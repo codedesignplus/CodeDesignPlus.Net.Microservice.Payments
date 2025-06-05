@@ -619,3 +619,116 @@ Logo	VISA	VISA	Tarjetas de crédito
 Logo	VISA	VISA_DEBIT	Tarjetas de débito	
 
 */
+
+
+/*
+JSON con los valores obligatorios para una transacción
+{
+  "language": "es",
+  "command": "SUBMIT_TRANSACTION",
+  "isTest": true,
+  "merchant": {
+    "apiLogin": "yourApiLogin123",
+    "apiKey": "yourApiKey123"
+  },
+  "transaction": {
+    "order": {
+      "accountId": 123456,
+      "referenceCode": "ORDER-001",
+      "description": "Descripción de la orden",
+      "language": "es",
+      "signature": "firma123",
+      "buyer": {
+        "fullName": "Juan Pérez",
+        "emailAddress": "juan.perez@email.com",
+        "contactPhone": "+573001112233",
+        "shippingAddress": {
+          "street1": "Calle 123",
+          "city": "Bogotá",
+          "state": "Cundinamarca",
+          "country": "CO",
+          "postalCode": "110111"
+        }
+      },
+      "additionalValues": {
+        "TX_VALUE": {
+          "value": 100000,
+          "currency": "COP"
+        },
+        "TX_TAX": {
+          "value": 0,
+          "currency": "COP"
+        },
+        "TX_TAX_RETURN_BASE": {
+          "value": 0,
+          "currency": "COP"
+        }
+      }
+    },
+    "payer": {
+      "emailAddress": "juan.perez@email.com",
+      "fullName": "Juan Pérez",
+      "billingAddress": {
+        "street1": "Calle 123",
+        "city": "Bogotá",
+        "country": "CO"
+      },
+      "contactPhone": "+573001112233",
+      "dniNumber": "123456789"
+    },
+    "type": "AUTHORIZATION_AND_CAPTURE",
+    "paymentMethod": "VISA",
+    "paymentCountry": "CO",
+    "deviceSessionId": "session123",
+    "ipAddress": "192.168.1.1",
+    "cookie": "cookie123",
+    "userAgent": "Mozilla/5.0"
+  }
+}
+
+
+JSON Minimo Frontend
+{
+  "order": {
+    "referenceCode": "ORD-001",            // Generado por el frontend o backend
+    "description": "Descripción de la compra", // Usuario
+    "buyer": {
+      "fullName": "Nombre Apellido",       // Usuario
+      "emailAddress": "correo@ejemplo.com",// Usuario
+      "contactPhone": "+573001234567",     // Usuario
+      "dniNumber": "123456789",            // Usuario
+      "shippingAddress": {
+        "street1": "Calle 123",            // Usuario
+        "city": "Bogotá",                  // Usuario
+        "state": "Cundinamarca",           // Usuario
+        "country": "CO",                   // Usuario
+        "postalCode": "110111",            // Usuario
+        "phone": "+573001234567"           // Usuario
+      }
+    },
+    "additionalValues": {
+      "TX_VALUE": {
+        "value": 100000                    // Usuario (valor de la compra)
+      }
+    }
+  },
+  "payer": {
+    "emailAddress": "correo@ejemplo.com",  // Usuario
+    "fullName": "Nombre Apellido",         // Usuario
+    "billingAddress": {
+      "street1": "Calle 123",              // Usuario
+      "city": "Bogotá",                    // Usuario
+      "country": "CO"                      // Usuario
+    },
+    "contactPhone": "+573001234567",       // Usuario
+    "dniNumber": "123456789"               // Usuario
+  },
+  "paymentMethod": "VISA",                 // Usuario (selecciona método de pago)
+  "creditCard": {                          // Solo si es pago con tarjeta
+    "number": "4111111111111111",          // Usuario
+    "securityCode": "123",                 // Usuario
+    "expirationDate": "2028/12",           // Usuario
+    "name": "Nombre Apellido"              // Usuario
+  }
+}
+*/
