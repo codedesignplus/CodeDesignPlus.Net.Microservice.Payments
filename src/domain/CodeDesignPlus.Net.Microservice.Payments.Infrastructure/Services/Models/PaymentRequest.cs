@@ -138,7 +138,7 @@ public class Order
     [StringLength(255, MinimumLength = 1, ErrorMessage = "Reference code must be between 1 and 255 characters long.")]
     [RegularExpression(@"^[a-zA-Z0-9_-]+$", ErrorMessage = "Reference code must contain only letters, numbers, underscores, and hyphens.")]
     public string ReferenceCode { get; set; } = null!;
-    /// <summary>
+    /// <summary>   
     /// Description of the order.
     /// </summary>
     [Required]
