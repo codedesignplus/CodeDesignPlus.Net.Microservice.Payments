@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 
@@ -19,7 +21,7 @@ public class PayuRequest
   /// <summary>
   /// Assigns true if the request is in test mode. If not, assign false.
   /// </summary>
-  public bool IsTest { get; set; } = false;
+  public bool Test { get; set; } = false;
   /// <summary>
   /// This object contains the authentication data.
   /// </summary>
@@ -224,15 +226,18 @@ public class PayuAdditionalValues
   /// <summary>
   /// Transaction amount.
   /// </summary>
-  public PayuAmount TX_VALUE { get; set; } = new PayuAmount();
+  [JsonProperty(PropertyName = "TX_VALUE")]
+  public PayuAmount Value { get; set; } = new PayuAmount();
   /// <summary>
   /// VAT (Value Added Tax) amount.
   /// </summary>
-  public PayuAmount TX_TAX { get; set; } = new PayuAmount();
+  [JsonProperty(PropertyName = "TX_TAX")]
+  public PayuAmount Tax { get; set; } = new PayuAmount();
   /// <summary>
   /// Base value for calculating VAT.
   /// </summary>
-  public PayuAmount TX_TAX_RETURN_BASE { get; set; } = new PayuAmount();
+  [JsonProperty(PropertyName = "TX_TAX_RETURN_BASE")]
+  public PayuAmount TaxReturnBase { get; set; } = new PayuAmount();
 }
 
 /// <summary>

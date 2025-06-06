@@ -5,6 +5,10 @@ using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.Rest.Swagger;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.HealthChecks;
 using CodeDesignPlus.Net.Microservice.Commons.MediatR;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
 using CodeDesignPlus.Net.Redis.Cache.Extensions;
 using CodeDesignPlus.Net.Vault.Extensions;
 using NodaTime.Serialization.JsonNet;
@@ -41,6 +45,28 @@ builder.Services.AddCoreSwagger<Program>(builder.Configuration);
 builder.Services.AddCache(builder.Configuration);
 builder.Services.AddResources<Program>(builder.Configuration);
 builder.Services.AddHealthChecksServices();
+
+var section = builder.Configuration.GetSection(PayuOptions.Section);
+
+builder.Services
+      .AddOptions<PayuOptions>()
+      .Bind(section)
+      .ValidateDataAnnotations()
+      .ValidateOnStart();
+
+builder.Services.AddScoped<IPayment, Payment>();
+
+var payuOptions = section.Get<PayuOptions>();
+
+if (payuOptions != null && payuOptions.Enable)
+{
+    builder.Services.AddScoped<IPayu, Payu>();
+
+    builder.Services.AddHttpClient("Payu", client =>
+    {
+        client.BaseAddress = payuOptions.Url;
+    });
+}
 
 var app = builder.Build();
 

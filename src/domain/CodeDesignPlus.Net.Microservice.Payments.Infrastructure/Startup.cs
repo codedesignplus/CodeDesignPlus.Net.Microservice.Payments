@@ -9,28 +9,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
     {
         public void Initialize(IServiceCollection services, IConfiguration configuration)
         {
-            var section = configuration.GetSection(PayuOptions.Section);
-
-            services
-                  .AddOptions<PayuOptions>()
-                  .Bind(section)
-                  .ValidateDataAnnotations()
-                  .ValidateOnStart();
-
-            services.AddSingleton<IPayment, Payment>();
-
-            var payuOptions = section.Get<PayuOptions>();
-
-            if (payuOptions != null && payuOptions.Enabled)
-            {
-                services.AddSingleton<IPayu, Payu>();
-
-                services.AddHttpClient("Payu", client =>
-                {
-                    client.BaseAddress = new Uri(payuOptions.BaseUrl);
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
-                });
-            }
+          
         }
     }
 }
