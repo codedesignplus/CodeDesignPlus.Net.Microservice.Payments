@@ -83,7 +83,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     Signature = md5Signature,
                     Buyer = new PayuBuyer
                     {
-                        //MerchantBuyerId = user.IdUser.ToString(),
+                        MerchantBuyerId = user.IdUser.ToString(),
                         FullName = transaction.Order.Buyer.FullName,
                         EmailAddress = transaction.Order.Buyer.EmailAddress,
                         ContactPhone = transaction.Order.Buyer.ContactPhone,
@@ -128,7 +128,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                 },
                 Payer = new PayuPayer
                 {
-                    //MerchantPayerId = user.IdUser.ToString(),
+                    MerchantPayerId = user.IdUser.ToString(),
                     FullName = transaction.Payer.FullName,
                     EmailAddress = transaction.Payer.EmailAddress,
                     ContactPhone = transaction.Payer.ContactPhone,
@@ -184,37 +184,15 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
     private static string CreateMD5(string input)
     {
-        using (MD5 md5 = MD5.Create())
+        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+        byte[] hashBytes = MD5.HashData(inputBytes);
+
+        var sb = new StringBuilder();
+        for (int i = 0; i < hashBytes.Length; i++)
         {
-            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-            byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < hashBytes.Length; i++)
-            {
-                sb.Append(hashBytes[i].ToString("x2"));
-            }
-            return sb.ToString();
+            sb.Append(hashBytes[i].ToString("x2"));
         }
+        return sb.ToString();
     }
-
-    private static string GenerarFirmaHMACSHA256(string mensaje, string claveSecreta)
-    {
-        var keyBytes = Encoding.UTF8.GetBytes(claveSecreta);
-        var messageBytes = Encoding.UTF8.GetBytes(mensaje);
-
-        using (var hmac = new HMACSHA256(keyBytes))
-        {
-            var hashBytes = hmac.ComputeHash(messageBytes);
-            var sb = new StringBuilder();
-            foreach (var b in hashBytes)
-            {
-                sb.Append(b.ToString("x2"));
-            }
-            return sb.ToString();
-        }
-    }
-
-
 }
 
