@@ -59,6 +59,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     {
         var referenceCode = id.ToString();
 
+        var md5Signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}");
+
         var signature = GenerarFirmaHMACSHA256($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}", payuOptions.SecretKey);
 
         var payuRequest = new PayuRequest()
@@ -78,7 +80,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     ReferenceCode = referenceCode,
                     Description = transaction.Order.Description,
                     Language = payuOptions.Language,
-                    Signature = signature,
+                    Signature = md5Signature,
                     Buyer = new PayuBuyer
                     {
                         //MerchantBuyerId = user.IdUser.ToString(),
@@ -180,37 +182,23 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         };
     }
 
-    private string GenerarFirmaHMACSHA256(string v, object secretKey)
+    private static string CreateMD5(string input)
     {
-        throw new NotImplementedException();
-    }
-
-    private static string GenerarFirmaMD5(string texto)
-    {
-        // Usamos 'using' para asegurarnos de que los recursos del objeto MD5 se liberen correctamente.
-        using var md5 = MD5.Create();
-        // El algoritmo MD5 trabaja con bytes, no con strings.
-        // Por eso, primero convertimos la cadena a un arreglo de bytes usando codificación UTF-8.
-        byte[] inputBytes = Encoding.UTF8.GetBytes(texto);
-
-        // Ahora, calculamos el hash MD5. El resultado es otro arreglo de bytes (de 16 bytes de longitud).
-        byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-        // Para obtener la firma en el formato hexadecimal que necesitas (ej: "ba9ffa..."),
-        // debemos convertir cada byte del hash a su representación de 2 caracteres hexadecimales.
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < hashBytes.Length; i++)
+        using (MD5 md5 = MD5.Create())
         {
-            // "x2" formatea el byte como una cadena hexadecimal de 2 caracteres en minúsculas.
-            // Ejemplo: el byte '10' se convierte en "0a", el byte '255' se convierte en "ff".
-            sb.Append(hashBytes[i].ToString("x2"));
-        }
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-        // Devolvemos el string construido.
-        return sb.ToString();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+            {
+                sb.Append(hashBytes[i].ToString("x2"));
+            }
+            return sb.ToString();
+        }
     }
 
-     public static string GenerarFirmaHMACSHA256(string mensaje, string claveSecreta)
+    private static string GenerarFirmaHMACSHA256(string mensaje, string claveSecreta)
     {
         var keyBytes = Encoding.UTF8.GetBytes(claveSecreta);
         var messageBytes = Encoding.UTF8.GetBytes(mensaje);
@@ -226,7 +214,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             return sb.ToString();
         }
     }
-    
-    
+
+
 }
 

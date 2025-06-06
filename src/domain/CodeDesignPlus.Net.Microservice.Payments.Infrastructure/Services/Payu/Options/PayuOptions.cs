@@ -15,8 +15,8 @@ public class PayuOptions: IValidatableObject
     public string ApiLogin { get; set; } = string.Empty;
     public bool IsTest { get; set; } = true;
     public Uri Url { get; set; } = null!;
-    public string Language { get; set; } = "es";
-    public string Currency { get; set; } = "COP";
+    public string Language { get; set; } = null!;
+    public string Currency { get; set; } = null!;
     public string TransactionType { get; set; } = "AUTHORIZATION_AND_CAPTURE";
     public string PaymentCountry { get; internal set; } = "CO";
     public string SecretKey { get; set; } = null!;
