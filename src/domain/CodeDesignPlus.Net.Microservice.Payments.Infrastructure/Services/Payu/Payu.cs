@@ -59,9 +59,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     {
         var referenceCode = id.ToString();
 
-        var md5Signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}");
-
-        var signature = GenerarFirmaHMACSHA256($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}", payuOptions.SecretKey);
+        var signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}");
 
         var payuRequest = new PayuRequest()
         {
@@ -80,7 +78,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     ReferenceCode = referenceCode,
                     Description = transaction.Order.Description,
                     Language = payuOptions.Language,
-                    Signature = md5Signature,
+                    Signature = signature,
                     Buyer = new PayuBuyer
                     {
                         MerchantBuyerId = user.IdUser.ToString(),
