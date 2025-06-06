@@ -9,9 +9,9 @@ public static class MapsterConfigPayment
 {
     public static void Configure()
     {
-        TypeAdapterConfig<PayDto, PayCommand>
+        TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayWithCreditCardOrDebitCardCommand>
             .NewConfig()
-            .ConstructUsing(src => new PayCommand(src.Id, src.Transaction));
+            .ConstructUsing(src => new PayWithCreditCardOrDebitCardCommand((Guid)src.Id, (Domain.ValueObjects.Transaction)src.Transaction));
 
         TypeAdapterConfig<PaymentAggregate, PaymentDto>
             .NewConfig()

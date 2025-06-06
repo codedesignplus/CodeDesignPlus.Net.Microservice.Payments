@@ -1,11 +1,11 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.PayWithCreditCardOrDebitCard;
 
 [DtoGenerator]
-public record PayCommand(Guid Id, Transaction Transaction) : IRequest;
+public record PayWithCreditCardOrDebitCardCommand(Guid Id, Transaction Transaction) : IRequest;
 
-public class Validator : AbstractValidator<PayCommand>
+public class Validator : AbstractValidator<PayWithCreditCardOrDebitCardCommand>
 {
     public Validator()
     {

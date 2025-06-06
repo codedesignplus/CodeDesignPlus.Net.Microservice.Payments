@@ -18,7 +18,7 @@ public class PaymentController(IMediator mediator, IMapper mapper) : ControllerB
     [HttpPost]
     public async Task<IActionResult> Pay([FromBody] PayDto data, CancellationToken cancellationToken)
     {
-        await mediator.Send(mapper.Map<PayCommand>(data), cancellationToken);
+        await mediator.Send(mapper.Map<PayWithCreditCardOrDebitCardCommand>((object)data), cancellationToken);
 
         return NoContent();
     }
