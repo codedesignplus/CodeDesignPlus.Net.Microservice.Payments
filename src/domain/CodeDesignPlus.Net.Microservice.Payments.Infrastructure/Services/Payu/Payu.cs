@@ -96,15 +96,15 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                             Phone = transaction.Order.Buyer.ShippingAddress.Phone
                         }
                     },
-                    ShippingAddress = new PayuAddress
-                    {
-                        Street1 = transaction.Order.Buyer.ShippingAddress.Street,
-                        City = transaction.Order.Buyer.ShippingAddress.City,
-                        State = transaction.Order.Buyer.ShippingAddress.State,
-                        Country = transaction.Order.Buyer.ShippingAddress.Country,
-                        PostalCode = transaction.Order.Buyer.ShippingAddress.PostalCode,
-                        Phone = transaction.Order.Buyer.ShippingAddress.Phone
-                    },
+                    // ShippingAddress = new PayuAddress
+                    // {
+                    //     Street1 = transaction.Order.Buyer.ShippingAddress.Street,
+                    //     City = transaction.Order.Buyer.ShippingAddress.City,
+                    //     State = transaction.Order.Buyer.ShippingAddress.State,
+                    //     Country = transaction.Order.Buyer.ShippingAddress.Country,
+                    //     PostalCode = transaction.Order.Buyer.ShippingAddress.PostalCode,
+                    //     Phone = transaction.Order.Buyer.ShippingAddress.Phone
+                    // },
                     AdditionalValues = new PayuAdditionalValues
                     {
                         Value = new PayuAmount
