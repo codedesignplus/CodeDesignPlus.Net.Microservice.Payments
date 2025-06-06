@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup>
-    <PublishAot>true</PublishAot>
+    <PublishAot>false</PublishAot>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CodeDesignPlus.Net.Microservice.Payments.Application\CodeDesignPlus.Net.Microservice.Payments.Application.csproj" />
