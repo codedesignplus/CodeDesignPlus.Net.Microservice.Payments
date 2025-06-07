@@ -47,9 +47,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             },
         };
 
-        var resposne = await this.httpClient.PostAsJsonAsync(options.Value.Url, request, cancellationToken);
-
-        return await resposne.Content.ReadFromJsonAsync<BankResponse>(cancellationToken);
+        return await Request<BankRequest, BankResponse>(request, cancellationToken);
     }
 
     public async Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
@@ -193,9 +191,28 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         };
     }
 
-    private async Task<(string json, string responseContent)> Request(PayuRequest payuRequest, CancellationToken cancellationToken)
+    
+    private async Task<TResponse> Request<T, TResponse>(T request, CancellationToken cancellationToken)
     {
-        var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(payuRequest, settings);
+        var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(request, settings);
+
+        var httpRequest = new HttpRequestMessage
+        {
+            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
+            Method = HttpMethod.Post
+        };
+        httpRequest.Headers.Add("Accept", "application/json");
+
+        var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        return CodeDesignPlus.Net.Serializers.JsonSerializer.Deserialize<TResponse>(responseContent, settings);
+    }
+
+    private async Task<(string json, string responseContent)> Request<T>(T request, CancellationToken cancellationToken)
+    {
+        var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(request, settings);
 
         var httpRequest = new HttpRequestMessage
         {

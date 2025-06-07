@@ -16,3 +16,5 @@ global using NodaTime;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentById;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPayment;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Commands.SyncBanks;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Queries.GetAllBanks;

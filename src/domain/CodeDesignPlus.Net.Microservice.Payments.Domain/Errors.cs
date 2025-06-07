@@ -85,4 +85,8 @@ public class Errors : IErrorCodes
     public const string PseResponseUrlCannotBeNullOrEmpty = "171 : Pse Response URL cannot be null or empty"; 
     public const string PseResponseUrlCannotBeGreaterThan255Characters = "172 : Pse Response URL cannot be greater than 255 characters";
     public const string PseCannotBeNull = "173 : Pse cannot be null";
+
+    public const string BackDescriptionRequired = "174 : Back Description is required";
+
+    public const string BackCodeRequired = "175 : Back Code is required"; 
 }

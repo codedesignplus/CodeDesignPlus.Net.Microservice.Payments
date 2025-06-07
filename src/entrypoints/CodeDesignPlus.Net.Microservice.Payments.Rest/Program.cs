@@ -46,6 +46,7 @@ builder.Services.AddCache(builder.Configuration);
 builder.Services.AddResources<Program>(builder.Configuration);
 builder.Services.AddHealthChecksServices();
 
+/* Mover al startup pero validar el porque se invoca 4 veces el Startup*/
 var section = builder.Configuration.GetSection(PayuOptions.Section);
 
 builder.Services
@@ -67,6 +68,10 @@ if (payuOptions != null && payuOptions.Enable)
         client.BaseAddress = payuOptions.Url;
     });
 }
+
+builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
+
+/* Fin de bloque a mover */
 
 var app = builder.Build();
 
