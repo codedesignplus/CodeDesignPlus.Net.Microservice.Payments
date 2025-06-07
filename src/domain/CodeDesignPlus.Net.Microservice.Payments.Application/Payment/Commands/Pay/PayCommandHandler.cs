@@ -1,11 +1,11 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
 
-namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.PayWithCreditCardOrDebitCard;
+namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 
-public class PayWithCreditCardOrDebitCardCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPayment payment) : IRequestHandler<PayWithCreditCardOrDebitCardCommand>
+public class PayCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPayment payment) : IRequestHandler<PayCommand>
 {
-    public async Task Handle(PayWithCreditCardOrDebitCardCommand request, CancellationToken cancellationToken)
+    public async Task Handle(PayCommand request, CancellationToken cancellationToken)
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 

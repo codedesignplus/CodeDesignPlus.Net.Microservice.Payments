@@ -4,27 +4,30 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 public sealed partial class Pse
 {
-    [GeneratedRegex(@"^0x[0-9]{32}$")]
-    private static partial Regex Regex();
 
-    public string FullName { get; private set; } = null!;
     public string PseCode { get; private set; } = null!;
     public string TypePerson { get; private set; } = null!;
-    public string TypeDocument { get; private set; } = null!;
-    public string Document { get; private set; } = null!;
+    public string PseResponseUrl { get; private set; } = null!;
 
     [JsonConstructor]
-    private Pse(string value)
+    private Pse(string pseCode, string typePerson, string pseResponseUrl)
     {
-        DomainGuard.IsNullOrEmpty(value, Errors.UnknownError);
+        DomainGuard.IsNullOrEmpty(pseCode, Errors.PseCodeCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(pseCode.Length, 34, Errors.PseCodeCannotBeGreaterThan34Characters);
 
-        DomainGuard.IsFalse(Regex().IsMatch(value), Errors.UnknownError);
+        DomainGuard.IsNullOrEmpty(typePerson, Errors.TypePersonCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(typePerson.Length, 1, Errors.TypePersonCannotBeGreaterThan2Characters);
 
-        this.PseCode = value;
+        DomainGuard.IsNullOrEmpty(pseResponseUrl, Errors.PseResponseUrlCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(pseResponseUrl.Length, 255, Errors.PseResponseUrlCannotBeGreaterThan255Characters);
+
+        PseCode = pseCode;
+        TypePerson = typePerson;
+        PseResponseUrl = pseResponseUrl;
     }
 
-    public static Pse Create(string value)
+    public static Pse Create(string pseCode, string typePerson, string pseResponseUrl)
     {
-        return new Pse(value);
+        return new Pse(pseCode, typePerson, pseResponseUrl);
     }
 }

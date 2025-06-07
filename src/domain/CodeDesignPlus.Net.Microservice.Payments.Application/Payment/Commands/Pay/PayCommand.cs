@@ -1,11 +1,11 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.PayWithCreditCardOrDebitCard;
+namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 
 [DtoGenerator]
-public record PayWithCreditCardOrDebitCardCommand(Guid Id, Transaction Transaction) : IRequest;
+public record PayCommand(Guid Id, Transaction Transaction) : IRequest;
 
-public class Validator : AbstractValidator<PayWithCreditCardOrDebitCardCommand>
+public class Validator : AbstractValidator<PayCommand>
 {
     public Validator()
     {
@@ -154,38 +154,68 @@ public class Validator : AbstractValidator<PayWithCreditCardOrDebitCardCommand>
 
                 RuleFor(x => x.Transaction.CreditCard)
                     .NotNull()
+                    .When(x => x.Transaction.Pse == null)
                     .WithMessage("Transaction credit card cannot be null.")
                     .DependentRules(() =>
                     {
-                        RuleFor(x => x.Transaction.CreditCard.Number)
+                        RuleFor(x => x.Transaction.CreditCard!.Number)
                             .NotEmpty()
                             .NotNull()
                             .MinimumLength(13)
                             .MaximumLength(20)
-                            .WithMessage("Credit card number cannot be empty or null and must be between 13 and 20 characters long.");
+                            .WithMessage("Credit card number cannot be empty or null and must be between 13 and 20 characters long.")
+                            .When(x => x.Transaction.Pse == null);
 
-                        RuleFor(x => x.Transaction.CreditCard.SecurityCode)
+                        RuleFor(x => x.Transaction.CreditCard!.SecurityCode)
                             .NotEmpty()
                             .NotNull()
                             .MinimumLength(1)
                             .MaximumLength(4)
-                            .WithMessage("Credit card security code cannot be empty or null and must be between 1 and 4 characters long.");
+                            .WithMessage("Credit card security code cannot be empty or null and must be between 1 and 4 characters long.")
+                            .When(x => x.Transaction.Pse == null);
 
-                        RuleFor(x => x.Transaction.CreditCard.ExpirationDate)
+                        RuleFor(x => x.Transaction.CreditCard!.ExpirationDate)
                             .NotEmpty()
                             .NotNull()
                             .Matches(@"^\d{4}/\d{2}$")
                             .MinimumLength(7)
                             .MaximumLength(7)
-                            .WithMessage("Credit card expiration date cannot be empty or null, must be in YYYY/MM format, and exactly 7 characters long.");
+                            .WithMessage("Credit card expiration date cannot be empty or null, must be in YYYY/MM format, and exactly 7 characters long.")
+                            .When(x => x.Transaction.Pse == null);
 
-                        RuleFor(x => x.Transaction.CreditCard.Name)
+                        RuleFor(x => x.Transaction.CreditCard!.Name)
                             .NotEmpty()
                             .NotNull()
                             .MinimumLength(1)
                             .MaximumLength(255)
-                            .WithMessage("Credit card name cannot be empty or null and must be between 1 and 255 characters long.");
+                            .WithMessage("Credit card name cannot be empty or null and must be between 1 and 255 characters long.")
+                            .When(x => x.Transaction.Pse == null);
                     });
+
+                // RuleFor(x => x.Transaction.Pse)
+                //     .NotNull()
+                //     .When(x => x.Transaction.CreditCard == null)
+                //     .WithMessage("Transaction PSE cannot be null.")
+                //     .DependentRules(() =>
+                //     {
+                //         RuleFor(x => x.Transaction.Pse.PseCode)
+                //             .NotEmpty()
+                //             .NotNull()
+                //             .MaximumLength(34)
+                //             .WithMessage("PSE code cannot be empty or null and must be up to 34 characters long.");
+
+                //         RuleFor(x => x.Transaction.Pse!.TypePerson)
+                //             .NotEmpty()
+                //             .NotNull()
+                //             .MaximumLength(2)
+                //             .WithMessage("PSE type person cannot be empty or null and must be exactly 2 characters long.");
+
+                //         RuleFor(x => x.Transaction.Pse!.PseResponseUrl)
+                //             .NotEmpty()
+                //             .NotNull()
+                //             .MaximumLength(255)
+                //             .WithMessage("PSE response URL cannot be empty or null and must be up to 255 characters long.");
+                //     });
             });
     }
 }

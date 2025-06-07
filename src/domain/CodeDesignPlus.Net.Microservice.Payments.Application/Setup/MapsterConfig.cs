@@ -1,7 +1,4 @@
-﻿
-
-using CodeDesignPlus.Microservice.Api.Dtos;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Setup;
 
@@ -9,9 +6,9 @@ public static class MapsterConfigPayment
 {
     public static void Configure()
     {
-        TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayWithCreditCardOrDebitCardCommand>
+        TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
             .NewConfig()
-            .ConstructUsing(src => new PayWithCreditCardOrDebitCardCommand((Guid)src.Id, (Domain.ValueObjects.Transaction)src.Transaction));
+            .ConstructUsing(src => new PayCommand(src.Id, src.Transaction));
 
         TypeAdapterConfig<PaymentAggregate, PaymentDto>
             .NewConfig()

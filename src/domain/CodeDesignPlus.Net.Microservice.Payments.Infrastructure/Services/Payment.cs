@@ -9,16 +9,11 @@ public class Payment(IServiceProvider serviceProvider) : IPayment
 {
     public Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Transaction transaction, Provider provider, CancellationToken cancellationToken)
     {
-        return ProcessPayment(id, transaction, provider, [], cancellationToken);
-    }
-
-    public Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Transaction transaction, Provider provider, Dictionary<string, string> extraParametrs, CancellationToken cancellationToken)
-    {
         if (provider == Provider.Payu)
         {
             var payu = serviceProvider.GetRequiredService<IPayu>();
 
-            return payu.ProcessPayment(id, transaction, provider, extraParametrs, cancellationToken);
+            return payu.ProcessPayment(id, transaction, provider, cancellationToken);
         }
 
         throw new NotSupportedException($"Provider {provider} is not supported.");

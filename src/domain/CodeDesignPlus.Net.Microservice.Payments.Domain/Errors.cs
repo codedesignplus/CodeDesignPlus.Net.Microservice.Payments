@@ -72,5 +72,17 @@ public class Errors : IErrorCodes
 
     public const string AmountCannotBeNull = "161 : Amount cannot be null";
     public const string TaxCannotBeNull = "162 : Tax cannot be null"; 
-    public const string TaxReturnBaseCannotBeNull = "163 : Tax Return Base cannot be null"; 
+    public const string TaxReturnBaseCannotBeNull = "163 : Tax Return Base cannot be null";
+
+    public const string DniTypeCannotBeNullOrEmpty = "164 : Dni Type cannot be null or empty"; 
+    public const string DniTypeCannotBeGreaterThan2Characters = "165 : Dni Type cannot be greater than 2 characters";
+
+    public const string PseCodeCannotBeNullOrEmpty = "166 : Pse Code cannot be null or empty"; 
+    public const string PseCodeCannotBeGreaterThan34Characters = "167 : Pse Code cannot be greater than 34 characters"; 
+    public const string PseCodeMustBeValidFormat = "168 : Pse Code must be valid format"; 
+    public const string TypePersonCannotBeNullOrEmpty = "169 : Type Person cannot be null or empty"; 
+    public const string TypePersonCannotBeGreaterThan2Characters = "170 : Type Person cannot be greater than 2 characters"; 
+    public const string PseResponseUrlCannotBeNullOrEmpty = "171 : Pse Response URL cannot be null or empty"; 
+    public const string PseResponseUrlCannotBeGreaterThan255Characters = "172 : Pse Response URL cannot be greater than 255 characters";
+    public const string PseCannotBeNull = "173 : Pse cannot be null";
 }

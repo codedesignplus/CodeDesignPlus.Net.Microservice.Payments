@@ -1,7 +1,9 @@
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Constants;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
 using CodeDesignPlus.Net.Security.Abstractions;
@@ -50,12 +52,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         return await resposne.Content.ReadFromJsonAsync<BankResponse>(cancellationToken);
     }
 
-    public Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
-    {
-        return ProcessPayment(id, transaction, provider, [], cancellationToken);
-    }
-
-    public async Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, Dictionary<string, string> extraParametrs, CancellationToken cancellationToken)
+    public async Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
     {
         var referenceCode = id.ToString();
 
@@ -96,15 +93,6 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                             Phone = transaction.Order.Buyer.ShippingAddress.Phone
                         }
                     },
-                    // ShippingAddress = new PayuAddress
-                    // {
-                    //     Street1 = transaction.Order.Buyer.ShippingAddress.Street,
-                    //     City = transaction.Order.Buyer.ShippingAddress.City,
-                    //     State = transaction.Order.Buyer.ShippingAddress.State,
-                    //     Country = transaction.Order.Buyer.ShippingAddress.Country,
-                    //     PostalCode = transaction.Order.Buyer.ShippingAddress.PostalCode,
-                    //     Phone = transaction.Order.Buyer.ShippingAddress.Phone
-                    // },
                     AdditionalValues = new PayuAdditionalValues
                     {
                         Value = new PayuAmount
@@ -140,13 +128,13 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                         PostalCode = transaction.Payer.BillingAddress.PostalCode
                     }
                 },
-                CreditCard = new PayuCreditCard
-                {
-                    Number = transaction.CreditCard.Number,
-                    ExpirationDate = transaction.CreditCard.ExpirationDate,
-                    SecurityCode = transaction.CreditCard.SecurityCode,
-                    Name = transaction.CreditCard.Name,
-                },
+                // CreditCard = new PayuCreditCard
+                // {
+                //     Number = transaction.CreditCard.Number,
+                //     ExpirationDate = transaction.CreditCard.ExpirationDate,
+                //     SecurityCode = transaction.CreditCard.SecurityCode,
+                //     Name = transaction.CreditCard.Name,
+                // },
                 Type = payuOptions.TransactionType,
                 PaymentMethod = transaction.PaymentMethod,
                 PaymentCountry = payuOptions.PaymentCountry,
@@ -154,10 +142,59 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                 Cookie = transaction.Cookie,
                 IpAddress = transaction.IpAddress,
                 UserAgent = transaction.UserAgent,
-                ExtraParameters = extraParametrs,
+                //ExtraParameters = extraParametrs,
             }
         };
 
+        var paymentMethod = PayuPaymentMethods.GetPaymentMethod(transaction.PaymentMethod);
+
+        if (paymentMethod.Type == PayType.CreditCard || paymentMethod.Type == PayType.DebitCard)
+        {
+            InfrastructureGuard.IsNull(transaction.CreditCard!, Errors.CreditCardCannotBeNull);
+
+            payuRequest.Transaction.CreditCard = new PayuCreditCard
+            {
+                Number = transaction.CreditCard!.Number,
+                ExpirationDate = transaction.CreditCard.ExpirationDate,
+                SecurityCode = transaction.CreditCard.SecurityCode,
+                Name = transaction.CreditCard.Name,
+            };
+
+            // Si tienes cuotas para TC (transaction.InstallmentsNumber)
+            // if (transaction.InstallmentsNumber.HasValue && transaction.InstallmentsNumber.Value > 0)
+            // {
+            //     payuRequest.Transaction.ExtraParameters.Add("INSTALLMENTS_NUMBER", transaction.InstallmentsNumber.Value.ToString());
+            // }
+        }
+
+        if (paymentMethod.Type == PayType.Pse)
+        {
+            InfrastructureGuard.IsNull(transaction.Pse!, Errors.PseCannotBeNull);
+
+            payuRequest.Transaction.ExtraParameters.Add("RESPONSE_URL", transaction.Pse!.PseResponseUrl);
+            payuRequest.Transaction.ExtraParameters.Add("FINANCIAL_INSTITUTION_CODE", transaction.Pse.PseCode);
+            payuRequest.Transaction.ExtraParameters.Add("USER_TYPE", transaction.Pse.TypePerson); // "N" o "J"
+            payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE1", transaction.IpAddress); // Referencia opcional
+            payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE2", transaction.Payer.DniType); // Referencia opcional
+            payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE3", transaction.Payer.DniNumber); // Referencia opcional
+
+            // Referencias opcionales de PSE si las usas
+            // if (!string.IsNullOrEmpty(transaction.PseReference1))
+            //    payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE1", transaction.PseReference1);
+        }
+        (string json, string responseContent) = await Request(payuRequest, cancellationToken);
+
+        return new Domain.Models.TransactionResponse
+        {
+            Id = id,
+            Provider = "Payu",
+            Request = json,
+            Response = responseContent
+        };
+    }
+
+    private async Task<(string json, string responseContent)> Request(PayuRequest payuRequest, CancellationToken cancellationToken)
+    {
         var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(payuRequest, settings);
 
         var httpRequest = new HttpRequestMessage
@@ -170,14 +207,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         var response = await httpClient.SendAsync(httpRequest, cancellationToken);
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        return new Domain.Models.TransactionResponse
-        {
-            Id = id,
-            Provider = "Payu",
-            Request = json,
-            Response = responseContent
-        };
+        return (json, responseContent);
     }
 
     private static string CreateMD5(string input)

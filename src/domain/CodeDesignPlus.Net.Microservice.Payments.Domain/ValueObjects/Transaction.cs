@@ -8,20 +8,20 @@ public partial class Transaction
     public Order Order { get; private set; } = null!;
     public Payer Payer { get; private set; } = null!;
     public string PaymentMethod { get; private set; } = null!;
-    public CreditCard CreditCard { get; private set; } = null!;
+    public CreditCard? CreditCard { get; private set; } = null!;
+    public Pse? Pse { get; private set; } = null!;
     public string DeviceSessionId { get; private set; } = null!;
     public string IpAddress { get; private set; } = null!;
     public string Cookie { get; private set; } = null!;
     public string UserAgent { get; private set; } = null!;
 
-    public Transaction(Order order, Payer payer, string paymentMethod, CreditCard creditCard, string deviceSessionId, string ipAddress, string cookie, string userAgent)
+    public Transaction(Order order, Payer payer, string paymentMethod, CreditCard? creditCard, Pse? pse, string deviceSessionId, string ipAddress, string cookie, string userAgent)
     {
 
         DomainGuard.IsNull(order, Errors.OrderCannotBeNull);
         DomainGuard.IsNull(payer, Errors.BuyerCannotBeNull);
         DomainGuard.IsNullOrEmpty(paymentMethod, Errors.PaymentMethodCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(paymentMethod.Length, 32, Errors.PaymentMethodCannotBeGreaterThan32Characters);
-        DomainGuard.IsNull(creditCard, Errors.CreditCardCannotBeNull);
 
         DomainGuard.IsNullOrEmpty(deviceSessionId, Errors.DeviceSessionIdCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(deviceSessionId.Length, 255, Errors.DeviceSessionIdCannotBeGreaterThan255Characters);
@@ -37,19 +37,26 @@ public partial class Transaction
         DomainGuard.IsNullOrEmpty(userAgent, Errors.UserAgentCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(userAgent.Length, 1024, Errors.UserAgentCannotBeGreaterThan1024Characters);
 
+        if (pse == null)
+            DomainGuard.IsNull(creditCard!, Errors.CreditCardCannotBeNull);
+        
+        else if (creditCard == null)
+            DomainGuard.IsNull(pse!, Errors.PseCannotBeNull);
+
 
         Order = order;
         Payer = payer;
         PaymentMethod = paymentMethod;
         CreditCard = creditCard;
+        Pse = pse;
         DeviceSessionId = deviceSessionId;
         IpAddress = ipAddress;
         Cookie = cookie;
         UserAgent = userAgent;
     }
 
-    public static Transaction Create(Order order, Payer payer, string paymentMethod, CreditCard creditCard, string deviceSessionId, string ipAddress, string cookie, string userAgent)
+    public static Transaction Create(Order order, Payer payer, string paymentMethod, CreditCard? creditCard, Pse? pse, string deviceSessionId, string ipAddress, string cookie, string userAgent)
     {
-        return new Transaction(order, payer, paymentMethod, creditCard, deviceSessionId, ipAddress, cookie, userAgent);
+        return new Transaction(order, payer, paymentMethod, creditCard, pse, deviceSessionId, ipAddress, cookie, userAgent);
     }
 }
