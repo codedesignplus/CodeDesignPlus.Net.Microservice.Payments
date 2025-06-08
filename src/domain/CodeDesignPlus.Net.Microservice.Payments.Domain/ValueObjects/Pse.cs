@@ -4,7 +4,6 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 public sealed partial class Pse
 {
-
     public string PseCode { get; private set; } = null!;
     public string TypePerson { get; private set; } = null!;
     public string PseResponseUrl { get; private set; } = null!;
