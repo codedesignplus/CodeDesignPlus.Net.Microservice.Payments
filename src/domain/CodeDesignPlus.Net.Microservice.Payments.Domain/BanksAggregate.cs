@@ -13,6 +13,7 @@ public class BanksAggregate(Guid id) : AggregateRootBase(id)
         DomainGuard.IsNullOrEmpty(description, Errors.BackDescriptionRequired);
         DomainGuard.IsNullOrEmpty(code, Errors.BackCodeRequired);
 
+        Name = name;
         Description = description;
         Code = code;
         IsActive = isActive;

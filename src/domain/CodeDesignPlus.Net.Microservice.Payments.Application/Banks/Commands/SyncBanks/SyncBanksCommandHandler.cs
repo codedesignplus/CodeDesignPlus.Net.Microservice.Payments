@@ -14,7 +14,7 @@ public class SyncBanksCommandHandler(IBankRepository repository) : IRequestHandl
 
             if (existingBank != null)
             {
-                existingBank.Update( bank.Name, bank.Description, bank.IsActive);
+                existingBank.Update(bank.Name, bank.Description, bank.IsActive);
 
                 await repository.UpdateAsync(existingBank, cancellationToken);
             }
