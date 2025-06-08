@@ -88,5 +88,7 @@ public class Errors : IErrorCodes
 
     public const string BackDescriptionRequired = "174 : Back Description is required";
 
-    public const string BackCodeRequired = "175 : Back Code is required"; 
+    public const string BackCodeRequired = "175 : Back Code is required";
+
+    public const string BackNameRequired = "176 : Back Name is required";
 }

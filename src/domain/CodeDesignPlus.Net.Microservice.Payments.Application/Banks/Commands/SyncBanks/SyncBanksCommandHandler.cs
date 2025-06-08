@@ -14,13 +14,13 @@ public class SyncBanksCommandHandler(IBankRepository repository) : IRequestHandl
 
             if (existingBank != null)
             {
-                existingBank.Update(bank.Description, bank.IsActive);
+                existingBank.Update( bank.Name, bank.Description, bank.IsActive);
 
                 await repository.UpdateAsync(existingBank, cancellationToken);
             }
             else
             {
-                var newBank = BanksAggregate.Create(bank.Id, bank.Description, bank.Code, bank.IsActive);
+                var newBank = BanksAggregate.Create(bank.Id, bank.Name, bank.Description, bank.Code, bank.IsActive);
 
                 await repository.CreateAsync(newBank, cancellationToken);
             }

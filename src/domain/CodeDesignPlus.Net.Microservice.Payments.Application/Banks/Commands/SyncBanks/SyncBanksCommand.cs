@@ -23,6 +23,17 @@ public class BankValidator : AbstractValidator<BanksDto>
 {
     public BankValidator()
     {
+        RuleFor(x => x.Id)
+            .NotEmpty()
+            .NotNull()
+            .WithMessage("Bank ID cannot be null or empty.");
+        
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .NotNull()
+            .MaximumLength(255)
+            .WithMessage("Description cannot be null or empty and must not exceed 255 characters.");
+
         RuleFor(x => x.Description)
             .NotEmpty()
             .NotNull()
