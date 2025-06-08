@@ -44,6 +44,7 @@ public class BankSyncBackgroundService(ILogger<BankSyncBackgroundService> logger
                     var command = new SyncBanksCommand([.. banks.Banks.Select(x => new BanksDto
                     {
                         Id = Guid.Parse(x.Id),
+                        Name = x.Description,
                         Description = x.Description,
                         Code = x.PseCode,
                         IsActive = true
