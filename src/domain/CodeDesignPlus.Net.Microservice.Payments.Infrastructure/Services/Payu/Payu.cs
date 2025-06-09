@@ -180,14 +180,14 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             // if (!string.IsNullOrEmpty(transaction.PseReference1))
             //    payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE1", transaction.PseReference1);
         }
-        (string json, string responseContent) = await Request(payuRequest, cancellationToken);
+        var response = await Request<PayuRequest, PayuResponse>(payuRequest, cancellationToken);
 
         return new Domain.Models.TransactionResponse
         {
             Id = id,
             Provider = "Payu",
-            Request = json,
-            Response = responseContent
+            Request = payuRequest,
+            Response = response
         };
     }
 
@@ -208,23 +208,6 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return CodeDesignPlus.Net.Serializers.JsonSerializer.Deserialize<TResponse>(responseContent, settings);
-    }
-
-    private async Task<(string json, string responseContent)> Request<T>(T request, CancellationToken cancellationToken)
-    {
-        var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(request, settings);
-
-        var httpRequest = new HttpRequestMessage
-        {
-            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
-            Method = HttpMethod.Post
-        };
-        httpRequest.Headers.Add("Accept", "application/json");
-
-        var response = await httpClient.SendAsync(httpRequest, cancellationToken);
-
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        return (json, responseContent);
     }
 
     private static string CreateMD5(string input)

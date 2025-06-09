@@ -41,8 +41,8 @@ public class Errors : IErrorCodes
     public const string ProviderCannotBeNullOrEmpty = "135 : Provider cannot be null or empty"; 
     public const string ProviderCannotBeGreaterThan50Characters = "136 : Provider cannot be greater than 50 characters"; 
     public const string TransactionCannotBeNull = "137 : Transaction cannot be null"; 
-    public const string RequestCannotBeNullOrEmpty = "138 : Request cannot be null or empty"; 
-    public const string ResponseCannotBeNullOrEmpty = "139 : Response cannot be null or empty";
+    public const string RequestCannotBeNull = "138 : Request cannot be null"; 
+    public const string ResponseCannotBeNull = "139 : Response cannot be null";
 
     public const string CurrencyCannotBeNullOrEmpty = "140 : Currency cannot be null or empty"; 
     public const string CurrencyMustBeValidFormat = "141 : Currency must be valid format";

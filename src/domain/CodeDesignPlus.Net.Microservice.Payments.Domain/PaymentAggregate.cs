@@ -13,8 +13,8 @@ public class PaymentAggregate(Guid id) : AggregateRoot(id)
     private PaymentAggregate(Guid id, Provider provider, Transaction transaction, string request, string response, Guid? tenant, Guid createdBy) : this(id)
     {
         DomainGuard.IsNull(transaction, Errors.TransactionCannotBeNull);
-        DomainGuard.IsNullOrEmpty(request, Errors.RequestCannotBeNullOrEmpty);
-        DomainGuard.IsNullOrEmpty(response, Errors.ResponseCannotBeNullOrEmpty);
+        DomainGuard.IsNull(request, Errors.RequestCannotBeNull);
+        DomainGuard.IsNull(response, Errors.ResponseCannotBeNull);
 
         Provider = provider;
         Transaction = transaction;

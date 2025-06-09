@@ -8,8 +8,8 @@ public class PaymentCompletedDomainEvent(
     Guid aggregateId,
     Provider provider,
     Transaction transaction,
-    string request,
-    string response,
+    object request,
+    object response,
     Guid? tenant,
     Guid? eventId = null,
     Instant? occurredAt = null,
@@ -18,11 +18,11 @@ public class PaymentCompletedDomainEvent(
 {
     public Provider Provider { get; } = provider;
     public Transaction Transaction { get; } = transaction;
-    public string Request { get; } = request;
-    public string Response { get; } = response;
+    public object Request { get; } = request;
+    public object Response { get; } = response;
     public Guid? Tenant { get; } = tenant;
     
-    public static PaymentCompletedDomainEvent Create(Guid aggregateId, Provider provider, Transaction transaction, string request, string response, Guid? tenant, Guid? eventId = null, Instant? occurredAt = null, Dictionary<string, object>? metadata = null)
+    public static PaymentCompletedDomainEvent Create(Guid aggregateId, Provider provider, Transaction transaction, object request, object response, Guid? tenant, Guid? eventId = null, Instant? occurredAt = null, Dictionary<string, object>? metadata = null)
     {
         return new PaymentCompletedDomainEvent(aggregateId, provider, transaction, request, response, tenant, eventId, occurredAt, metadata);
     }

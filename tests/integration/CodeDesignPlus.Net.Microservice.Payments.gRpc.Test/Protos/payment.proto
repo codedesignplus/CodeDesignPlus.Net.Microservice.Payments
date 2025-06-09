@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+option csharp_namespace = "CodeDesignPlus.Net.Microservice.Payments.gRpc.Test";
+
+package Payment;
+
+
+service Payment {
+  rpc GetPayment (stream GetPaymentRequest) returns (stream GetPaymentResponse);
+}
+
+message GetPaymentRequest {
+  string Id = 1;
+}
+
+message GetPaymentResponse {
+
+}

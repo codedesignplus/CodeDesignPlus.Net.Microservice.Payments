@@ -1,5 +1,3 @@
-using System;
-
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 
 /// <summary>
@@ -45,6 +43,11 @@ public class TransactionResponse
     /// </summary>
     public string State { get; set; } = null!;
     /// <summary>
+    /// Gets or sets the reason for a 'PENDING' state.
+    /// Typically present in redirection-based payments like PSE.
+    /// </summary>
+    public string? PendingReason { get; set; }
+    /// <summary>
     /// Gets or sets the response code associated with the transaction state.
     /// This is a string that can have various values indicating the outcome of the transaction.
     /// </summary>
@@ -78,7 +81,7 @@ public class TransactionResponse
     /// Gets or sets the date and time when the transaction response was created in the PayU system.
     /// This is a DateTime value representing the operation date of the transaction.
     /// </summary>
-    public DateTime OperationDate { get; set; }
+    public long OperationDate { get; set; }
     /// <summary>
     /// Gets or sets additional parameters or data associated with the transaction response.
     /// This is a dictionary where the key is a string and the value is also a string.

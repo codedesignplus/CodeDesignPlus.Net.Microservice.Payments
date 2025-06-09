@@ -6,6 +6,6 @@ public class TransactionResponse
 {
     public Guid Id { get; set; }
     public string Provider { get; set; } = null!;
-    public string Request { get; set; } = null!;
-    public string Response { get; set; } = null!;
+    public object Request { get; set; } = null!;
+    public object Response { get; set; } = null!;
 }

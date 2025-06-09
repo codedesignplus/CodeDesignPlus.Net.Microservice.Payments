@@ -46,30 +46,30 @@ builder.Services.AddCache(builder.Configuration);
 builder.Services.AddResources<Program>(builder.Configuration);
 builder.Services.AddHealthChecksServices();
 
-/* Mover al startup pero validar el porque se invoca 4 veces el Startup*/
-var section = builder.Configuration.GetSection(PayuOptions.Section);
+// /* Mover al startup pero validar el porque se invoca 4 veces el Startup*/
+// var section = builder.Configuration.GetSection(PayuOptions.Section);
 
-builder.Services
-      .AddOptions<PayuOptions>()
-      .Bind(section)
-      .ValidateDataAnnotations()
-      .ValidateOnStart();
+// builder.Services
+//       .AddOptions<PayuOptions>()
+//       .Bind(section)
+//       .ValidateDataAnnotations()
+//       .ValidateOnStart();
 
-builder.Services.AddScoped<IPayment, Payment>();
+// builder.Services.AddScoped<IPayment, Payment>();
 
-var payuOptions = section.Get<PayuOptions>();
+// var payuOptions = section.Get<PayuOptions>();
 
-if (payuOptions != null && payuOptions.Enable)
-{
-    builder.Services.AddScoped<IPayu, Payu>();
+// if (payuOptions != null && payuOptions.Enable)
+// {
+//     builder.Services.AddScoped<IPayu, Payu>();
 
-    builder.Services.AddHttpClient("Payu", client =>
-    {
-        client.BaseAddress = payuOptions.Url;
-    });
-}
+//     builder.Services.AddHttpClient("Payu", client =>
+//     {
+//         client.BaseAddress = payuOptions.Url;
+//     });
+// }
 
-builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
+// builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
 
 /* Fin de bloque a mover */
 
