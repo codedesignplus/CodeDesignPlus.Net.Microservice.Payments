@@ -134,7 +134,6 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                 //     Name = transaction.CreditCard.Name,
                 // },
                 Type = payuOptions.TransactionType,
-                PaymentMethod = transaction.PaymentMethod,
                 PaymentCountry = payuOptions.PaymentCountry,
                 DeviceSessionId = transaction.DeviceSessionId,
                 Cookie = transaction.Cookie,
@@ -144,9 +143,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             }
         };
 
-        var paymentMethod = PayuPaymentMethods.GetPaymentMethod(transaction.PaymentMethod);
 
-        if (paymentMethod.Type == PayType.CreditCard || paymentMethod.Type == PayType.DebitCard)
+        if (transaction.CreditCard != null)
         {
             InfrastructureGuard.IsNull(transaction.CreditCard!, Errors.CreditCardCannotBeNull);
 
@@ -165,7 +163,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             // }
         }
 
-        if (paymentMethod.Type == PayType.Pse)
+        if (transaction.Pse != null)
         {
             InfrastructureGuard.IsNull(transaction.Pse!, Errors.PseCannotBeNull);
 

@@ -146,12 +146,6 @@ public class Validator : AbstractValidator<PayCommand>
                             });
                     });
 
-                RuleFor(x => x.Transaction.PaymentMethod)
-                    .NotEmpty()
-                    .NotNull()
-                    .MaximumLength(32)
-                    .WithMessage("Transaction payment method cannot be empty or null and must be up to 32 characters long.");
-
                 RuleFor(x => x.Transaction.CreditCard)
                     .NotNull()
                     .When(x => x.Transaction.Pse == null)
