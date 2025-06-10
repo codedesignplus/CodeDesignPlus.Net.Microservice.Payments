@@ -80,7 +80,6 @@ public static class MapsterConfig
             .MapWith(src => Domain.ValueObjects.Transaction.Create(
                 src.Order.Adapt<Domain.ValueObjects.Order>(),
                 src.Payer.Adapt<Domain.ValueObjects.Payer>(),
-                src.PaymentMethod,
                 src.CreditCard.Adapt<Domain.ValueObjects.CreditCard?>(),
                 src.Pse.Adapt<Domain.ValueObjects.Pse?>(),
                 src.DeviceSessionId,
