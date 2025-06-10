@@ -1,9 +1,15 @@
+using CodeDesignPlus.Net.Core.Abstractions.Models.Pager;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPayment;
 
-public class GetAllPaymentQueryHandler(IPaymentRepository repository, IMapper mapper, IUserContext user) : IRequestHandler<GetAllPaymentQuery, PaymentDto>
+public class GetAllPaymentQueryHandler(IPaymentRepository repository, IMapper mapper, IUserContext user) : IRequestHandler<GetAllPaymentQuery, Pagination<PaymentDto>>
 {
-    public Task<PaymentDto> Handle(GetAllPaymentQuery request, CancellationToken cancellationToken)
+    public async Task<Pagination<PaymentDto>> Handle(GetAllPaymentQuery request, CancellationToken cancellationToken)
     {
-        return Task.FromResult<PaymentDto>(default!);
+        ApplicationGuard.IsNull(request, Errors.InvalidRequest);
+
+        var licenses = await repository.MatchingAsync<PaymentAggregate>(request.Criteria, user.Tenant, cancellationToken);
+
+        return mapper.Map<Pagination<PaymentDto>>(licenses);
     }
 }
