@@ -2,6 +2,7 @@ using CodeDesignPlus.Net.Logger.Extensions;
 using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.gRpc.Interceptors;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.MediatR;
+using CodeDesignPlus.Net.Microservice.Payments.gRpc.Core.Mapster;
 using CodeDesignPlus.Net.Microservice.Payments.gRpc.Services;
 using CodeDesignPlus.Net.Mongo.Extensions;
 using CodeDesignPlus.Net.Observability.Extensions;
@@ -15,12 +16,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 Serilog.Debugging.SelfLog.Enable(Console.Error);
 
+MapsterConfig.Configure();
+
 builder.Host.UseSerilog();
 
 builder.Configuration.AddVault();
 
 builder.Services.AddGrpc(options =>
 {
+    // Aumenta el límite de recepción a 50 MB
+    options.MaxReceiveMessageSize = 50 * 1024 * 1024;
+    // También puedes configurar el límite de envío
+    options.MaxSendMessageSize = 50 * 1024 * 1024;
     options.Interceptors.Add<ErrorInterceptor>();
 });
 builder.Services.AddGrpcReflection();

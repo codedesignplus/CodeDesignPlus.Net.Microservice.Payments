@@ -54,7 +54,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     {
         var referenceCode = id.ToString();
 
-        var signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Ammount.Value}~{payuOptions.Currency}");
+        var signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Amount.Value}~{payuOptions.Currency}");
 
         var payuRequest = new PayuRequest()
         {
@@ -95,7 +95,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     {
                         Value = new PayuAmount
                         {
-                            Value = transaction.Order.Ammount.Value,
+                            Value = transaction.Order.Amount.Value,
                             Currency = payuOptions.Currency
                         },
                         Tax = new PayuAmount

@@ -1,5 +1,3 @@
-
-
 using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentById;
