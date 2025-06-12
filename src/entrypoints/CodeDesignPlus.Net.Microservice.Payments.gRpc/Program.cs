@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Logger.Extensions;
+using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.gRpc.Extensions;
 using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.gRpc.Interceptors;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.HealthChecks;
@@ -25,12 +26,9 @@ builder.Configuration.AddVault();
 
 builder.Services.AddGrpc(options =>
 {
-    // Aumenta el límite de recepción a 50 MB
-    options.MaxReceiveMessageSize = 50 * 1024 * 1024;
-    // También puedes configurar el límite de envío
-    options.MaxSendMessageSize = 50 * 1024 * 1024;
     options.Interceptors.Add<ErrorInterceptor>();
 });
+builder.Services.AddGrpcInterceptors();
 builder.Services.AddGrpcReflection();
 
 builder.Services.AddVault(builder.Configuration);
