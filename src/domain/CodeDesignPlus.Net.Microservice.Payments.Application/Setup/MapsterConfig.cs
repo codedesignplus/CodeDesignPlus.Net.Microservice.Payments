@@ -10,6 +10,9 @@ public static class MapsterConfigPayment
             .NewConfig()
             .ConstructUsing(src => new PayCommand(src.Id, src.Transaction));
 
+        TypeAdapterConfig<PaymentMethodAggregate, PaymentMethodDto>
+            .NewConfig();
+
         TypeAdapterConfig<PaymentAggregate, PaymentDto>
             .NewConfig()
             .MapWith(src => new PaymentDto

@@ -91,4 +91,13 @@ public class Errors : IErrorCodes
     public const string BackCodeRequired = "175 : Back Code is required";
 
     public const string BackNameRequired = "176 : Back Name is required";
+
+    public const string IdPaymentMethodCannotBeEmpty = "177 : Id Payment Method cannot be empty";
+    public const string NameOfPaymentMethodCannotBeNullOrEmpty = "178 : Name of Payment Method cannot be null or empty";
+    public const string CodeOfPaymentMethodCannotBeNullOrEmpty = "179 : Code of Payment Method cannot be null or empty";
+    public const string CodeOfPaymentMethodCannotBeGreaterThan32Characters = "180 : Code of Payment Method cannot be greater than 32 characters";
+
+    public const string NameOfPaymentMethodCannotBeGreaterThan64Characters = "181 : Name of Payment Method cannot be greater than 64 characters";
+
+    public const string CommentsOfPaymentMethodCannotBeGreaterThan124Characters = "182 : Comments of Payment Method cannot be greater than 124 characters";
 }

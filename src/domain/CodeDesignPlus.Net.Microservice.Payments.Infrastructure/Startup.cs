@@ -31,9 +31,8 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
                 });
             }
 
-            services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
-
-
+            services.AddHostedService<BackgroundService.BankSyncBackgroundService>();
+            services.AddHostedService<BackgroundService.PaymentMethodSeedBackgroundService>();
         }
     }
 }

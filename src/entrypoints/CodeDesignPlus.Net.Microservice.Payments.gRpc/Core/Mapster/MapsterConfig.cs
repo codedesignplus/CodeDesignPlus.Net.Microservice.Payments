@@ -85,7 +85,8 @@ public static class MapsterConfig
                 src.DeviceSessionId,
                 src.IpAddress,
                 src.Cookie,
-                src.UserAgent
+                src.UserAgent,
+                src.PaymentMethod
             ));
 
         TypeAdapterConfig<PayRequest, PayCommand>

@@ -110,6 +110,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                         }
                     },
                 },
+                PaymentMethod = transaction.PaymentMethod,
                 Payer = new PayuPayer
                 {
                     MerchantPayerId = user.IdUser.ToString(),
@@ -126,20 +127,12 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                         PostalCode = transaction.Payer.BillingAddress.PostalCode
                     }
                 },
-                // CreditCard = new PayuCreditCard
-                // {
-                //     Number = transaction.CreditCard.Number,
-                //     ExpirationDate = transaction.CreditCard.ExpirationDate,
-                //     SecurityCode = transaction.CreditCard.SecurityCode,
-                //     Name = transaction.CreditCard.Name,
-                // },
                 Type = payuOptions.TransactionType,
                 PaymentCountry = payuOptions.PaymentCountry,
                 DeviceSessionId = transaction.DeviceSessionId,
                 Cookie = transaction.Cookie,
                 IpAddress = transaction.IpAddress,
                 UserAgent = transaction.UserAgent,
-                //ExtraParameters = extraParametrs,
             }
         };
 

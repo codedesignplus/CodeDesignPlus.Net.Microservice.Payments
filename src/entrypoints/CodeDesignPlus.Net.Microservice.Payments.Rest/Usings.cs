@@ -18,3 +18,6 @@ global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Querie
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPayment;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Commands.SyncBanks;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Queries.GetAllBanks;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.CreatePaymentMethod;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.UpdatePaymentMethod;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Queries.GetPaymentMethodsByProvider;
