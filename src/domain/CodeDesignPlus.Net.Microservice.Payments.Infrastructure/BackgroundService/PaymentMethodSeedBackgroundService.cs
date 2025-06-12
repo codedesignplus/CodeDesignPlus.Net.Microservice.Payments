@@ -43,7 +43,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
     private readonly List<PaymentMethodAggregate> paymentMethods = new()
     {
         PaymentMethodAggregate.Create(
-            Guid.Parse("b1f8c3d2-4e5f-4a6b-8c9d-0e1f2a3b4c5d"),
+            Guid.Parse("1f2d55b8-45af-4ac7-ac8f-c07f8b7b560e"),
             Provider.Payu,
             "American Express",
             "AMEX",
@@ -51,7 +51,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjeta de crédito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("c2d3e4f5-6a7b-8c9d-0e1f2a3b4c5e"),
+            Guid.Parse("08da70c3-4cf4-4049-ab16-581d894dc3f8"),
             Provider.Payu,
             "Banco de Bogotá",
             "BANK_REFERENCED",
@@ -59,7 +59,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Referencia bancaria"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("d3e4f5a6-7b8c-9d0e-1f2a3b4c5d6e"),
+            Guid.Parse("965f7119-2cd2-442e-8d00-27f4ecf21001"),
             Provider.Payu,
             "Bancolombia",
             "BANK_REFERENCED",
@@ -67,7 +67,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Referencia bancaria"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("e4f5a6b7-8c9d-0e1f2a3b4c5d6e7"),
+            Guid.Parse("428a7532-3474-41e0-8df1-c71bf86e8277"),
             Provider.Payu,
             "Botón Bancolombia",
             "BANCOLOMBIA_BUTTON",
@@ -75,7 +75,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Transferencia bancaria"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("f5a6b7c8-9d0e-1f2a3b4c5d6e7f8"),
+            Guid.Parse("a9ab45a3-9c10-441a-8864-4914eae77e0f"),
             Provider.Payu,
             "Codensa",
             "CODENSA",
@@ -83,7 +83,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjeta de crédito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("a6b7c8d9-0e1f2a3b4c5d6e7f8g9"),
+            Guid.Parse("25a0231e-eead-4da7-9e20-d2769a9a7ca8"),
             Provider.Payu,
             "Davivienda",
             "BANK_REFERENCED",
@@ -91,7 +91,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Referencia bancaria"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("b7c8d9e0-1f2a3b4c5d6e7f8g9h0"),
+            Guid.Parse("fe34f156-3764-4d15-be83-f1d3a8b96757"),
             Provider.Payu,
             "Diners",
             "DINERS",
@@ -99,7 +99,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjeta de crédito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("c8d9e0f1-2a3b4c5d6e7f8g9h0i1"),
+            Guid.Parse("0534f45f-f8ac-4417-a6ec-d7a04288834e"),
             Provider.Payu,
             "Efecty",
             "EFECTY",
@@ -107,7 +107,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Efectivo"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("d9e0f1a2-3b4c5d6e7f8g9h0i1j2"),
+            Guid.Parse("b35b8de4-470f-4ce9-b2f6-08cb1943aa91"),
             Provider.Payu,
             "Google Pay",
             "GOOGLE_PAY",
@@ -115,7 +115,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Servicio móvil de pagos"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("e0f1a2b3-4c5d6e7f8g9h0i1j2k3"),
+            Guid.Parse("127a18e4-c7c9-4e89-9866-3720bb937f3c"),
             Provider.Payu,
             "Mastercard",
             "MASTERCARD",
@@ -123,7 +123,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjeta de crédito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("f1a2b3c4-5d6e7f8g9h0i1j2k3l4"),
+            Guid.Parse("451f7883-e297-4e96-88ac-bb1d1901efd2"),
             Provider.Payu,
             "Mastercard",
             "MASTERCARD",
@@ -131,7 +131,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjeta de débito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("a2b3c4d5-6e7f8g9h0i1j2k3l4m5"),
+            Guid.Parse("d98557cf-4caa-4fe1-820a-4baeb9dfb2bc"),
             Provider.Payu,
             "Nequi",
             "NEQUI",
@@ -139,7 +139,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Servicio móvil de pagos"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("b3c4d5e6-7f8g9h0i1j2k3l4m5n6"),
+            Guid.Parse("427eb569-f759-4fc3-97a6-51a0d93e7f10"),
             Provider.Payu,
             "PSE",
             "PSE",
@@ -147,7 +147,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Transferencia bancaria"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("c4d5e6f7-8g9h0i1j2k3l4m5n6o7"),
+            Guid.Parse("b4eee155-ff14-4f73-8ef5-9406c8495db7"),
             Provider.Payu,
             "Su Red",
             "OTHERS_CASH",
@@ -155,7 +155,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Oficinas de pago: PagaTodo, Gana Gana, Gana, Acertemos, Apuestas Cúcuta 75, Su Chance, La Perla, Apuestas Unidas, JER."
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("d5e6f7a8-9h0i1j2k3l4m5n6o7p8"),
+            Guid.Parse("13b545e6-5f84-4306-a9c7-c94f6432f509"),
             Provider.Payu,
             "VISA",
             "VISA",
@@ -163,7 +163,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
             "Tarjetas de crédito"
         ),
         PaymentMethodAggregate.Create(
-            Guid.Parse("e6f7a8b9-0i1j2k3l4m5n6o7p8q9"),
+            Guid.Parse("87d5c766-bf3e-437f-a305-b333010adf51"),
             Provider.Payu,
             "VISA",
             "VISA_DEBIT",
