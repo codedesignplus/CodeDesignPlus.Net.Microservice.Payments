@@ -1,13 +1,17 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
+using DnsClient.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 
-public class PayCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPayment payment) : IRequestHandler<PayCommand>
+public class PayCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPayment payment, ILogger<PayCommandHandler> logger) : IRequestHandler<PayCommand>
 {
     public async Task Handle(PayCommand request, CancellationToken cancellationToken)
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
+
+        logger.LogWarning("Processing payment for request: {@Request}", request);
 
         var exist = await repository.ExistsAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
 

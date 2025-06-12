@@ -8,7 +8,7 @@ public static class MapsterConfigPayment
     {
         TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
             .NewConfig()
-            .ConstructUsing(src => new PayCommand(src.Id, src.Transaction));
+            .MapWith(src => new PayCommand(src.Id, src.Transaction));
 
         TypeAdapterConfig<PaymentMethodAggregate, PaymentMethodDto>
             .NewConfig();
