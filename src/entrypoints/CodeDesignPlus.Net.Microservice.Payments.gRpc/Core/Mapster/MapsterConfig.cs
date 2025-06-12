@@ -88,6 +88,10 @@ public static class MapsterConfig
                 src.UserAgent
             ));
 
+        TypeAdapterConfig<PayRequest, PayCommand>
+            .NewConfig()
+            .MapWith(src => new PayCommand(Guid.Parse(src.Id), src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
+
         TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
             .NewConfig()
             .ConstructUsing(src => new PayCommand(src.Id, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));

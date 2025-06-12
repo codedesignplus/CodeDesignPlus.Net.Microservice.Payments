@@ -11,13 +11,13 @@ public class GetPaymentByIdQueryHandler(IPaymentRepository repository, IMapper m
         if (exists)
             return await cacheManager.GetAsync<PaymentDto>(request.Id.ToString());
 
-        var license = await repository.FindAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
+        var payment = await repository.FindAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
 
-        ApplicationGuard.IsNull(license, Errors.PaymentNotFound);
+        ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
 
-        var dto = mapper.Map<PaymentDto>(license);
+        var dto = mapper.Map<PaymentDto>(payment);
 
-        await cacheManager.SetAsync(request.Id.ToString(), license);
+        await cacheManager.SetAsync(request.Id.ToString(), payment);
 
         return dto;
     }

@@ -6,10 +6,12 @@ using Google.Protobuf.WellKnownTypes;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Services;
 
-public class PaymentService(IMediator mediator, IMapper mapper) : Payment.PaymentBase
+public class PaymentService(IMediator mediator, IMapper mapper, ILogger<PaymentService> logger) : Payment.PaymentBase
 {
     public async override Task<Empty> Pay(PayRequest request, ServerCallContext context)
     {
+        logger.LogInformation("Processing payment for Order ID: {OrderId}", request.Id);
+
         var command = mapper.Map<PayCommand>(request);
         await mediator.Send(command);
 
