@@ -99,11 +99,6 @@ public class TransactionResponseDetails
     /// </summary>
     public string ResponseMessage { get; set; } = null!;
     /// <summary>
-    /// Gets or sets the date and time when the transaction response was created in the payment system.
-    /// This field is typically used for logging and auditing purposes.
-    /// </summary>
-    public DateTime OperationDate { get; set; }
-    /// <summary>
     /// Gets or sets additional parameters or data associated with the transaction response.
     /// This field can contain various key-value pairs that provide extra context or information about the transaction.
     /// </summary>
