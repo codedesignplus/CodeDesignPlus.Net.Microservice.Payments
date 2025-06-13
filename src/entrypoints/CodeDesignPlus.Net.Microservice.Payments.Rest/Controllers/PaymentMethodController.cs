@@ -17,7 +17,7 @@ public class PaymentMethodController(IMediator mediator) : ControllerBase
     /// <param name="provider">The payment provider to filter the payment methods.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>204 No Content if successful.</returns>
-    [HttpGet(":provider")]
+    [HttpGet("/{provider}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetPaymentMethods(Provider provider, CancellationToken cancellationToken)
     {
