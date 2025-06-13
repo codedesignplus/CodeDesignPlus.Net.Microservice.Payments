@@ -33,7 +33,7 @@ public partial class Payer
         DomainGuard.IsGreaterThan(contactPhone.Length, 20, Errors.ContactPhoneCannotBeGreaterThan20Characters);
 
         DomainGuard.IsNullOrEmpty(dniType, Errors.DniTypeCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(dniType.Length, 2, Errors.DniTypeCannotBeGreaterThan2Characters);
+        DomainGuard.IsGreaterThan(dniType.Length, 3, Errors.DniTypeCannotBeGreaterThan3Characters);
 
         EmailAddress = emailAddress;
         FullName = fullName;

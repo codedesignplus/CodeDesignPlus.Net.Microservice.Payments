@@ -75,7 +75,7 @@ public class Errors : IErrorCodes
     public const string TaxReturnBaseCannotBeNull = "163 : Tax Return Base cannot be null";
 
     public const string DniTypeCannotBeNullOrEmpty = "164 : Dni Type cannot be null or empty"; 
-    public const string DniTypeCannotBeGreaterThan2Characters = "165 : Dni Type cannot be greater than 2 characters";
+    public const string DniTypeCannotBeGreaterThan3Characters = "165 : Dni Type cannot be greater than 3 characters";
 
     public const string PseCodeCannotBeNullOrEmpty = "166 : Pse Code cannot be null or empty"; 
     public const string PseCodeCannotBeGreaterThan34Characters = "167 : Pse Code cannot be greater than 34 characters"; 
