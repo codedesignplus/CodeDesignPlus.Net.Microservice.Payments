@@ -16,6 +16,7 @@ public class PaymentMethodController(IMediator mediator) : ControllerBase
     /// </summary>
     /// <param name="provider">The payment provider to filter the payment methods.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="methods">Optional list of payment methods to filter by.</param>
     /// <returns>204 No Content if successful.</returns>
     [HttpGet("{provider}")]
     [AllowAnonymous]

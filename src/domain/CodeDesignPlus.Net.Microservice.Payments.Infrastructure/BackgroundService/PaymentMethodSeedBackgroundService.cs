@@ -6,40 +6,40 @@ using H = Microsoft.Extensions.Hosting;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService;
 
-public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgroundService> logger, IMediator mediator) : H.BackgroundService
+public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgroundService> logger, IServiceScopeFactory serviceScopeFactory) : H.BackgroundService
 {
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (stoppingToken.IsCancellationRequested)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        return Task.Run(async () =>
+        using var scope = serviceScopeFactory.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        try
         {
-            try
+            foreach (var paymentMethod in paymentMethods)
             {
-                foreach (var paymentMethod in paymentMethods)
-                {
-                    var command = new CreatePaymentMethodCommand(
-                        paymentMethod.Id,
-                        Provider.Payu,
-                        paymentMethod.Name,
-                        paymentMethod.Code,
-                        paymentMethod.Type,
-                        paymentMethod.Comments
-                    );
-                    
-                    await mediator.Send(command, stoppingToken);
-                }
+                var command = new CreatePaymentMethodCommand(
+                    paymentMethod.Id,
+                    Provider.Payu,
+                    paymentMethod.Name,
+                    paymentMethod.Code,
+                    paymentMethod.Type,
+                    paymentMethod.Comments
+                );
+
+                await mediator.Send(command, stoppingToken);
             }
-            catch (CodeDesignPlusException ex)
-            {
-                logger.LogWarning(ex, "An error occurred while seeding payment methods: {Message}", ex.Message);
-            }
-        }, stoppingToken);
+        }
+        catch (CodeDesignPlusException ex)
+        {
+            logger.LogWarning(ex, "An error occurred while seeding payment methods: {Message}", ex.Message);
+        }
     }
-    
+
     private readonly List<PaymentMethodAggregate> paymentMethods = new()
     {
         PaymentMethodAggregate.Create(
@@ -117,7 +117,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         PaymentMethodAggregate.Create(
             Guid.Parse("127a18e4-c7c9-4e89-9866-3720bb937f3c"),
             Provider.Payu,
-            "Mastercard",
+            "Mastercard Crédito",
             "MASTERCARD",
             TypePaymentMethod.CreditCard,
             "Tarjeta de crédito"
@@ -125,7 +125,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         PaymentMethodAggregate.Create(
             Guid.Parse("451f7883-e297-4e96-88ac-bb1d1901efd2"),
             Provider.Payu,
-            "Mastercard",
+            "Mastercard Débito",
             "MASTERCARD",
             TypePaymentMethod.DebitCard,
             "Tarjeta de débito"
@@ -157,7 +157,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         PaymentMethodAggregate.Create(
             Guid.Parse("13b545e6-5f84-4306-a9c7-c94f6432f509"),
             Provider.Payu,
-            "VISA",
+            "Visa Crédito",
             "VISA",
             TypePaymentMethod.CreditCard,
             "Tarjetas de crédito"
@@ -165,7 +165,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         PaymentMethodAggregate.Create(
             Guid.Parse("87d5c766-bf3e-437f-a305-b333010adf51"),
             Provider.Payu,
-            "VISA",
+            "Visa Débito",
             "VISA_DEBIT",
             TypePaymentMethod.DebitCard,
             "Tarjetas de débito"

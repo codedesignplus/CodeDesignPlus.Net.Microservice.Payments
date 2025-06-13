@@ -6,7 +6,7 @@ public class GetPaymentMethodsByProviderQueryHandler(IPaymentMethodRepository re
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 
-        var cacheKey = $"PaymentMethodsByProvider-{request.Provider}";
+        var cacheKey = $"PaymentMethodsByProvider-{request.Provider}-{string.Join(",", request.Methods)}";
 
         var exist = await cacheManager.ExistsAsync(cacheKey);
 
