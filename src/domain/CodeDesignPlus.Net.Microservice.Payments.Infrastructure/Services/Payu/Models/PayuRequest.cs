@@ -32,11 +32,14 @@ public class PayuRequest
   public PayuTransaction Transaction { get; set; } = null!;
 }
 
+/// <summary>
+/// Represents a merchant in the PayU payment gateway.
+/// </summary>
 public class PayuMerchant
 {
   /// <summary>
   /// User or login provided by PayU. How to get my API Login.
-  /// </summary>
+  /// </summary>  
   public string ApiLogin { get; set; } = null!;
   /// <summary>
   /// Password provided by PayU. How to get my API Key.
