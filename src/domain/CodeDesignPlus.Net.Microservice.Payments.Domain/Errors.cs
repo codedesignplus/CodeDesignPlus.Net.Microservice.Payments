@@ -100,4 +100,6 @@ public class Errors : IErrorCodes
     public const string NameOfPaymentMethodCannotBeGreaterThan64Characters = "181 : Name of Payment Method cannot be greater than 64 characters";
 
     public const string CommentsOfPaymentMethodCannotBeGreaterThan124Characters = "182 : Comments of Payment Method cannot be greater than 124 characters";
+
+    public const string ModuleCannotBeNullOrEmpty = "183 : Module cannot be null or empty";
 }

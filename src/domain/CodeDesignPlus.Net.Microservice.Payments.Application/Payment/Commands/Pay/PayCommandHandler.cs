@@ -25,9 +25,8 @@ public class PayCommandHandler(IPaymentRepository repository, IUserContext user,
         var response = await payment.ProcessPayment(request.Id, request.Transaction, Provider.Payu, cancellationToken);
 
         var requestJson = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(response.Request);
-        var responseJson = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(response.Response);
 
-        var aggregate = PaymentAggregate.Create(request.Id, Provider.Payu, request.Transaction, requestJson, responseJson, user.Tenant, user.IdUser);
+        var aggregate = PaymentAggregate.Create(request.Id, Provider.Payu, request.Transaction, request.Module, requestJson, response, user.Tenant, user.IdUser);
 
         await repository.CreateAsync(aggregate, cancellationToken);
 

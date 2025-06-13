@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.Models;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
@@ -9,5 +10,5 @@ public class PaymentDto : IDtoBase
     public Provider Provider { get; set; } = Provider.None;
     public Transaction Transaction { get; set; } = null!;
     public string Request { get; set; } = null!;
-    public string Response { get; set; } = null!;
+    public TransactionResponse Response { get; set; } = null!;
 }

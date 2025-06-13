@@ -91,10 +91,10 @@ public static class MapsterConfig
 
         TypeAdapterConfig<PayRequest, PayCommand>
             .NewConfig()
-            .MapWith(src => new PayCommand(Guid.Parse(src.Id), src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
+            .MapWith(src => new PayCommand(Guid.Parse(src.Id), src.Module, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
 
         TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
             .NewConfig()
-            .ConstructUsing(src => new PayCommand(src.Id, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
+            .ConstructUsing(src => new PayCommand(src.Id, src.Module, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
     }
 }

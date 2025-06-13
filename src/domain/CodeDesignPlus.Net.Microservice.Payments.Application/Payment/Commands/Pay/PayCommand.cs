@@ -3,13 +3,17 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 
 [DtoGenerator]
-public record PayCommand(Guid Id, Transaction Transaction) : IRequest;
+public record PayCommand(Guid Id, string Module, Transaction Transaction) : IRequest;
 
 public class Validator : AbstractValidator<PayCommand>
 {
     public Validator()
     {
         RuleFor(x => x.Id).NotEmpty().NotNull();
+        RuleFor(x => x.Module)
+            .NotEmpty()
+            .NotNull()
+            .WithMessage("Module cannot be null or empty.");
         RuleFor(x => x.Transaction)
             .NotNull()
             .WithMessage("Transaction cannot be null.")
