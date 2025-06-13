@@ -13,7 +13,12 @@ public class PayCommandHandler(IPaymentRepository repository, IUserContext user,
 
         logger.LogWarning("Processing payment for request: {@Request}", request);
 
-        var exist = await repository.ExistsAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
+        bool exist;
+        
+        if (user.Tenant != Guid.Empty)
+            exist = await repository.ExistsAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
+        else
+            exist = await repository.ExistsAsync<PaymentAggregate>(request.Id, cancellationToken);
 
         ApplicationGuard.IsTrue(exist, Errors.PaymentAlredyExists);
 

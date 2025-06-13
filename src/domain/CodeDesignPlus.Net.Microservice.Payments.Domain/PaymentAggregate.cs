@@ -3,12 +3,13 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
 
-public class PaymentAggregate(Guid id) : AggregateRoot(id)
+public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 {
     public Provider Provider { get; private set; } = Provider.None;
     public Transaction Transaction { get; private set; } = null!;
     public string Request { get; private set; } = null!;
     public string Response { get; private set; } = null!;
+    public Guid? Tenant { get; private set; }
 
     private PaymentAggregate(Guid id, Provider provider, Transaction transaction, string request, string response, Guid? tenant, Guid createdBy) : this(id)
     {

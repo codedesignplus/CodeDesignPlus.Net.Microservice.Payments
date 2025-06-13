@@ -11,7 +11,12 @@ public class GetPaymentByIdQueryHandler(IPaymentRepository repository, IMapper m
         if (exists)
             return await cacheManager.GetAsync<PaymentDto>(request.Id.ToString());
 
-        var payment = await repository.FindAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
+        PaymentAggregate payment;
+
+        if (user.Tenant != Guid.Empty)
+            payment = await repository.FindAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
+        else
+            payment = await repository.FindAsync<PaymentAggregate>(request.Id, cancellationToken);
 
         ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
 
