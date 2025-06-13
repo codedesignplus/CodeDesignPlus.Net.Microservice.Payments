@@ -10,5 +10,5 @@ public class PaymentDto : IDtoBase
     public Provider Provider { get; set; } = Provider.None;
     public Transaction Transaction { get; set; } = null!;
     public string Request { get; set; } = null!;
-    public TransactionResponse Response { get; set; } = null!;
+    public TransactionResponseData Response { get; set; } = null!;
 }

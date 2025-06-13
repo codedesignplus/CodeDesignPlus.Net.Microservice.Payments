@@ -10,10 +10,10 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     public Transaction Transaction { get; private set; } = null!;
     public string Module { get; private set; } = null!;
     public string Request { get; private set; } = null!;
-    public TransactionResponse Response { get; private set; } = null!;
+    public TransactionResponseData Response { get; private set; } = null!;
     public Guid? Tenant { get; private set; }
 
-    private PaymentAggregate(Guid id, Provider provider, Transaction transaction, string module, string request, TransactionResponse response, Guid? tenant, Guid createdBy) : this(id)
+    private PaymentAggregate(Guid id, Provider provider, Transaction transaction, string module, string request, TransactionResponseData response, Guid? tenant, Guid createdBy) : this(id)
     {
         DomainGuard.IsNullOrEmpty(module, Errors.ModuleCannotBeNullOrEmpty);
         DomainGuard.IsNull(transaction, Errors.TransactionCannotBeNull);
@@ -36,7 +36,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         base.AddEvent(PaymentCompletedDomainEvent.Create(Id, Provider, Transaction, Request, Response, Tenant));
     }
 
-    public static PaymentAggregate Create(Guid id, Provider provider, Transaction transaction, string module, string request, TransactionResponse response, Guid tenant, Guid createdBy)
+    public static PaymentAggregate Create(Guid id, Provider provider, Transaction transaction, string module, string request, TransactionResponseData response, Guid tenant, Guid createdBy)
     {
         return new PaymentAggregate(id, provider, transaction, module, request, response, tenant, createdBy);
     }
