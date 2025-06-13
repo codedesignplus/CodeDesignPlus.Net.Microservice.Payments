@@ -19,9 +19,9 @@ public class PaymentMethodController(IMediator mediator) : ControllerBase
     /// <returns>204 No Content if successful.</returns>
     [HttpGet("{provider}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetPaymentMethodByProvider(Provider provider, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetPaymentMethodByProvider(Provider provider, [FromQuery] List<TypePaymentMethod> methods, CancellationToken cancellationToken)
     {
-        var data = await mediator.Send(new GetPaymentMethodsByProviderQuery(provider), cancellationToken);
+        var data = await mediator.Send(new GetPaymentMethodsByProviderQuery(provider, methods), cancellationToken);
 
         return Ok(data);
     }

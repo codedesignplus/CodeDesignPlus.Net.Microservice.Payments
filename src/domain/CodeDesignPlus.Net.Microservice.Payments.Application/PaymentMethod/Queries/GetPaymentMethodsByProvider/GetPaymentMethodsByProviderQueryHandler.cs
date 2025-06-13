@@ -13,7 +13,7 @@ public class GetPaymentMethodsByProviderQueryHandler(IPaymentMethodRepository re
         if (exist)
             return await cacheManager.GetAsync<List<PaymentMethodDto>>(cacheKey);
 
-        var paymentMethods = await repository.GetByProviderAsync(request.Provider, cancellationToken);
+        var paymentMethods = await repository.GetByProviderAsync(request.Provider, request.Methods, cancellationToken);
 
         var data = mapper.Map<List<PaymentMethodDto>>(paymentMethods);
 

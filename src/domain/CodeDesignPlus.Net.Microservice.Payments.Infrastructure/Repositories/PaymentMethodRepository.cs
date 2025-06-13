@@ -6,11 +6,14 @@ public class PaymentMethodRepository(IServiceProvider serviceProvider, IOptions<
 
     : RepositoryBase(serviceProvider, mongoOptions, logger), IPaymentMethodRepository
 {
-    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(Provider provider, CancellationToken cancellationToken)
+    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(Provider provider, List<TypePaymentMethod> methods, CancellationToken cancellationToken)
     {
         var collection = GetCollection<PaymentMethodAggregate>();
 
-        var filter = Builders<PaymentMethodAggregate>.Filter.Eq(x => x.Provider, provider);
+        var filter = Builders<PaymentMethodAggregate>.Filter.And(
+            Builders<PaymentMethodAggregate>.Filter.Eq(x => x.Provider, provider),
+            Builders<PaymentMethodAggregate>.Filter.In(x => x.Type, methods)
+        );
 
         return collection.Find(filter).ToListAsync(cancellationToken);
     }
