@@ -7,7 +7,7 @@ public class GetDateCardsQueryHandler() : IRequestHandler<GetDateCardsQuery, Lis
     public Task< List<DateCardsDto>> Handle(GetDateCardsQuery request, CancellationToken cancellationToken)
     {
         var now = SystemClock.Instance.GetCurrentInstant().InUtc().ToDateTimeUtc();
-        var expirations = GetNextTenYears(now.Month, request.Year);
+        var expirations = GetNextTenYears(now.Month, now.Year);
 
         var dateCards = expirations.Select(e => new DateCardsDto
         {

@@ -8,13 +8,13 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 [ApiController]
 public class DateCardsController(IMediator mediator) : ControllerBase
 {
-    [HttpGet("{year:int}")]
+    [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DateCardsDto>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [AllowAnonymous]
-    public async Task<IActionResult> GetDateCards(int year)
+    public async Task<IActionResult> GetDateCards()
     {
-        var query = new GetDateCardsQuery(year);
+        var query = new GetDateCardsQuery();
         var dateCards = await mediator.Send(query);
 
         return Ok(dateCards);
