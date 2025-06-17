@@ -1,0 +1,2 @@
+src\domain\CodeDesignPlus.Net.Microservice.Payments.Application\Payment\DataTransferObjects\PaymentDto.cs skip
+src\entrypoints\CodeDesignPlus.Net.Microservice.Payments.Rest\Usings.cs skip

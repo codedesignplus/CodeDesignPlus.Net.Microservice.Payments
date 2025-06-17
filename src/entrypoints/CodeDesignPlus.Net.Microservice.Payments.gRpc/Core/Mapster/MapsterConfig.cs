@@ -53,7 +53,7 @@ public static class MapsterConfig
             .MapWith(src => Domain.ValueObjects.Order.Create(
                     src.Description,
                     src.Buyer.Adapt<Domain.ValueObjects.Buyer>(),
-                    src.Ammount.Adapt<Domain.ValueObjects.Amount>(),
+                    src.Amount.Adapt<Domain.ValueObjects.Amount>(),
                     src.Tax.Adapt<Domain.ValueObjects.Amount>(),
                     src.TaxReturnBase.Adapt<Domain.ValueObjects.Amount>()
                 )
