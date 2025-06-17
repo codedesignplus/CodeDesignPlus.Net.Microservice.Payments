@@ -33,7 +33,8 @@ public static class MapsterConfig
                 src.EmailAddress,
                 src.ContactPhone,
                 src.ShippingAddress.Adapt<Domain.ValueObjects.Address>(),
-                src.DniNumber
+                src.DniNumber,
+                src.DniType
             ));
 
         TypeAdapterConfig<Payer, Domain.ValueObjects.Payer>

@@ -10,10 +10,11 @@ public partial class Buyer
     public string EmailAddress { get; private set; } = null!;
     public string ContactPhone { get; private set; } = null!;
     public string DniNumber { get; private set; } = null!;
+    public string DniType { get; private set; } = null!;
     public Address ShippingAddress { get; private set; } = null!;
 
     [JsonConstructor]
-    private Buyer(string fullName, string emailAddress, string contactPhone, Address shippingAddress, string dniNumber)
+    private Buyer(string fullName, string emailAddress, string contactPhone, Address shippingAddress, string dniNumber, string dniType)
     {
         DomainGuard.IsNullOrEmpty(fullName, Errors.FullNameCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(fullName.Length, 100, Errors.FullNameCannotBeGreaterThan100Characters);
@@ -30,16 +31,20 @@ public partial class Buyer
         DomainGuard.IsNullOrEmpty(dniNumber, Errors.DniNumberCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(dniNumber.Length, 20, Errors.DniNumberCannotBeGreaterThan20Characters);
 
+        DomainGuard.IsNullOrEmpty(dniType, Errors.DniTypeCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(dniType.Length, 3, Errors.DniTypeCannotBeGreaterThan3Characters);
+
         FullName = fullName;
         EmailAddress = emailAddress;
         ContactPhone = contactPhone;
         ShippingAddress = shippingAddress;
         DniNumber = dniNumber;
+        DniType = dniType;
     }
-    
-    public static Buyer Create(string fullName, string emailAddress, string contactPhone, Address shippingAddress, string dniNumber)
+
+    public static Buyer Create(string fullName, string emailAddress, string contactPhone, Address shippingAddress, string dniNumber, string dniType)
     {
-        return new Buyer(fullName, emailAddress, contactPhone, shippingAddress, dniNumber);
+        return new Buyer(fullName, emailAddress, contactPhone, shippingAddress, dniNumber, dniType);
     }
 
 }

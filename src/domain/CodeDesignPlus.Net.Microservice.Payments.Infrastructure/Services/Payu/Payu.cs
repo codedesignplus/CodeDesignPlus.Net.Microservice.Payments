@@ -49,6 +49,28 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         return await Request<BankRequest, BankResponse>(request, cancellationToken);
     }
+    
+    
+    public async Task<TransactionResponse?> GetTransactioById(string id, CancellationToken cancellationToken)
+    {
+        var request = new TransactionRequest
+        {
+            Language = payuOptions.Language,
+            Test = options.Value.IsTest,
+            Merchant = new PayuMerchant
+            {
+                ApiLogin = payuOptions.ApiLogin,
+                ApiKey = payuOptions.ApiKey
+            },
+            Details = new TransactionDetail
+            {
+                TransactionId = id
+            }
+        };
+
+        return await Request<TransactionRequest, TransactionResponse>(request, cancellationToken);
+    }
+
 
     public async Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
     {
@@ -81,15 +103,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                         EmailAddress = transaction.Order.Buyer.EmailAddress,
                         ContactPhone = transaction.Order.Buyer.ContactPhone,
                         DniNumber = transaction.Order.Buyer.DniNumber,
-                        ShippingAddress = new PayuAddress
-                        {
-                            Street1 = transaction.Order.Buyer.ShippingAddress.Street,
-                            City = transaction.Order.Buyer.ShippingAddress.City,
-                            State = transaction.Order.Buyer.ShippingAddress.State,
-                            Country = transaction.Order.Buyer.ShippingAddress.Country,
-                            PostalCode = transaction.Order.Buyer.ShippingAddress.PostalCode,
-                            Phone = transaction.Order.Buyer.ShippingAddress.Phone
-                        }
+                        DniType = transaction.Order.Buyer.DniType,
                     },
                     AdditionalValues = new PayuAdditionalValues
                     {
@@ -110,6 +124,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                         }
                     },
                 },
+
                 PaymentMethod = transaction.PaymentMethod,
                 Payer = new PayuPayer
                 {
@@ -118,14 +133,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     EmailAddress = transaction.Payer.EmailAddress,
                     ContactPhone = transaction.Payer.ContactPhone,
                     DniNumber = transaction.Payer.DniNumber,
-                    BillingAddress = new PayuAddress
-                    {
-                        Street1 = transaction.Payer.BillingAddress.Street,
-                        City = transaction.Payer.BillingAddress.City,
-                        State = transaction.Payer.BillingAddress.State,
-                        Country = transaction.Payer.BillingAddress.Country,
-                        PostalCode = transaction.Payer.BillingAddress.PostalCode
-                    }
+                    DniType = transaction.Payer.DniType,
                 },
                 Type = payuOptions.TransactionType,
                 PaymentCountry = payuOptions.PaymentCountry,
@@ -136,6 +144,31 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             }
         };
 
+        if (transaction.Order.Buyer.ShippingAddress != null)
+        {
+            payuRequest.Transaction.Order.Buyer.ShippingAddress = new PayuAddress
+            {
+                Street1 = transaction.Order.Buyer.ShippingAddress.Street,
+                City = transaction.Order.Buyer.ShippingAddress.City,
+                State = transaction.Order.Buyer.ShippingAddress.State,
+                Country = transaction.Order.Buyer.ShippingAddress.Country,
+                PostalCode = transaction.Order.Buyer.ShippingAddress.PostalCode,
+                Phone = transaction.Order.Buyer.ShippingAddress.Phone
+            };
+        }
+
+        if (transaction.Payer.BillingAddress != null)
+        {
+            payuRequest.Transaction.Payer.BillingAddress = new PayuAddress
+            {
+                Street1 = transaction.Payer.BillingAddress.Street,
+                City = transaction.Payer.BillingAddress.City,
+                State = transaction.Payer.BillingAddress.State,
+                Country = transaction.Payer.BillingAddress.Country,
+                PostalCode = transaction.Payer.BillingAddress.PostalCode,
+                Phone = transaction.Payer.BillingAddress.Phone
+            };
+        }
 
         if (transaction.CreditCard != null)
         {
