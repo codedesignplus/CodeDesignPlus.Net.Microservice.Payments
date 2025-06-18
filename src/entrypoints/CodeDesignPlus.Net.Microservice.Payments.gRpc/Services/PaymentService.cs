@@ -45,12 +45,12 @@ public class PaymentService(IMediator mediator, IMapper mapper, ILogger<PaymentS
     {
         foreach (var item in payment.Response.TransactionResponse.AdditionalInfo)
         {
-            dto.Response.TransactionResponse.AdditionalData.Add(item.Key, item.Value);
+            dto.Response.TransactionResponse.AdditionalData.Add(item.Key, item.Value ?? string.Empty);
         }
 
         foreach (var item in payment.Response.TransactionResponse.ExtraParameters)
         {
-            dto.Response.TransactionResponse.ExtraParameters.Add(item.Key, item.Value);
+            dto.Response.TransactionResponse.ExtraParameters.Add(item.Key, item.Value ?? string.Empty);
         }
     }
 
