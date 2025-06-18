@@ -43,25 +43,25 @@ public class PaymentService(IMediator mediator, IMapper mapper, ILogger<PaymentS
         var payment = await mediator.Send(new GetPaymentByIdQuery(id));
 
         var dto = mapper.Map<PaymentResponse>(payment);
-        
+
         SetExtraInfo(payment, dto);
 
         return dto;
     }
 
-    
+
     private static void SetExtraInfo(PaymentDto payment, PaymentResponse dto)
     {
-        foreach (var item in payment.Response.TransactionResponse.AdditionalInfo)
-        {
-            dto.Response.TransactionResponse.AdditionalData.Add(item.Key, item.Value ?? string.Empty);
-        }
+        if (payment.Response.TransactionResponse.ExtraParameters != null)
+            foreach (var item in payment.Response.TransactionResponse.AdditionalInfo)
+            {
+                dto.Response.TransactionResponse.AdditionalData.Add(item.Key, item.Value ?? string.Empty);
+            }
 
-        foreach (var item in payment.Response.TransactionResponse.ExtraParameters)
-        {
-            dto.Response.TransactionResponse.ExtraParameters.Add(item.Key, item.Value ?? string.Empty);
-        }
+        if (payment.Response.TransactionResponse.ExtraParameters != null)
+            foreach (var item in payment.Response.TransactionResponse.ExtraParameters)
+            {
+                dto.Response.TransactionResponse.ExtraParameters.Add(item.Key, item.Value ?? string.Empty);
+            }
     }
-
-    
 }
