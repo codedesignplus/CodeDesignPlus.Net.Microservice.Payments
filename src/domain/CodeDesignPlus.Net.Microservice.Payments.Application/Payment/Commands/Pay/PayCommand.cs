@@ -66,7 +66,54 @@ public class Validator : AbstractValidator<PayCommand>
 
                                 RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress)
                                     .NotNull()
-                                    .WithMessage("Buyer shipping address cannot be null.");
+                                    .When(x => x.Transaction.Order.Buyer.ShippingAddress != null)
+                                    .WithMessage("Buyer shipping address cannot be null.")
+                                    .DependentRules(() =>
+                                    {
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Street)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(100)
+                                            .WithMessage("Buyer shipping address street cannot be empty or null and must be between 1 and 100 characters long.");
+
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Country)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(2)
+                                            .WithMessage("Buyer shipping address country cannot be empty or null and must be between 1 and 2 characters long.");
+
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.State)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(40)
+                                            .WithMessage("Buyer shipping address state cannot be empty or null and must be between 1 and 40 characters long.");
+
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.City)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(50)
+                                            .WithMessage("Buyer shipping address city cannot be empty or null and must be between 1 and 50 characters long.");
+
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.PostalCode)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(8)
+                                            .WithMessage("Buyer shipping address postal code cannot be empty or null and must be between 1 and 8 characters long.");
+
+                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Phone)
+                                            .NotEmpty()
+                                            .NotNull()
+                                            .MinimumLength(1)
+                                            .MaximumLength(11)
+                                            .Matches(@"^\+?\d{1,11}$")
+                                            .WithMessage("Buyer shipping address phone cannot be empty or null and must be between 1 and 11 characters long.");
+
+                                    });
                             });
 
                     });
@@ -106,7 +153,7 @@ public class Validator : AbstractValidator<PayCommand>
 
                         RuleFor(x => x.Transaction.Payer.BillingAddress)
                             .NotNull()
-                            .WithMessage("Payer billing address cannot be null.")
+                            .When(x => x.Transaction.Payer.BillingAddress != null)
                             .DependentRules(() =>
                             {
                                 RuleFor(x => x.Transaction.Payer.BillingAddress.Street)

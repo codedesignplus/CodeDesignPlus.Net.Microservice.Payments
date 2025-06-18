@@ -26,8 +26,6 @@ public partial class Buyer
         DomainGuard.IsNullOrEmpty(contactPhone, Errors.ContactPhoneCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(contactPhone.Length, 20, Errors.ContactPhoneCannotBeGreaterThan20Characters);
 
-        DomainGuard.IsNull(shippingAddress, Errors.ShippingAddressCannotBeNullOrEmpty);
-
         DomainGuard.IsNullOrEmpty(dniNumber, Errors.DniNumberCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(dniNumber.Length, 20, Errors.DniNumberCannotBeGreaterThan20Characters);
 

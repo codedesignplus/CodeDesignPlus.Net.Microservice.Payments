@@ -24,8 +24,6 @@ public partial class Payer
         DomainGuard.IsNullOrEmpty(fullName, Errors.FullNameCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(fullName.Length, 150, Errors.FullNameCannotBeGreaterThan150Characters);
 
-        DomainGuard.IsNull(billingAddress, Errors.BillingAddressCannotBeNull);
-
         DomainGuard.IsNullOrEmpty(dniNumber, Errors.DniNumberCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(dniNumber.Length, 20, Errors.DniNumberCannotBeGreaterThan20Characters);
 
