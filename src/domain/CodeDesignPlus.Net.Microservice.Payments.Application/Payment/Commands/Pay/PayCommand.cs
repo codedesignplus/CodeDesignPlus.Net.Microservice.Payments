@@ -65,47 +65,45 @@ public class Validator : AbstractValidator<PayCommand>
                                     .WithMessage("Buyer DNI number cannot be empty or null and must be up to 20 characters long.");
 
                                 RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress)
-                                    .NotNull()
-                                    .When(x => x.Transaction.Order.Buyer.ShippingAddress != null)
-                                    .WithMessage("Buyer shipping address cannot be null.")
-                                    .DependentRules(() =>
+                                    .ChildRules((transaction) =>
                                     {
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Street)
+                                        transaction
+                                            .RuleFor(x => x.Street)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
                                             .MaximumLength(100)
                                             .WithMessage("Buyer shipping address street cannot be empty or null and must be between 1 and 100 characters long.");
 
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Country)
+                                        transaction.RuleFor(x => x.Country)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
                                             .MaximumLength(2)
                                             .WithMessage("Buyer shipping address country cannot be empty or null and must be between 1 and 2 characters long.");
 
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.State)
+                                        transaction.RuleFor(x => x.State)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
                                             .MaximumLength(40)
                                             .WithMessage("Buyer shipping address state cannot be empty or null and must be between 1 and 40 characters long.");
 
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.City)
+                                        transaction.RuleFor(x => x.City)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
                                             .MaximumLength(50)
                                             .WithMessage("Buyer shipping address city cannot be empty or null and must be between 1 and 50 characters long.");
 
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.PostalCode)
+                                        transaction.RuleFor(x => x.PostalCode)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
                                             .MaximumLength(8)
                                             .WithMessage("Buyer shipping address postal code cannot be empty or null and must be between 1 and 8 characters long.");
 
-                                        RuleFor(x => x.Transaction.Order.Buyer.ShippingAddress.Phone)
+                                        transaction.RuleFor(x => x.Phone)
                                             .NotEmpty()
                                             .NotNull()
                                             .MinimumLength(1)
@@ -152,18 +150,16 @@ public class Validator : AbstractValidator<PayCommand>
                             .WithMessage("Payer DNI number cannot be empty or null and must be up to 20 characters long.");
 
                         RuleFor(x => x.Transaction.Payer.BillingAddress)
-                            .NotNull()
-                            .When(x => x.Transaction.Payer.BillingAddress != null)
-                            .DependentRules(() =>
+                            .ChildRules((transaction) =>
                             {
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.Street)
+                                transaction.RuleFor(x => x.Street)
                                     .NotEmpty()
                                     .NotNull()
                                     .MinimumLength(1)
                                     .MaximumLength(100)
                                     .WithMessage("Payer billing address street cannot be empty or null and must be between 1 and 100 characters long.");
 
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.Country)
+                                 transaction.RuleFor(x => x.Country)
                                     .NotEmpty()
                                     .NotNull()
                                     .MinimumLength(1)
@@ -171,25 +167,25 @@ public class Validator : AbstractValidator<PayCommand>
                                     .Matches(@"^[A-Z]{2}$")
                                     .WithMessage("Payer billing address country cannot be empty or null, must be a two-letter uppercase ISO 3166-1 alpha-2 code, and must be exactly 2 characters long.");
 
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.State)
+                                 transaction.RuleFor(x => x.State)
                                     .MinimumLength(1)
                                     .MaximumLength(40)
                                     .WithMessage("Payer billing address state cannot be empty or null and must be between 1 and 40 characters long.");
 
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.City)
+                                 transaction.RuleFor(x => x.City)
                                     .NotEmpty()
                                     .NotNull()
                                     .MinimumLength(1)
                                     .MaximumLength(50)
                                     .WithMessage("Payer billing address city cannot be empty or null and must be between 1 and 50 characters long.");
 
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.PostalCode)
+                                 transaction.RuleFor(x => x.PostalCode)
                                     .Matches(@"^\d{1,8}$")
                                     .MinimumLength(1)
                                     .MaximumLength(8)
                                     .WithMessage("Payer billing address postal code cannot be empty or null and must be numeric and up to 8 digits long.");
 
-                                RuleFor(x => x.Transaction.Payer.BillingAddress.Phone)
+                                 transaction.RuleFor(x => x.Phone)
                                     .MinimumLength(1)
                                     .MaximumLength(11)
                                     .Matches(@"^\+?\d{1,11}$")

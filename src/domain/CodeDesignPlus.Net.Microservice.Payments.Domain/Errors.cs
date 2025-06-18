@@ -28,7 +28,7 @@ public class Errors : IErrorCodes
     public const string EmailAddressMustBeValidFormat = "123 : EmailAddress must be valid format";
     public const string ContactPhoneCannotBeNullOrEmpty = "124 : ContactPhone cannot be null or empty";
     public const string ContactPhoneCannotBeGreaterThan20Characters = "125 : ContactPhone cannot be greater than 20 characters";
-    public const string ShippingAddressCannotBeNullOrEmpty = "126 : ShippingAddress cannot be null or empty";
+    public const string ShippingAddressCannotBeNullOrEmpty = "126 : ð€ä³å4ter   ";
     public const string DniNumberCannotBeNullOrEmpty = "127 : DniNumber cannot be null or empty";
     public const string DniNumberCannotBeGreaterThan20Characters = "128 : DniNumber cannot be greater than 20 characters";
     public const string FullNameCannotBeGreaterThan150Characters = "129 : FullName cannot be greater than 150 characters";
