@@ -12,16 +12,25 @@ public class PaymentService(IMediator mediator, IMapper mapper, ILogger<PaymentS
     {
         InfrastructureGuard.IsFalse(Guid.TryParse(request.Id, out var id), Errors.InvalidId);
 
-        logger.LogInformation("Processing payment for Order ID: {OrderId}", request.Id);
+        logger.LogWarning("Processing payment for Order ID: {OrderId}", request.Id);
 
         var command = mapper.Map<PayCommand>(request);
+
         await mediator.Send(command);
+
+        logger.LogWarning("Payment processed successfully for Order ID: {OrderId}", request.Id);
 
         var payment = await mediator.Send(new GetPaymentByIdQuery(id));
 
+        logger.LogWarning("Retrieved payment details for Order ID: {OrderId}, data: {@Payment}", request.Id, payment);
+
         var dto = mapper.Map<PaymentResponse>(payment);
 
+        logger.LogWarning("Mapped payment details to DTO for Order ID: {OrderId}, data: {@Dto}", request.Id, dto);
+
         SetExtraInfo(payment, dto);
+
+        logger.LogWarning("Set extra info for payment response for Order ID: {OrderId}", request.Id);
 
         return dto;
     }
