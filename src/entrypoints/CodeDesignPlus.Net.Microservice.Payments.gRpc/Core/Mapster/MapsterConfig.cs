@@ -1,4 +1,5 @@
 ﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+using Google.Protobuf.Collections;
 using NodaTime;
 using NodaTime.Serialization.Protobuf;
 
@@ -8,12 +9,12 @@ public static class MapsterConfig
 {
     public static void Configure()
     {
-         TypeAdapterConfig<Amount, Domain.ValueObjects.Amount>
-          .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Amount.Create(
-                src.Value,
-                src.Currency
-            ));
+        TypeAdapterConfig<Amount, Domain.ValueObjects.Amount>
+         .NewConfig()
+           .MapWith(src => Domain.ValueObjects.Amount.Create(
+               src.Value,
+               src.Currency
+           ));
 
         TypeAdapterConfig<Address, Domain.ValueObjects.Address>
           .NewConfig()
@@ -97,5 +98,32 @@ public static class MapsterConfig
         TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
             .NewConfig()
             .ConstructUsing(src => new PayCommand(src.Id, src.Module, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
+
+        TypeAdapterConfig<PaymentDto, PaymentResponse>
+            .NewConfig()
+            .MapWith(src => new PaymentResponse
+            {
+                Id = src.Id.ToString(),
+                Provider = src.Provider.ToString(),
+                Request = src.Request,
+                Response = new TransactionResponseData()
+                {
+                    Code = src.Response.Code,
+                    Error = src.Response.Error,
+                    TransactionResponse = new TransactionResponseDetails()
+                    {
+                        AuthorizationCode = src.Response.TransactionResponse.AuthorizationCode,
+                        OrderId = src.Response.TransactionResponse.OrderId.ToString(),
+                        PaymentNetworkResponseCode = src.Response.TransactionResponse.PaymentNetworkResponseCode,
+                        PaymentNetworkResponseErrorMessage = src.Response.TransactionResponse.PaymentNetworkResponseErrorMessage,
+                        ResponseCode = src.Response.TransactionResponse.ResponseCode,
+                        ResponseMessage = src.Response.TransactionResponse.ResponseMessage,
+                        TransactionId = src.Response.TransactionResponse.TransactionId,
+                        State = src.Response.TransactionResponse.State,
+                        TrazabilityCode = src.Response.TransactionResponse.TrazabilityCode
+                    }
+
+                }
+            });
     }
 }
