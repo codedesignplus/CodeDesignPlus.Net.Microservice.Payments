@@ -77,7 +77,11 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     {
         var referenceCode = id.ToString();
 
-        var signature = CreateMD5($"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Amount.Value}~{payuOptions.Currency}");
+        var value = $"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{referenceCode}~{transaction.Order.Amount.Value}~{payuOptions.Currency}";
+
+        var signature = GenerateMd5Hash(value);
+
+        logger.LogWarning("Signature generated for Payu: {Signature} - {Value}", signature, value);
 
         var payuRequest = new PayuRequest()
         {
@@ -237,17 +241,12 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         return CodeDesignPlus.Net.Serializers.JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }
 
-    private static string CreateMD5(string input)
+    
+    private static string GenerateMd5Hash(string input)
     {
-        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-        byte[] hashBytes = MD5.HashData(inputBytes);
-
-        var sb = new StringBuilder();
-        for (int i = 0; i < hashBytes.Length; i++)
-        {
-            sb.Append(hashBytes[i].ToString("x2"));
-        }
-        return sb.ToString();
+        var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+        var hashBytes = System.Security.Cryptography.MD5.HashData(inputBytes);
+        return Convert.ToHexStringLower(hashBytes);
     }
 }
 
