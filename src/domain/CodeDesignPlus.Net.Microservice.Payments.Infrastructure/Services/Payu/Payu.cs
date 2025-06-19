@@ -10,7 +10,7 @@ using CodeDesignPlus.Net.Security.Abstractions;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 
-public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user) : IPayu
+public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user, ILogger<Payu> logger) : IPayu
 {
     private readonly Newtonsoft.Json.JsonSerializerSettings settings = new()
     {
@@ -19,9 +19,10 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             NamingStrategy = new Newtonsoft.Json.Serialization.CamelCaseNamingStrategy
             {
                 OverrideSpecifiedNames = false
-            }
+            },
         },
-        NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
+        NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+        
     };
 
     private readonly HttpClient httpClient = httpClientFactory.CreateClient("Payu");
@@ -219,6 +220,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     private async Task<TResponse> Request<T, TResponse>(T request, CancellationToken cancellationToken)
     {
         var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(request, settings);
+
+        logger.LogWarning("Sending request to Payu: {@Request}", json);
 
         var httpRequest = new HttpRequestMessage
         {
