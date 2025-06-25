@@ -27,7 +27,7 @@ public partial class Transaction
 
         DomainGuard.IsNullOrEmpty(ipAddress, Errors.IpAddressCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(ipAddress.Length, 39, Errors.IpAddressCannotBeGreaterThan39Characters);
-        DomainGuard.IsFalse(IpAddressRegex().IsMatch(ipAddress), Errors.IpAddressMustBeValidFormat);
+        //DomainGuard.IsFalse(IpAddressRegex().IsMatch(ipAddress), Errors.IpAddressMustBeValidFormat);
 
         DomainGuard.IsNullOrEmpty(cookie, Errors.CookieCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(cookie.Length, 255, Errors.CookieCannotBeGreaterThan255Characters);
