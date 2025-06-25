@@ -187,6 +187,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                 Name = transaction.CreditCard.Name,
             };
 
+            payuRequest.Transaction.ExtraParameters.Add("INSTALLMENTS_NUMBER", "1");
+
             // Si tienes cuotas para TC (transaction.InstallmentsNumber)
             // if (transaction.InstallmentsNumber.HasValue && transaction.InstallmentsNumber.Value > 0)
             // {
