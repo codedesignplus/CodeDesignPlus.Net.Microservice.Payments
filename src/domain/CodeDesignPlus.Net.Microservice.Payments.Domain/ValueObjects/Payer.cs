@@ -15,7 +15,7 @@ public partial class Payer
     public string DniType { get; private set; } = null!;
 
     [JsonConstructor]
-    private Payer(string emailAddress, string fullName, Address billingAddress, string dniNumber, string contactPhone, string dniType)
+    private Payer(string fullName, string emailAddress, string contactPhone, string dniNumber, string dniType, Address billingAddress)
     {
         DomainGuard.IsNullOrEmpty(emailAddress, Errors.EmailAddressCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(emailAddress.Length, 255, Errors.EmailAddressCannotBeGreaterThan255Characters);
@@ -41,8 +41,8 @@ public partial class Payer
         DniType = dniType;
     }
 
-    public static Payer Create(string emailAddress, string fullName, Address billingAddress, string dniNumber, string contactPhone, string dniType)
+    public static Payer Create(string fullName, string emailAddress, string contactPhone, string dniNumber, string dniType, Address billingAddress)
     {
-        return new Payer(emailAddress, fullName, billingAddress, dniNumber, contactPhone, dniType);
+        return new Payer(fullName, emailAddress, contactPhone, dniNumber, dniType, billingAddress);
     }
 }

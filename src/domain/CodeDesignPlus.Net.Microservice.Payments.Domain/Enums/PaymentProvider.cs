@@ -3,7 +3,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 /// <summary>
 /// Represents the payment providers available in the system.
 /// </summary>
-public enum Provider
+public enum PaymentProvider
 {
     /// <summary>
     /// No payment provider selected.

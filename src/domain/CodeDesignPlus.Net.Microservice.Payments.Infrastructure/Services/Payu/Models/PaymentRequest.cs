@@ -8,7 +8,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.
 /// <summary>
 /// Represents a request to the PayU payment gateway.
 /// </summary>
-public class PayuRequest
+public class PaymentRequest
 {
   /// <summary>
   /// Language used in the request, this language is used to display error messages generated.
@@ -25,27 +25,13 @@ public class PayuRequest
   /// <summary>
   /// This object contains the authentication data.
   /// </summary>
-  public PayuMerchant Merchant { get; set; } = null!;
+  public Merchant Merchant { get; set; } = null!;
   /// <summary>
   /// This object contains the transaction data.
   /// </summary>
   public PayuTransaction Transaction { get; set; } = null!;
 }
 
-/// <summary>
-/// Represents a merchant in the PayU payment gateway.
-/// </summary>
-public class PayuMerchant
-{
-  /// <summary>
-  /// User or login provided by PayU. How to get my API Login.
-  /// </summary>  
-  public string ApiLogin { get; set; } = null!;
-  /// <summary>
-  /// Password provided by PayU. How to get my API Key.
-  /// </summary>
-  public string ApiKey { get; set; } = null!;
-}
 
 /// <summary>
 /// Represents a transaction request to the PayU payment gateway.

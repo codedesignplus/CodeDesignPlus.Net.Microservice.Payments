@@ -73,7 +73,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     }
 
 
-    public async Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
+    public async Task ProcessPayment(Guid id, Domain.ValueObjects.Transaction transaction, Provider provider, CancellationToken cancellationToken)
     {
         var referenceCode = id.ToString();
 
@@ -83,7 +83,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         logger.LogWarning("Signature generated for Payu: {Signature} - {Value}", signature, value);
 
-        var payuRequest = new PayuRequest()
+        var payuRequest = new PaymentRequest()
         {
             Language = payuOptions.Language,
             Test = payuOptions.IsTest,
@@ -211,15 +211,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             // if (!string.IsNullOrEmpty(transaction.PseReference1))
             //    payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE1", transaction.PseReference1);
         }
-        var response = await Request<PayuRequest, PayuResponse>(payuRequest, cancellationToken);
-
-        return new Domain.Models.TransactionResponse
-        {
-            Id = id,
-            Provider = "Payu",
-            Request = payuRequest,
-            Response = response
-        };
+        
+        await Request<PaymentRequest, PayuResponse>(payuRequest, cancellationToken);
     }
 
     
