@@ -24,6 +24,10 @@ public class PaymentMethodController(IMediator mediator) : ControllerBase
     [HttpGet("{provider}")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<TypePaymentMethod>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public async Task<IActionResult> GetPaymentMethodByProvider(PaymentProvider provider, [FromQuery] List<TypePaymentMethod> methods, CancellationToken cancellationToken)
     {
         var data = await mediator.Send(new GetPaymentMethodsByProviderQuery(provider, methods), cancellationToken);

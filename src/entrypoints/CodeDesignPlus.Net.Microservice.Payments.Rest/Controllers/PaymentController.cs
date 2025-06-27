@@ -21,8 +21,10 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <response code="403">If the user is forbidden from accessing this resource.</response> 
     [HttpPatch("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaymentResponseDto))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     public async Task<IActionResult> CheckAndUpdate(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new UpdateStatusCommand(id), cancellationToken);

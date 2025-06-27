@@ -19,7 +19,10 @@ public class DateCardsController(IMediator mediator) : ControllerBase
     /// <response code="403">If the user is forbidden from accessing this resource.</response>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DateCardsDto>))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
     [AllowAnonymous]
     public async Task<IActionResult> GetDateCards(CancellationToken cancellationToken)
     {
