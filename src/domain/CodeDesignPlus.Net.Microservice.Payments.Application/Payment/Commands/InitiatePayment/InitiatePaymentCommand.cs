@@ -49,7 +49,12 @@ public class AmountDtoValidator : AbstractValidator<Amount>
     public AmountDtoValidator()
     {
         RuleFor(x => x.Value).GreaterThan(0).WithMessage("Amount value must be greater than zero.");
-        RuleFor(x => x.Currency).NotEmpty().Length(3).Matches(@"^[A-Z]{3}$").WithMessage("Currency must be a three-letter uppercase ISO 4217 code.");
+        RuleFor(x => x.Currency)
+        .NotEmpty()
+        .Length(3)
+        .Matches(@"^[A-Z]{3}$")
+        .WithMessage("Currency must be a three-letter uppercase ISO 4217 code.")
+        .When(x => x.Currency is not null);
     }
 }
 
