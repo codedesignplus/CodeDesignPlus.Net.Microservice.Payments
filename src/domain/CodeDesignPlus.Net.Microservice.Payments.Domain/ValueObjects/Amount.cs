@@ -16,7 +16,7 @@ public sealed partial class Amount
         ApplicationGuard.IsLessThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
 
         if(currency is not null)
-            ApplicationGuard.IsTrue(CurrencyRegex().IsMatch(currency), Errors.CurrencyMustBeThreeLetterUppercaseISO4217Code);
+            ApplicationGuard.IsFalse(CurrencyRegex().IsMatch(currency), Errors.CurrencyMustBeThreeLetterUppercaseISO4217Code);
 
         this.Value = value;
         this.Currency = currency;
