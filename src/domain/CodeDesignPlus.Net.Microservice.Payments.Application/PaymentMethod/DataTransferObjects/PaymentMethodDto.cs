@@ -5,7 +5,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Dat
 public class PaymentMethodDto : IDtoBase
 {
     public required Guid Id { get; set; }
-    public Provider Provider { get; set; }
+    public PaymentProvider Provider { get; set; }
     public string Name { get; set; } = null!;
     public string Code { get; set; } = null!;
     public TypePaymentMethod Type { get; set; }

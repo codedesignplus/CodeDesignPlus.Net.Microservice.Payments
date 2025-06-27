@@ -6,19 +6,19 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTrans
 public class PaymentDto : IDtoBase
 {
     public required Guid Id { get; set; }
-    public string Module { get; private set; } = null!;
-    public Guid? Tenant { get; private set; }
-    public PaymentStatus Status { get; private set; }
-    public Amount SubTotal { get; private set; } = null!;
-    public Amount Tax { get; private set; } = null!;
-    public Amount Total { get; private set; } = null!;
-    public Payer Payer { get; private set; } = null!;
-    public Domain.ValueObjects.PaymentMethod PaymentMethod { get; private set; } = null!;
-    public string Description { get; private set; } = null!;
+    public string Module { get; set; } = null!;
+    public Guid? Tenant { get; set; }
+    public PaymentStatus Status { get; set; }
+    public Amount SubTotal { get; set; } = null!;
+    public Amount Tax { get; set; } = null!;
+    public Amount Total { get; set; } = null!;
+    public Payer Payer { get; set; } = null!;
+    public Domain.ValueObjects.PaymentMethod PaymentMethod { get; set; } = null!;
+    public string Description { get; set; } = null!;
 
-    public PaymentProvider PaymentProvider { get; private set; } = PaymentProvider.None;
-    public string? ProviderTransactionId { get; private set; }
-    public string? ProviderResponseMessage { get; private set; }
-    public string? RawProviderResponseData { get; private set; }
-    public FinancialNetwork FinancialNetwork { get; private set; } = null!;
+    public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.None;
+    public string? ProviderTransactionId { get; set; }
+    public string? ProviderResponseMessage { get; set; }
+    public string? RawProviderResponseData { get; set; }
+    public FinancialNetwork FinancialNetwork { get; set; } = null!;
 }

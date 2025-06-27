@@ -1,7 +1,4 @@
-﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
-using Google.Protobuf.Collections;
-using NodaTime;
-using NodaTime.Serialization.Protobuf;
+﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Core.Mapster;
 
@@ -27,38 +24,16 @@ public static class MapsterConfig
               src.Phone
           ));
 
-        TypeAdapterConfig<Buyer, Domain.ValueObjects.Buyer>
-            .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Buyer.Create(
-                src.FullName,
-                src.EmailAddress,
-                src.ContactPhone,
-                src.ShippingAddress.Adapt<Domain.ValueObjects.Address>(),
-                src.DniNumber,
-                src.DniType
-            ));
-
         TypeAdapterConfig<Payer, Domain.ValueObjects.Payer>
             .NewConfig()
             .MapWith(src => Domain.ValueObjects.Payer.Create(
-                src.EmailAddress,
                 src.FullName,
-                src.BillingAddress.Adapt<Domain.ValueObjects.Address>(),
-                src.DniNumber,
+                src.EmailAddress,
                 src.ContactPhone,
-                src.DniType
+                src.DniNumber,
+                src.DniType,
+                src.BillingAddress.Adapt<Domain.ValueObjects.Address>()
             ));
-
-        TypeAdapterConfig<Order, Domain.ValueObjects.Order>
-            .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Order.Create(
-                    src.Description,
-                    src.Buyer.Adapt<Domain.ValueObjects.Buyer>(),
-                    src.Amount.Adapt<Domain.ValueObjects.Amount>(),
-                    src.Tax.Adapt<Domain.ValueObjects.Amount>(),
-                    src.TaxReturnBase.Adapt<Domain.ValueObjects.Amount>()
-                )
-            );
 
         TypeAdapterConfig<CreditCard, Domain.ValueObjects.CreditCard>
             .NewConfig()
@@ -66,7 +41,8 @@ public static class MapsterConfig
                 src.Number,
                 src.SecurityCode,
                 src.ExpirationDate,
-                src.Name
+                src.Name,
+                (sbyte)src.InstallmentsNumber
             ));
 
         TypeAdapterConfig<Pse, Domain.ValueObjects.Pse>
@@ -77,53 +53,26 @@ public static class MapsterConfig
                 src.PseResponseUrl
             ));
 
-        TypeAdapterConfig<Transaction, Domain.ValueObjects.Transaction>
+        TypeAdapterConfig<PaymentMethod, Domain.ValueObjects.PaymentMethod>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Transaction.Create(
-                src.Order.Adapt<Domain.ValueObjects.Order>(),
-                src.Payer.Adapt<Domain.ValueObjects.Payer>(),
-                src.CreditCard.Adapt<Domain.ValueObjects.CreditCard?>(),
-                src.Pse.Adapt<Domain.ValueObjects.Pse?>(),
-                src.DeviceSessionId,
-                src.IpAddress,
-                src.Cookie,
-                src.UserAgent,
-                src.PaymentMethod
+            .MapWith(src => Domain.ValueObjects.PaymentMethod.Create(
+                src.Type,
+                src.CreditCard.Adapt<Domain.ValueObjects.CreditCard>(),
+                src.Pse.Adapt<Domain.ValueObjects.Pse>()
             ));
 
-        TypeAdapterConfig<PayRequest, PayCommand>
+        TypeAdapterConfig<InitiatePaymentRequest, InitiatePaymentCommand>
             .NewConfig()
-            .MapWith(src => new PayCommand(Guid.Parse(src.Id), src.Module, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
-
-        TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
-            .NewConfig()
-            .ConstructUsing(src => new PayCommand(src.Id, src.Module, src.Transaction.Adapt<Domain.ValueObjects.Transaction>()));
-
-        TypeAdapterConfig<PaymentDto, PaymentResponse>
-            .NewConfig()
-            .MapWith(src => new PaymentResponse
-            {
-                Id = src.Id.ToString(),
-                Provider = src.Provider.ToString(),
-                Request = src.Request,
-                Response = new TransactionResponseData()
-                {
-                    Code = src.Response.Code,
-                    Error = src.Response.Error,
-                    TransactionResponse = new TransactionResponseDetails()
-                    {
-                        AuthorizationCode = src.Response.TransactionResponse.AuthorizationCode,
-                        OrderId = src.Response.TransactionResponse.OrderId.ToString(),
-                        PaymentNetworkResponseCode = src.Response.TransactionResponse.PaymentNetworkResponseCode,
-                        PaymentNetworkResponseErrorMessage = src.Response.TransactionResponse.PaymentNetworkResponseErrorMessage,
-                        ResponseCode = src.Response.TransactionResponse.ResponseCode,
-                        ResponseMessage = src.Response.TransactionResponse.ResponseMessage,
-                        TransactionId = src.Response.TransactionResponse.TransactionId,
-                        State = src.Response.TransactionResponse.State,
-                        TrazabilityCode = src.Response.TransactionResponse.TrazabilityCode
-                    }
-
-                }
-            });
+            .MapWith(src => new InitiatePaymentCommand(
+                Guid.Parse(src.Id),
+                src.Module,
+                src.SubTotal.Adapt<Domain.ValueObjects.Amount>(),
+                src.Tax.Adapt<Domain.ValueObjects.Amount>(),
+                src.Total.Adapt<Domain.ValueObjects.Amount>(),
+                src.Description,
+                src.Payer.Adapt<Domain.ValueObjects.Payer>(),
+                src.PaymentMethod.Adapt<Domain.ValueObjects.PaymentMethod>(),
+                (Domain.Enums.PaymentProvider)src.Provider
+            ));
     }
 }

@@ -5,7 +5,6 @@ using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.Rest.Swagger;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.HealthChecks;
 using CodeDesignPlus.Net.Microservice.Commons.MediatR;
-using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;

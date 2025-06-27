@@ -39,8 +39,8 @@ public partial class CreditCard
         InstallmentsNumber =  installmentsNumber;
     }
     
-    public static CreditCard Create(string number, string securityCode, string expirationDate, string name)
+    public static CreditCard Create(string number, string securityCode, string expirationDate, string name, sbyte installmentsNumber = 1)
     {
-        return new CreditCard(number, securityCode, expirationDate, name);
+        return new CreditCard(number, securityCode, expirationDate, name, installmentsNumber);
     }
 }

@@ -1,4 +1,4 @@
-﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Setup;
 
@@ -6,10 +6,6 @@ public static class MapsterConfigPayment
 {
     public static void Configure()
     {
-        TypeAdapterConfig<CodeDesignPlus.Microservice.Api.Dtos.PayDto, PayCommand>
-            .NewConfig()
-            .MapWith(src => new PayCommand(src.Id, src.Module, src.Transaction));
-
         TypeAdapterConfig<PaymentMethodAggregate, PaymentMethodDto>
             .NewConfig();
 
@@ -18,10 +14,20 @@ public static class MapsterConfigPayment
             .MapWith(src => new PaymentDto
             {
                 Id = src.Id,
-                Provider = src.Provider,
-                Request = src.Request,
-                Response = src.Response,
-                Transaction = src.Transaction
+                Description = src.Description,
+                SubTotal = src.SubTotal,
+                Tax = src.Tax,
+                Total = src.Total,
+                Payer = src.Payer,
+                PaymentMethod = src.PaymentMethod,
+                Status = src.Status,
+                Module = src.Module,
+                Tenant = src.Tenant,
+                PaymentProvider = src.PaymentProvider,
+                ProviderTransactionId = src.ProviderTransactionId,
+                ProviderResponseMessage = src.ProviderResponseMessage,
+                RawProviderResponseData = src.RawProviderResponseData,
+                FinancialNetwork = src.FinancialNetwork
             });
 
     }
