@@ -1,21 +1,15 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
-using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 
-public class Payment(IServiceProvider serviceProvider) : IPayment
+public class PaymentProviderAdapterFactory(IServiceProvider serviceProvider) : IPaymentProviderAdapterFactory
 {
-    public Task<Domain.Models.TransactionResponse> ProcessPayment(Guid id, Transaction transaction, Provider provider, CancellationToken cancellationToken)
+    public IPaymentProviderAdapter GetAdapter(PaymentProvider provider)
     {
-        if (provider == Provider.Payu)
-        {
-            var payu = serviceProvider.GetRequiredService<IPayu>();
-
-            return payu.ProcessPayment(id, transaction, provider, cancellationToken);
-        }
-
-        throw new NotSupportedException($"Provider {provider} is not supported.");
+        throw new NotImplementedException();
     }
 }

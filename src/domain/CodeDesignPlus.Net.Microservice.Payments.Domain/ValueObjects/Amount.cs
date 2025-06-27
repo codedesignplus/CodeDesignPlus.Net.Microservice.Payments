@@ -8,14 +8,12 @@ public sealed partial class Amount
     private static partial Regex CurrencyRegex();
 
     public long Value { get; private set; }
-    public string Currency { get; private set; } = null!;
+    public string? Currency { get; private set; }
 
     [JsonConstructor]
     private Amount(long value, string currency)
     {
-        DomainGuard.IsNullOrEmpty(currency, Errors.CurrencyCannotBeNullOrEmpty);
-
-        DomainGuard.IsFalse(CurrencyRegex().IsMatch(currency), Errors.CurrencyMustBeValidFormat);
+        ApplicationGuard.IsGreaterThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
 
         this.Value = value;
         this.Currency = currency;

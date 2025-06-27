@@ -221,7 +221,7 @@ public class PayuAdditionalValues
   /// Transaction amount.
   /// </summary>
   [JsonProperty(PropertyName = "TX_VALUE")]
-  public PayuAmount Value { get; set; } = new PayuAmount();
+  public PayuAmount Total { get; set; } = new PayuAmount();
   /// <summary>
   /// VAT (Value Added Tax) amount.
   /// </summary>
@@ -231,7 +231,7 @@ public class PayuAdditionalValues
   /// Base value for calculating VAT.
   /// </summary>
   [JsonProperty(PropertyName = "TX_TAX_RETURN_BASE")]
-  public PayuAmount TaxReturnBase { get; set; } = new PayuAmount();
+  public PayuAmount SubTotal { get; set; } = new PayuAmount();
 }
 
 /// <summary>

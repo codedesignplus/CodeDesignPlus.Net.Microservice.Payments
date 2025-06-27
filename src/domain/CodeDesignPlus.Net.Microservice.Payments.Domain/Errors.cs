@@ -120,4 +120,12 @@ public class Errors : IErrorCodes
     public const string ProviderTransactionIdCannotBeNullOrEmpty = "195 : Provider Transaction ID cannot be null or empty";
     public const string ProviderResponseMessageCannotBeNullOrEmpty = "196 : Provider Response Message cannot be null or empty";
     public const string RawProviderResponseDataCannotBeNullOrEmpty = "197 : Raw Provider Response Data cannot be null or empty";
+
+    public const string TotalMustBeGreaterThanOrEqualToSubTotalPlusTax = "198 : Total must be greater than or equal to SubTotal plus Tax";
+
+    public const string PaymentMethodInfoMustHaveOnePaymentMethod  = "199 : PaymentMethodInfo must have either CreditCard or Pse, but not both";
+
+    public const string AmountValueMustBeGreaterThanZero  = "200 : Amount value must be greater than zero";
+
+    public const string CreditCardInstallmentsNumberMustBeGreaterThanZero = "201 : Credit Card Installments Number must be greater than zero";
 }

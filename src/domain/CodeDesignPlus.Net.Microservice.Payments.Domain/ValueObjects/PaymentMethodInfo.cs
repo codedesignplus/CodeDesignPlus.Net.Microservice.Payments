@@ -2,32 +2,28 @@ using System.Text.Json.Serialization;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-public sealed partial class PaymentMethodInfo
+public sealed partial class PaymentMethod
 {
 
     public string Type { get; private set; }
-    public string Brand { get; private set; } = null!;
-    public string MaskedIdentifier { get; private set; } = null!;
+
+    public CreditCard? CreditCard { get; private set; }
+    public Pse? Pse { get; private set; }
 
     [JsonConstructor]
-    public PaymentMethodInfo(string type, string brand, string maskedIdentifier)
+    public PaymentMethod(string type, CreditCard? creditCard, Pse? pse)
     {
-        DomainGuard.IsNullOrEmpty(type, Errors.PaymentMethodTypeCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(type.Length, 50, Errors.PaymentMethodTypeCannotBeGreaterThan50Characters);
+        ApplicationGuard.IsNullOrEmpty(type, Errors.PaymentMethodCannotBeNullOrEmpty);
+        ApplicationGuard.IsTrue(creditCard is null && pse is null, Errors.PaymentMethodInfoMustHaveOnePaymentMethod);
 
-        DomainGuard.IsNullOrEmpty(brand, Errors.PaymentMethodBrandCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(brand.Length, 50, Errors.PaymentMethodBrandCannotBeGreaterThan50Characters);
-
-        DomainGuard.IsNullOrEmpty(maskedIdentifier, Errors.PaymentMethodMaskedIdentifierCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(maskedIdentifier.Length, 50, Errors.PaymentMethodMaskedIdentifierCannotBeGreaterThan50Characters);
-
+        this.CreditCard = creditCard;
+        this.Pse = pse;
         this.Type = type;
-        this.Brand = brand;
-        this.MaskedIdentifier = maskedIdentifier;
-    }
 
-    public static PaymentMethodInfo Create(string type, string brand, string maskedIdentifier)
+
+    }
+    public static PaymentMethod Create(string paymentMethod, CreditCard? creditCard = null, Pse? pse = null)
     {
-        return new PaymentMethodInfo(type, brand, maskedIdentifier);
+        return new PaymentMethod(paymentMethod, creditCard, pse);
     }
 }
