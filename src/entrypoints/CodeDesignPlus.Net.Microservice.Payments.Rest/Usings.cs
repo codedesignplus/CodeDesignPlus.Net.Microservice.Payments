@@ -21,3 +21,4 @@ global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Queries.
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.CreatePaymentMethod;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.UpdatePaymentMethod;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Queries.GetPaymentMethodsByProvider;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;

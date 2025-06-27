@@ -1,6 +1,6 @@
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 
-public class PaymentResponse
+public class PayuPaymentResponse
 {
     public string Code { get; set; } = null!;
     public string Error { get; set; } = null!;

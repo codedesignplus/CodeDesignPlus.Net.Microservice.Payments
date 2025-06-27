@@ -8,7 +8,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.
 /// <summary>
 /// Represents a request to the PayU payment gateway.
 /// </summary>
-public class PaymentRequest
+public class PayuPaymentRequest
 {
   /// <summary>
   /// Language used in the request, this language is used to display error messages generated.

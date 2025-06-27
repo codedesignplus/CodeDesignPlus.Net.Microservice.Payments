@@ -6,6 +6,10 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 public enum PaymentStatus
 {
     /// <summary>
+    /// The payment status is unknown or not set.
+    /// </summary>
+    Unknown,
+    /// <summary>
     /// The payment has been initiated by the user, but its final result has not yet been confirmed.
     /// </summary>
     Initiated,
@@ -16,5 +20,9 @@ public enum PaymentStatus
     /// <summary>
     ///  The payment was rejected by the provider, bank, or fraud rules.
     /// </summary>
-    Failed
+    Failed,
+    /// <summary>
+    /// The payment is pending, meaning it has not yet been confirmed or rejected.
+    /// </summary>
+    Pending
 }

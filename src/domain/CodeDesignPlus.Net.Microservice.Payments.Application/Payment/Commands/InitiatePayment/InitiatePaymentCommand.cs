@@ -1,7 +1,7 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 [DtoGenerator]
 public record InitiatePaymentCommand(Guid Id, string Module, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, Domain.ValueObjects.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider ) : IRequest;
@@ -28,23 +28,6 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
             .SetValidator(new AmountDtoValidator());
 
         RuleFor(x => x.Payer).NotNull().SetValidator(new PayerInfoDtoValidator());
-
-        // When(cmd => cmd.PaymentProvider == PaymentProvider.Payu, () =>
-        // {
-        //     RuleFor(cmd => cmd.CreditCard)
-        //         .NotNull().WithMessage("Credit card information is required for this payment method.")
-        //         .SetValidator(new CreditCardInfoDtoValidator()!)
-        //         .When(cmd => cmd.Pse == null, ApplyConditionTo.CurrentValidator);
-
-        //     RuleFor(cmd => cmd.Pse)
-        //         .NotNull().WithMessage("PSE information is required for this payment method.")
-        //         .SetValidator(new PseInfoDtoValidator()!)
-        //         .When(cmd => cmd.CreditCard == null, ApplyConditionTo.CurrentValidator);
-
-        //     RuleFor(cmd => cmd)
-        //         .Must(cmd => (cmd.CreditCard != null) ^ (cmd.Pse != null))
-        //         .WithMessage("Either CreditCard or Pse information must be provided, but not both.");
-        // });
     }
 }
 

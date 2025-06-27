@@ -20,8 +20,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     public PaymentProvider PaymentProvider { get; private set; } = PaymentProvider.None;
     public string? ProviderTransactionId { get; private set; }
     public string? ProviderResponseMessage { get; private set; }
-
     public string? RawProviderResponseData { get; private set; }
+    public FinancialNetwork FinancialNetwork { get; private set; } = null!;
 
     private PaymentAggregate(Guid id, string module, Amount subTotal, Amount tax, Amount total, Payer payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
         : this(id)
@@ -67,36 +67,31 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         return new PaymentAggregate(id, module, subTotal, tax, total, payer, paymentMethod, description, paymentProvider, tenant, createdBy);
     }
 
-    public void CompleteAsSucceeded(string providerTransactionId, string providerMessage, string rawResponse)
+    public void SetResponse(PaymentStatus status, string providerMessage, string rawResponse, FinancialNetwork financialNetwork)
     {
         DomainGuard.IsFalse(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
-        DomainGuard.IsNullOrEmpty(providerTransactionId, Errors.ProviderTransactionIdCannotBeNullOrEmpty);
         DomainGuard.IsNullOrEmpty(providerMessage, Errors.ProviderResponseMessageCannotBeNullOrEmpty);
         DomainGuard.IsNullOrEmpty(rawResponse, Errors.RawProviderResponseDataCannotBeNullOrEmpty);
+        DomainGuard.IsNull(financialNetwork, Errors.FinancialNetworkCannotBeNull);
 
-        Status = PaymentStatus.Succeeded;
-        ProviderTransactionId = providerTransactionId;
+        Status = status;
         ProviderResponseMessage = providerMessage;
         RawProviderResponseData = rawResponse;
+        FinancialNetwork = financialNetwork;
+
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentSucceededDomainEvent.Create(Id, ProviderTransactionId, ProviderResponseMessage, Payer, Tenant));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Status, ProviderResponseMessage, FinancialNetwork, Tenant));
     }
 
-    public void CompleteAsFailed(string providerTransactionId, string providerMessage, string rawResponse)
+    public void SetTransactionId(string transactionId)
     {
-        DomainGuard.IsFalse(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
-        DomainGuard.IsNullOrEmpty(providerTransactionId, Errors.ProviderTransactionIdCannotBeNullOrEmpty);
-        DomainGuard.IsNullOrEmpty(providerMessage, Errors.ProviderResponseMessageCannotBeNullOrEmpty);
-        DomainGuard.IsNullOrEmpty(rawResponse, Errors.RawProviderResponseDataCannotBeNullOrEmpty);
+        DomainGuard.IsNullOrEmpty(transactionId, Errors.TransactionIdCannotBeNullOrEmpty);
+        DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
 
-        Status = PaymentStatus.Failed;
-        ProviderTransactionId = providerTransactionId;
-        ProviderResponseMessage = providerMessage;
-        RawProviderResponseData = rawResponse;
-
+        ProviderTransactionId = transactionId;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentFailedDomainEvent.Create(Id, ProviderTransactionId, ProviderResponseMessage, Payer, Tenant));
+        AddEvent(PaymentTransactionIdSetDomainEvent.Create(Id, ProviderTransactionId));
     }
 }

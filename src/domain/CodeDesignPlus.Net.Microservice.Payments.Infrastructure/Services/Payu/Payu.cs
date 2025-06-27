@@ -1,12 +1,8 @@
-using System.Net.Http.Json;
-using System.Security.Cryptography;
-using System.Text;
-using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.Pay;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
-using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Constants;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
 using CodeDesignPlus.Net.Security.Abstractions;
@@ -26,7 +22,6 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             },
         },
         NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-
     };
 
     private readonly HttpClient httpClient = httpClientFactory.CreateClient("Payu");
@@ -57,10 +52,9 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         return await Request<BankRequest, BankResponse>(request, cancellationToken);
     }
 
-
-    public async Task<AdapterInitiationResult> InitiatePaymentAsync(InitiatePaymentCommand command, CancellationToken cancellationToken)
+    public async Task<PaymentResponseDto> InitiatePaymentAsync(InitiatePaymentCommand command, CancellationToken cancellationToken)
     {
-        var payuRequest = new PaymentRequest()
+        var payuRequest = new PayuPaymentRequest()
         {
             Language = payuOptions.Language,
             Test = payuOptions.IsTest,
@@ -119,7 +113,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                 Type = payuOptions.TransactionType,
                 PaymentCountry = payuOptions.PaymentCountry,
                 DeviceSessionId = user.IdUser.ToString(),
-                Cookie = httpContextAccessor.HttpContext?.Request.Cookies["PaymentCookie"] ?? Guid.NewGuid().ToString();,
+                Cookie = httpContextAccessor.HttpContext?.Request.Cookies["PaymentCookie"] ?? Guid.NewGuid().ToString(),
                 IpAddress = user.IpAddress,
                 UserAgent = user.UserAgent,
             }
@@ -142,31 +136,98 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         {
             payuRequest.Transaction.ExtraParameters.Add("RESPONSE_URL", command.PaymentMethod.Pse!.PseResponseUrl);
             payuRequest.Transaction.ExtraParameters.Add("FINANCIAL_INSTITUTION_CODE", command.PaymentMethod.Pse.PseCode);
-            payuRequest.Transaction.ExtraParameters.Add("USER_TYPE", command.PaymentMethod.Pse.TypePerson); // "N" o "J"
+            payuRequest.Transaction.ExtraParameters.Add("USER_TYPE", command.PaymentMethod.Pse.TypePerson);
             payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE1", user.IpAddress);
             payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE2", $"Reference Code: {command.Id}");
             payuRequest.Transaction.ExtraParameters.Add("PSE_REFERENCE3", command.Module);
         }
 
-        // Process the payment request
         var response = await ProcessPayment(payuRequest, cancellationToken);
 
-        return new AdapterInitiationResult
-        {
-            ProviderTransactionId = response.TransactionResponse.TransactionId,
+        var bankResponse = new FinancialNetwork(
+            PaymentNetworkResponseCode: response.TransactionResponse.PaymentNetworkResponseCode,
+            PaymentNetworkResponseErrorMessage: response.TransactionResponse.PaymentNetworkResponseErrorMessage,
+            TrazabilityCode: response.TransactionResponse.TrazabilityCode,
+            AuthorizationCode: response.TransactionResponse.AuthorizationCode,
+            ResponseCode: response.TransactionResponse.ResponseCode
+        );
+
+        return new PaymentResponseDto{
             Succeeded = response.TransactionResponse.State == "APPROVED",
-            RedirectionUrl = "",
-            ErrorMessage = response.Error,
+            Status = ToPaymentStatus(response.TransactionResponse.State),
+            TransactionId = response.TransactionResponse.TransactionId,
+            RedirectionUrl = response.TransactionResponse.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            Message = response.TransactionResponse.ResponseMessage,
+            FinancialNetwork = bankResponse
         };
     }
 
-    public Task<AdapterStatusResult> CheckStatusAsync(string referenceCode, CancellationToken cancellationToken)
+    public async Task<PaymentResponseDto> CheckStatusAsync(string id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-    }
-    
+        var response = await this.GetByTransactionId(id, cancellationToken);
 
-    private async Task<PaymentResponse> ProcessPayment(PaymentRequest request, CancellationToken cancellationToken)
+        var bankResponse = new FinancialNetwork(
+            PaymentNetworkResponseCode: response.Result.Payload.PaymentNetworkResponseCode,
+            PaymentNetworkResponseErrorMessage: response.Result.Payload.PaymentNetworkResponseErrorMessage,
+            TrazabilityCode: response.Result.Payload.TrazabilityCode,
+            AuthorizationCode: response.Result.Payload.AuthorizationCode,
+            ResponseCode: response.Result.Payload.ResponseCode
+        );
+
+        return new PaymentResponseDto{
+            Succeeded = response.Result.Payload.State == "APPROVED",
+            Status = ToPaymentStatus(response.Result.Payload.State),
+            TransactionId = id,
+            RedirectionUrl = response.Result.Payload.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            Message = response.Result.Payload.ResponseMessage,
+            FinancialNetwork = bankResponse
+        };
+    }
+
+    private async Task<PayuReferenceCodeResponse> GetByReferenceCode(Guid id, CancellationToken cancellationToken)
+    {
+        var request = new PayuReferenceCodeRequest
+        {
+            Language = payuOptions.Language,
+            Command = "ORDER_DETAIL_BY_REFERENCE_CODE",
+            Test = options.Value.IsTest,
+            Merchant = new Merchant
+            {
+                ApiLogin = payuOptions.ApiLogin,
+                ApiKey = payuOptions.ApiKey
+            },
+            Details = new()
+            {
+                ReferenceCode = id.ToString(),
+            }
+        };
+
+        return await Request<PayuReferenceCodeRequest, PayuReferenceCodeResponse>(request, cancellationToken);
+    }
+
+
+    private async Task<PayuTransactionResponse> GetByTransactionId(string id, CancellationToken cancellationToken)
+    {
+        var request = new PayuTransactionRequest
+        {
+            Language = payuOptions.Language,
+            Command = "TRANSACTION_RESPONSE_DETAIL",
+            Test = options.Value.IsTest,
+            Merchant = new Merchant
+            {
+                ApiLogin = payuOptions.ApiLogin,
+                ApiKey = payuOptions.ApiKey
+            },
+            Details = new()
+            {
+                TransactionId = id
+            }
+        };
+
+        return await Request<PayuTransactionRequest, PayuTransactionResponse>(request, cancellationToken);
+    }
+
+    private async Task<PayuPaymentResponse> ProcessPayment(PayuPaymentRequest request, CancellationToken cancellationToken)
     {
         var value = $"{payuOptions.ApiKey}~{payuOptions.MerchantId}~{request.Transaction.Order.ReferenceCode}~{request.Transaction.Order.AdditionalValues.Total.Value}~{payuOptions.Currency}";
 
@@ -174,13 +235,12 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         request.Transaction.Order.Signature = signature;
 
-        return await Request<PaymentRequest, PaymentResponse>(request, cancellationToken);
+        return await Request<PayuPaymentRequest, PayuPaymentResponse>(request, cancellationToken);
     }
 
-    
     private async Task<TResponse> Request<T, TResponse>(T request, CancellationToken cancellationToken)
     {
-        var json = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(request, settings);
+        var json = JsonSerializer.Serialize(request, settings);
 
         logger.LogWarning("Sending request to Payu: {@Request}", json);
 
@@ -189,16 +249,16 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
             Method = HttpMethod.Post
         };
+
         httpRequest.Headers.Add("Accept", "application/json");
 
         var response = await httpClient.SendAsync(httpRequest, cancellationToken);
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        return CodeDesignPlus.Net.Serializers.JsonSerializer.Deserialize<TResponse>(responseContent, settings);
+        return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }
 
-    
     private static string GenerateMd5Hash(string input)
     {
         var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
@@ -206,5 +266,15 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         return Convert.ToHexStringLower(hashBytes);
     }
 
-}
+    private static PaymentStatus ToPaymentStatus(string state)
+    {
+        return state switch
+        {
+            "APPROVED" => PaymentStatus.Succeeded,
+            "PENDING" => PaymentStatus.Pending,
+            "DECLINED" => PaymentStatus.Failed,
+            _ => PaymentStatus.Unknown
+        };
+    }
 
+}

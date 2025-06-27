@@ -1,25 +1,29 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 
 /// <summary>
 /// Controller for handling payment operations.
 /// </summary>
 /// <param name="mediator">Mediator instance for sending commands.</param>
-/// <param name="mapper">Mapper instance for mapping DTOs to commands.</param>
 [Route("api/[controller]")]
 [ApiController]
-public class PaymentController(IMediator mediator, IMapper mapper) : ControllerBase
+public class PaymentController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Processes a payment request.
     /// </summary>
-    /// <param name="data">The payment data to process.</param>
+    /// <param name="id">Identifier of the payment to process.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>204 No Content if successful.</returns>
-    [HttpPost]
-    public async Task<IActionResult> Pay([FromBody] PayDto data, CancellationToken cancellationToken)
+    [HttpPatch("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent, Type = typeof(PaymentResponseDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CheckAndUpdate(Guid id, CancellationToken cancellationToken)
     {
-        await mediator.Send(mapper.Map<PayCommand>(data), cancellationToken);
+        var result = await mediator.Send(new UpdateStatusCommand(id), cancellationToken);
 
-        return NoContent();
+        return Ok(result);
     }
 }

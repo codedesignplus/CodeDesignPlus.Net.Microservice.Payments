@@ -128,4 +128,8 @@ public class Errors : IErrorCodes
     public const string AmountValueMustBeGreaterThanZero  = "200 : Amount value must be greater than zero";
 
     public const string CreditCardInstallmentsNumberMustBeGreaterThanZero = "201 : Credit Card Installments Number must be greater than zero";
+
+    public const string TransactionIdCannotBeNullOrEmpty  = "202 : Transaction ID cannot be null or empty";
+
+    public const string FinancialNetworkCannotBeNull = "203 : Financial Network cannot be null";
 }

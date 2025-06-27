@@ -1,17 +1,15 @@
-using System;
-
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 
-public class ReferenceCodeRequest
+public class PayuTransactionRequest
 {
     public bool Test { get; set; }
     public string Language { get; set; } = null!;
     public string Command { get; set; } = null!;
     public Merchant Merchant { get; set; } = null!;
-    public RequestDetails Details { get; set; } = null!;
+    public TransactionDetails Details { get; set; } = null!;
 }
 
-public class RequestDetails
+public class TransactionDetails
 {
-    public string ReferenceCode { get; set; } = null!;
+    public string TransactionId { get; set; } = null!;
 }
