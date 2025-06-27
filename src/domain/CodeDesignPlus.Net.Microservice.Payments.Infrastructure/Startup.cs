@@ -1,4 +1,5 @@
-﻿using CodeDesignPlus.Net.Microservice.Payments.Domain.Services;
+﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
@@ -17,7 +18,8 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
                   .ValidateDataAnnotations()
                   .ValidateOnStart();
 
-            services.AddScoped<IPayment, Payment>();
+            services.AddScoped<IPayu, Payu>();
+            services.AddKeyedScoped<IPaymentProviderAdapter, Payu>(PaymentProvider.Payu);
 
             var payuOptions = section.Get<PayuOptions>();
 

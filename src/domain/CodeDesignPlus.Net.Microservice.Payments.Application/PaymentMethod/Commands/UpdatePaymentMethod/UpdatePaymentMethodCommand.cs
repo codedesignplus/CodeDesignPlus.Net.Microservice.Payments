@@ -3,7 +3,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.UpdatePaymentMethod;
 
 [DtoGenerator]
-public record UpdatePaymentMethodCommand(Guid Id, Provider Provider, string Name, string Code, TypePaymentMethod Type, string? Comments, bool IsActive) : IRequest;
+public record UpdatePaymentMethodCommand(Guid Id, PaymentProvider Provider, string Name, string Code, TypePaymentMethod Type, string? Comments, bool IsActive) : IRequest;
 
 public class Validator : AbstractValidator<UpdatePaymentMethodCommand>
 {

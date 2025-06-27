@@ -4,5 +4,5 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.Repositories;
 
 public interface IPaymentMethodRepository : IRepositoryBase
 {
-    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(Provider provider, List<TypePaymentMethod> methods, CancellationToken cancellationToken);
+    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(PaymentProvider provider, List<TypePaymentMethod> methods, CancellationToken cancellationToken);
 }

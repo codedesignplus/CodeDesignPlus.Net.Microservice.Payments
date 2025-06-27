@@ -6,7 +6,7 @@ public class PaymentMethodRepository(IServiceProvider serviceProvider, IOptions<
 
     : RepositoryBase(serviceProvider, mongoOptions, logger), IPaymentMethodRepository
 {
-    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(Provider provider, List<TypePaymentMethod> methods, CancellationToken cancellationToken)
+    public Task<List<PaymentMethodAggregate>> GetByProviderAsync(PaymentProvider provider, List<TypePaymentMethod> methods, CancellationToken cancellationToken)
     {
         var collection = GetCollection<PaymentMethodAggregate>();
 
