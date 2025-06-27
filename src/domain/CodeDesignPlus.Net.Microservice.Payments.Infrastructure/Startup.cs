@@ -20,6 +20,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
 
             services.AddScoped<IPayu, Payu>();
             services.AddKeyedScoped<IPaymentProviderAdapter, Payu>(PaymentProvider.Payu);
+            services.AddSingleton<IPaymentProviderAdapterFactory, PaymentProviderAdapterFactory>();
 
             var payuOptions = section.Get<PayuOptions>();
 
