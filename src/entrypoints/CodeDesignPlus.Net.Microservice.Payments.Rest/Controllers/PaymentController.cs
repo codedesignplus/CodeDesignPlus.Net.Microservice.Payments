@@ -15,9 +15,12 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// </summary>
     /// <param name="id">Identifier of the payment to process.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>204 No Content if successful.</returns>
+    /// <response code="200">Returns the payment response details.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="401">If the user is not authorized.</response>
+    /// <response code="403">If the user is forbidden from accessing this resource.</response> 
     [HttpPatch("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent, Type = typeof(PaymentResponseDto))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaymentResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckAndUpdate(Guid id, CancellationToken cancellationToken)
