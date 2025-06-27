@@ -13,7 +13,7 @@ public sealed partial class Amount
     [JsonConstructor]
     private Amount(long value, string currency)
     {
-        ApplicationGuard.IsGreaterThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
+        ApplicationGuard.IsLessThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
 
         this.Value = value;
         this.Currency = currency;
