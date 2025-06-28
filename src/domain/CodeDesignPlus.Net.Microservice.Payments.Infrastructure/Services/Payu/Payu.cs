@@ -49,7 +49,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             },
         };
 
-        return await Request<BankRequest, BankResponse>(request, cancellationToken);
+        return await Request<BankRequest, BankResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
     }
 
     public async Task<PaymentResponseDto> InitiatePaymentAsync(InitiatePaymentCommand command, CancellationToken cancellationToken)
@@ -180,7 +180,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             Success = response.Result.Payload.State == "APPROVED",
             Status = ToPaymentStatus(response.Result.Payload.State),
             TransactionId = id,
-            RedirectUrl = response.Result.Payload.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            RedirectUrl = response.Result.Payload.ExtraParameters?.GetValueOrDefault("BANK_URL"),
             Message = response.Result.Payload.ResponseMessage,
             FinancialNetwork = bankResponse
         };
@@ -204,7 +204,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             }
         };
 
-        return await Request<PayuReferenceCodeRequest, PayuReferenceCodeResponse>(request, cancellationToken);
+        return await Request<PayuReferenceCodeRequest, PayuReferenceCodeResponse>(request, "reports-api/4.0/service.cgi", cancellationToken);
     }
 
 
@@ -226,7 +226,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             }
         };
 
-        return await Request<PayuTransactionRequest, PayuTransactionResponse>(request, cancellationToken);
+        return await Request<PayuTransactionRequest, PayuTransactionResponse>(request, "reports-api/4.0/service.cgi", cancellationToken);
     }
 
     private async Task<PayuPaymentResponse> ProcessPayment(PayuPaymentRequest request, CancellationToken cancellationToken)
@@ -237,10 +237,10 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         request.Transaction.Order.Signature = signature;
 
-        return await Request<PayuPaymentRequest, PayuPaymentResponse>(request, cancellationToken);
+        return await Request<PayuPaymentRequest, PayuPaymentResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
     }
 
-    private async Task<TResponse> Request<T, TResponse>(T request, CancellationToken cancellationToken)
+    private async Task<TResponse> Request<T, TResponse>(T request, string url, CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(request, settings);
 
@@ -248,6 +248,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         var httpRequest = new HttpRequestMessage
         {
+            RequestUri = new Uri(url, UriKind.Relative),
             Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
             Method = HttpMethod.Post
         };

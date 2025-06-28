@@ -69,9 +69,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 
     public void SetResponse(PaymentStatus status, string providerMessage, string rawResponse, FinancialNetwork financialNetwork)
     {
-        DomainGuard.IsFalse(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
-        DomainGuard.IsNullOrEmpty(providerMessage, Errors.ProviderResponseMessageCannotBeNullOrEmpty);
-        DomainGuard.IsNullOrEmpty(rawResponse, Errors.RawProviderResponseDataCannotBeNullOrEmpty);
+        DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
         DomainGuard.IsNull(financialNetwork, Errors.FinancialNetworkCannotBeNull);
 
         Status = status;
