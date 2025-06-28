@@ -153,10 +153,10 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         );
 
         return new PaymentResponseDto{
-            Succeeded = response.TransactionResponse.State == "APPROVED",
+            Success = response.TransactionResponse.State == "APPROVED",
             Status = ToPaymentStatus(response.TransactionResponse.State),
             TransactionId = response.TransactionResponse.TransactionId,
-            RedirectionUrl = response.TransactionResponse.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            RedirectUrl = response.TransactionResponse.ExtraParameters.GetValueOrDefault("BANK_URL"),
             Message = response.TransactionResponse.ResponseMessage,
             FinancialNetwork = bankResponse
         };
@@ -175,10 +175,10 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
         );
 
         return new PaymentResponseDto{
-            Succeeded = response.Result.Payload.State == "APPROVED",
+            Success = response.Result.Payload.State == "APPROVED",
             Status = ToPaymentStatus(response.Result.Payload.State),
             TransactionId = id,
-            RedirectionUrl = response.Result.Payload.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            RedirectUrl = response.Result.Payload.ExtraParameters.GetValueOrDefault("BANK_URL"),
             Message = response.Result.Payload.ResponseMessage,
             FinancialNetwork = bankResponse
         };

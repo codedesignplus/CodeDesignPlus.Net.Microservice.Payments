@@ -74,5 +74,24 @@ public static class MapsterConfig
                 src.PaymentMethod.Adapt<Domain.ValueObjects.PaymentMethod>(),
                 (Domain.Enums.PaymentProvider)src.Provider
             ));
+
+        TypeAdapterConfig<PaymentResponseDto, UpdateStatusResponse>
+            .NewConfig()
+            .MapWith(src => new UpdateStatusResponse
+            {
+                TransactionId = src.TransactionId.ToString(),
+                Status = (PaymentStatus)src.Status,
+                FinancialNetwork = new FinancialNetwork
+                {
+                    AuthorizationCode = src.FinancialNetwork.AuthorizationCode,
+                    PaymentNetworkResponseCode = src.FinancialNetwork.PaymentNetworkResponseCode,
+                    PaymentNetworkResponseErrorMessage = src.FinancialNetwork.PaymentNetworkResponseErrorMessage,
+                    ResponseCode = src.FinancialNetwork.ResponseCode,
+                    TrazabilityCode = src.FinancialNetwork.TrazabilityCode,
+                },
+                Message = src.Message,
+                RedirectUrl = src.RedirectUrl,
+                Success = src.Success,
+            });
     }
 }

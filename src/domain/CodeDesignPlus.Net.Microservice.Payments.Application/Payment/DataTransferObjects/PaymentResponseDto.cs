@@ -6,11 +6,11 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTrans
 
 public class PaymentResponseDto
 {
-    public bool Succeeded { get; set; }
+    public bool Success { get; set; }
     public PaymentStatus Status { get; set; }
     public string TransactionId { get; set; } = null!;
     public string Message { get; set; }= null!;
     public string RawResponse { get; set; }= null!;
-    public string? RedirectionUrl { get; set; }
+    public string? RedirectUrl { get; set; }
     public FinancialNetwork FinancialNetwork { get; set; } = null!;
 }
