@@ -15,9 +15,11 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
         else
             payment = await repository.FindAsync<PaymentAggregate>(request.Id, cancellationToken);
 
+        ApplicationGuard.IsNullOrEmpty(payment.ProviderTransactionId!, Errors.PaymentProviderTransactionIdNotFound);
+
         var adapter = adapterFactory.GetAdapter(payment.PaymentProvider);
 
-        var result = await adapter.CheckStatusAsync(payment.Id.ToString(), cancellationToken);
+        var result = await adapter.CheckStatusAsync(payment.ProviderTransactionId!, cancellationToken);
 
         payment.SetResponse(result.Status, result.Message, result.RawResponse, result.FinancialNetwork);
 
