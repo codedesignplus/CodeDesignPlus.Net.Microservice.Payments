@@ -93,5 +93,24 @@ public static class MapsterConfig
                 RedirectUrl = src.RedirectUrl,
                 Success = src.Success,
             });
+
+        TypeAdapterConfig<PaymentResponseDto, InitiatePaymentResponse>
+            .NewConfig()
+            .MapWith(src => new InitiatePaymentResponse
+            {
+                TransactionId = src.TransactionId.ToString(),
+                Status = (PaymentStatus)src.Status,
+                FinancialNetwork = new FinancialNetwork
+                {
+                    AuthorizationCode = src.FinancialNetwork.AuthorizationCode,
+                    PaymentNetworkResponseCode = src.FinancialNetwork.PaymentNetworkResponseCode,
+                    PaymentNetworkResponseErrorMessage = src.FinancialNetwork.PaymentNetworkResponseErrorMessage,
+                    ResponseCode = src.FinancialNetwork.ResponseCode,
+                    TrazabilityCode = src.FinancialNetwork.TrazabilityCode,
+                },
+                Message = src.Message,
+                RedirectUrl = src.RedirectUrl,
+                Success = src.Success,
+            });
     }
 }

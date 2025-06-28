@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
-public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILogger<InitiatePaymentCommandHandler> logger, IPaymentProviderAdapterFactory adapterFactory) : IRequestHandler<InitiatePaymentCommand>
+public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILogger<InitiatePaymentCommandHandler> logger, IPaymentProviderAdapterFactory adapterFactory) : IRequestHandler<InitiatePaymentCommand, PaymentResponseDto>
 {
-    public async Task Handle(InitiatePaymentCommand request, CancellationToken cancellationToken)
+    public async Task<PaymentResponseDto> Handle(InitiatePaymentCommand request, CancellationToken cancellationToken)
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 
@@ -44,5 +44,7 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
         await repository.UpdateAsync(payment, cancellationToken);
 
         await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+
+        return providerResult;
     }
 }
