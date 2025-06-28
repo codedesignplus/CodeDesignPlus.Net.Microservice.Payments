@@ -258,6 +258,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
+        logger.LogWarning("Received response from Payu: {@Response}", responseContent);
+
         return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }
 
