@@ -166,6 +166,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
     {
         var response = await this.GetByTransactionId(id, cancellationToken);
 
+        logger.LogInformation("Checking status for transaction {TransactionId}: {@Response}", id, response);
+
         var bankResponse = new FinancialNetwork(
             PaymentNetworkResponseCode: response.Result.Payload.PaymentNetworkResponseCode,
             PaymentNetworkResponseErrorMessage: response.Result.Payload.PaymentNetworkResponseErrorMessage,
