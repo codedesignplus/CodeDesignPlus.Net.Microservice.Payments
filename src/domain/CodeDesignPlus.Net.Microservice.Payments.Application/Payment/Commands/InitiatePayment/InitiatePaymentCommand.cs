@@ -80,7 +80,10 @@ public class PayerInfoDtoValidator : AbstractValidator<Payer>
         RuleFor(x => x.ContactPhone).NotEmpty().MaximumLength(20);
         RuleFor(x => x.DniNumber).NotEmpty().MaximumLength(20);
         RuleFor(x => x.DniType).NotEmpty().MaximumLength(3);
-        RuleFor(x => x.BillingAddress).NotNull().SetValidator(new AddressDtoValidator());
+        RuleFor(x => x.BillingAddress)
+            .NotNull()
+            .SetValidator(new AddressDtoValidator())
+            .When(x => x.BillingAddress != null);
     }
 }
 
