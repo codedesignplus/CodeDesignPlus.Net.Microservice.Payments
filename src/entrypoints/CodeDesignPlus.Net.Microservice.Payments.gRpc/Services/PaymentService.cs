@@ -1,9 +1,7 @@
 using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentById;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure;
-using Google.Protobuf.WellKnownTypes;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Services;
 

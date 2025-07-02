@@ -90,6 +90,6 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         ProviderTransactionId = transactionId;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentTransactionIdSetDomainEvent.Create(Id, ProviderTransactionId));
+        AddEvent(TransactionIdAssignedDomainEvent.Create(Id, ProviderTransactionId));
     }
 }
