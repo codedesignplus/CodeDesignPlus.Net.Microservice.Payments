@@ -110,6 +110,6 @@ ms-base:
         uri: /
       route:
       - destination:
-          host: ms-payments-rest.urbancore.svc.cluster.local
+          host: ms-payments-rest.codedesignplus.svc.cluster.local
           port:
             number: 5000
