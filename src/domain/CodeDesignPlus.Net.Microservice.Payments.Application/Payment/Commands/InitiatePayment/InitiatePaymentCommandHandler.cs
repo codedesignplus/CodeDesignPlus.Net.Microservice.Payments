@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
-public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILogger<InitiatePaymentCommandHandler> logger, IPaymentProviderAdapterFactory adapterFactory) : IRequestHandler<InitiatePaymentCommand, PaymentResponseDto>
+public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPaymentProviderAdapterFactory adapterFactory) : IRequestHandler<InitiatePaymentCommand, PaymentResponseDto>
 {
     public async Task<PaymentResponseDto> Handle(InitiatePaymentCommand request, CancellationToken cancellationToken)
     {
