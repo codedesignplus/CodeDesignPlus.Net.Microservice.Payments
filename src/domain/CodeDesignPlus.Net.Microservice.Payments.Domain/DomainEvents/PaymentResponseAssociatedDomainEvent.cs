@@ -7,26 +7,20 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 public class PaymentResponseAssociatedDomainEvent(
     Guid aggregateId,
     PaymentStatus status,
-    string providerResponseMessage,
-    FinancialNetwork financialNetwork,
+    Dictionary<string, string> response,
     Guid? tenant,
     Guid? eventId = null,
     Instant? occurredAt = null,
     Dictionary<string, object>? metadata = null
 ) : DomainEvent(aggregateId, eventId, occurredAt, metadata)
 {
-    
+
     public PaymentStatus Status { get; } = status;
-    public string ProviderResponseMessage { get; } = providerResponseMessage;
-    public FinancialNetwork FinancialNetwork { get; } = financialNetwork;
+    public Dictionary<string, string> Response { get; } = response;
     public Guid? Tenant { get; } = tenant;
 
-    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, 
-        PaymentStatus status, 
-        string providerResponseMessage, 
-        FinancialNetwork financialNetwork, 
-        Guid? tenant)
+    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, PaymentStatus status, Dictionary<string, string> response, Guid? tenant)
     {
-        return new PaymentResponseAssociatedDomainEvent(aggregateId, status, providerResponseMessage, financialNetwork, tenant);
+        return new PaymentResponseAssociatedDomainEvent(aggregateId, status, response, tenant);
     }
 }

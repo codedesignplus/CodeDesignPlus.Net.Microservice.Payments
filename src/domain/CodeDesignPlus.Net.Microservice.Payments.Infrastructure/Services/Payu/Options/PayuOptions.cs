@@ -20,6 +20,7 @@ public class PayuOptions: IValidatableObject
     public string TransactionType { get; set; } = "AUTHORIZATION_AND_CAPTURE";
     public string PaymentCountry { get; internal set; } = "CO";
     public string SecretKey { get; set; } = null!;
+    public string NotificationUrl { get; set; } = null!;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -62,6 +63,9 @@ public class PayuOptions: IValidatableObject
             
             if(this.SecretKey.Length < 36)
                 result.Add(new ValidationResult("SecretKey must be at least 36 characters long when Payu is enabled.", [nameof(SecretKey)]));
+
+            if (string.IsNullOrWhiteSpace(this.NotificationUrl))
+                result.Add(new ValidationResult("NotificationUrl is required when Payu is enabled.", [nameof(NotificationUrl)]));
         }
 
         return result;

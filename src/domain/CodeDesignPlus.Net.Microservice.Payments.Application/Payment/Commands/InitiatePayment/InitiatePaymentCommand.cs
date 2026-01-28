@@ -4,7 +4,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 [DtoGenerator]
-public record InitiatePaymentCommand(Guid Id, string Module, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, Domain.ValueObjects.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider ) : IRequest<PaymentResponseDto>;
+public record InitiatePaymentCommand(Guid Id, string Module, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, Domain.ValueObjects.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider ) : IRequest;
 
 public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePaymentCommand>
 {

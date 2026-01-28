@@ -7,26 +7,18 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 {
     public string Module { get; private set; } = null!;
     public Guid? Tenant { get; private set; }
-
     public PaymentStatus Status { get; private set; }
     public Amount SubTotal { get; private set; } = null!;
     public Amount Tax { get; private set; } = null!;
     public Amount Total { get; private set; } = null!;
-
     public Payer Payer { get; private set; } = null!;
     public PaymentMethod PaymentMethod { get; private set; } = null!;
     public string Description { get; private set; } = null!;
-
     public PaymentProvider PaymentProvider { get; private set; } = PaymentProvider.None;
-    public string? ProviderTransactionId { get; private set; }
-    public string? ProviderResponseMessage { get; private set; }
-    public string? RawProviderResponseData { get; private set; }
-    public FinancialNetwork FinancialNetwork { get; private set; } = null!;
+    public Dictionary<string, string> Response { get; private set; } = [];
 
-    private PaymentAggregate(Guid id, string module, Amount subTotal, Amount tax, Amount total, Payer payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
-        : this(id)
+    public static PaymentAggregate Create(Guid id, string module, Amount subTotal, Amount tax, Amount total, Payer payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
     {
-
         DomainGuard.IsNullOrEmpty(module, Errors.ModuleCannotBeNullOrEmpty);
         DomainGuard.IsNull(subTotal, Errors.SubTotalCannotBeNull);
         DomainGuard.IsNull(tax, Errors.TaxCannotBeNull);
@@ -38,58 +30,42 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 
         DomainGuard.IsTrue(total.Value < subTotal.Value + tax.Value, Errors.TotalMustBeGreaterThanOrEqualToSubTotalPlusTax);
 
-        Module = module;
-        SubTotal = subTotal;
-        Tax = tax;
-        Total = total;
-        Payer = payer;
-        PaymentMethod = paymentMethod;
-        Description = description;
-        PaymentProvider = paymentProvider;
-        CreatedBy = createdBy;
-        CreatedAt = SystemClock.Instance.GetCurrentInstant();
-        IsActive = true;
+        var aggregate = new PaymentAggregate(id)
+        {
+            Module = module,
+            SubTotal = subTotal,
+            Tax = tax,
+            Total = total,
+            Payer = payer,
+            PaymentMethod = paymentMethod,
+            Description = description,
+            PaymentProvider = paymentProvider,
+            CreatedBy = createdBy,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            IsActive = true,
 
-        CreatedBy = createdBy;
-        CreatedAt = SystemClock.Instance.GetCurrentInstant();
-        IsActive = true;
-
-        Status = PaymentStatus.Initiated;
+            Status = PaymentStatus.Initiated
+        };
 
         if (tenant.HasValue)
-            Tenant = tenant.Value;
+            aggregate.Tenant = tenant.Value;
 
-        AddEvent(PaymentInitiatedDomainEvent.Create(Id, Module, SubTotal, Tax, Total, Payer, PaymentMethod, Description, PaymentProvider, Tenant, CreatedBy));
+        aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, payer, paymentMethod, description, paymentProvider, tenant, createdBy));
+
+        return aggregate;
     }
 
-    public static PaymentAggregate Create(Guid id, string module, Amount subTotal, Amount tax, Amount total, Payer payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
-    {
-        return new PaymentAggregate(id, module, subTotal, tax, total, payer, paymentMethod, description, paymentProvider, tenant, createdBy);
-    }
-
-    public void SetResponse(PaymentStatus status, string providerMessage, string rawResponse, FinancialNetwork financialNetwork)
+    public void SetResponse(PaymentStatus status, Dictionary<string, string> response)
     {
         DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
-        DomainGuard.IsNull(financialNetwork, Errors.FinancialNetworkCannotBeNull);
+        DomainGuard.IsEmpty(response, Errors.ResponseCannotBeNullOrEmpty);
 
         Status = status;
-        ProviderResponseMessage = providerMessage;
-        RawProviderResponseData = rawResponse;
-        FinancialNetwork = financialNetwork;
+        Response = response;
 
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Status, ProviderResponseMessage, FinancialNetwork, Tenant));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Status, Response, Tenant));
     }
 
-    public void SetTransactionId(string transactionId)
-    {
-        DomainGuard.IsNullOrEmpty(transactionId, Errors.TransactionIdCannotBeNullOrEmpty);
-        DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.PaymentStatusIsNotInitiated);
-
-        ProviderTransactionId = transactionId;
-        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
-
-        AddEvent(TransactionIdAssignedDomainEvent.Create(Id, ProviderTransactionId));
-    }
 }

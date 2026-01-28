@@ -17,8 +17,5 @@ public class PaymentDto : IDtoBase
     public string Description { get; set; } = null!;
 
     public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.None;
-    public string? ProviderTransactionId { get; set; }
-    public string? ProviderResponseMessage { get; set; }
-    public string? RawProviderResponseData { get; set; }
-    public FinancialNetwork FinancialNetwork { get; set; } = null!;
+    public Dictionary<string, string> Response { get; set; } = [];
 }

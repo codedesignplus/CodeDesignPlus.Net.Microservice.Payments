@@ -134,4 +134,6 @@ public class Errors : IErrorCodes
     public const string FinancialNetworkCannotBeNull = "203 : Financial Network cannot be null";
 
     public const string CurrencyMustBeThreeLetterUppercaseISO4217Code = "204 : Currency must be a three-letter uppercase ISO 4217 code";
+
+    public const string ResponseCannotBeNullOrEmpty = "205 : Response cannot be null or empty";
 }

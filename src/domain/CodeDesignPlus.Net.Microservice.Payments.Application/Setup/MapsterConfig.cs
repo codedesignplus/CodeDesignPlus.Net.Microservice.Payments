@@ -1,6 +1,4 @@
-﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
-
-namespace CodeDesignPlus.Net.Microservice.Payments.Application.Setup;
+﻿namespace CodeDesignPlus.Net.Microservice.Payments.Application.Setup;
 
 public static class MapsterConfigPayment
 {
@@ -24,10 +22,7 @@ public static class MapsterConfigPayment
                 Module = src.Module,
                 Tenant = src.Tenant,
                 PaymentProvider = src.PaymentProvider,
-                ProviderTransactionId = src.ProviderTransactionId,
-                ProviderResponseMessage = src.ProviderResponseMessage,
-                RawProviderResponseData = src.RawProviderResponseData,
-                FinancialNetwork = src.FinancialNetwork
+                Response = src.Response,
             });
 
     }

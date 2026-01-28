@@ -12,4 +12,6 @@ public class Errors: IErrorCodes
     public const string PaymentMethodNotFound = "205 : Payment method not found";
 
     public const string PaymentProviderTransactionIdNotFound = "206 : Payment provider transaction id not found";
+
+    public const string InvalidSignature = "207 : Invalid signature received";
 }

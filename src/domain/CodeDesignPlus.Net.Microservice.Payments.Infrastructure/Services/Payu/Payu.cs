@@ -71,6 +71,7 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
                     ReferenceCode = command.Id.ToString(),
                     Description = command.Description,
                     Language = payuOptions.Language,
+                    NotifyUrl = payuOptions.NotificationUrl,
                     Buyer = new PayuBuyer
                     {
                         MerchantBuyerId = user.IdUser.ToString(),
@@ -152,11 +153,12 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             ResponseCode: response.TransactionResponse.ResponseCode
         );
 
-        return new PaymentResponseDto{
+        return new PaymentResponseDto
+        {
             Success = response.TransactionResponse.State == "APPROVED",
             Status = ToPaymentStatus(response.TransactionResponse.State),
             TransactionId = response.TransactionResponse.TransactionId,
-            RedirectUrl = response.TransactionResponse.ExtraParameters.GetValueOrDefault("BANK_URL"),
+            RedirectUrl = response.TransactionResponse.ExtraParameters?.GetValueOrDefault("BANK_URL"),
             Message = response.TransactionResponse.ResponseMessage,
             FinancialNetwork = bankResponse
         };
@@ -176,7 +178,8 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             ResponseCode: response.Result.Payload.ResponseCode
         );
 
-        return new PaymentResponseDto{
+        return new PaymentResponseDto
+        {
             Success = response.Result.Payload.State == "APPROVED",
             Status = ToPaymentStatus(response.Result.Payload.State),
             TransactionId = id,
@@ -184,6 +187,16 @@ public class Payu(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> op
             Message = response.Result.Payload.ResponseMessage,
             FinancialNetwork = bankResponse
         };
+    }
+
+    public async Task<bool> CheckSignature(string merchantId, Guid referenceCode, string value, string currency, string state, string receivedSignature)
+    {
+        decimal valorDecimal = decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+        var valueString = valorDecimal.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+
+        var signature = GenerateMd5Hash($"{payuOptions.ApiKey}~{merchantId}~{referenceCode}~{valueString}~{currency}~{state}");
+
+        return string.Equals(signature, receivedSignature, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<PayuReferenceCodeResponse> GetByReferenceCode(Guid id, CancellationToken cancellationToken)
