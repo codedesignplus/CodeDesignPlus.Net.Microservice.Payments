@@ -2,7 +2,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 
-public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPaymentProviderAdapterFactory adapterFactory) : IRequestHandler<UpdateStatusCommand>
+public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub) : IRequestHandler<UpdateStatusCommand>
 {
     public async Task Handle(UpdateStatusCommand request, CancellationToken cancellationToken)
     {
@@ -15,9 +15,7 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
         else
             payment = await repository.FindAsync<PaymentAggregate>(request.Id, cancellationToken);
 
-        var adapter = adapterFactory.GetAdapter(payment.PaymentProvider);
-
-        payment.SetResponse(request.Status, request.Metadata);
+        payment.SetFinalResponse(request.Status, request.Metadata);
 
         await repository.UpdateAsync(payment, cancellationToken);
 

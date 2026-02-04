@@ -17,5 +17,6 @@ public class PaymentDto : IDtoBase
     public string Description { get; set; } = null!;
 
     public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.None;
-    public Dictionary<string, string> Response { get; set; } = [];
+    public Dictionary<string, string?> InitiateResponse { get; set; } = [];
+    public Dictionary<string, string?> FinalResponse { get; set; } = [];
 }

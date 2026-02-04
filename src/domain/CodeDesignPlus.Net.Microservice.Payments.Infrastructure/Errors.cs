@@ -16,4 +16,13 @@ public class Errors : IErrorCodes
     public const string ValueIsRequired = "308 : Value Is Required";
     public const string SignatureIsRequired = "309 : Signature Is Required";
     public const string ReferenceCodeIsRequired = "310 : Reference Code Is Required";
+
+    public const string MerchantIdMissing = "311 : Merchant Id Missing";
+    public const string CurrencyMissing = "312 : Currency Missing";
+    public const string StateMissing = "313 : State Missing";
+    public const string ValueMissing = "314 : Value Missing";
+    public const string SignatureMissing = "315 : Signature Missing";
+    public const string ReferenceSaleMissing = "316 : Reference Sale Missing";
+
+    public const string InvalidReferenceSale = "317 : Invalid Reference Sale";
 }

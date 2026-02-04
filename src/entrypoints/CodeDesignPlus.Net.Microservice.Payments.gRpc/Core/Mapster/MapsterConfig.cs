@@ -66,6 +66,7 @@ public static class MapsterConfig
             .MapWith(src => new InitiatePaymentCommand(
                 Guid.Parse(src.Id),
                 src.Module,
+                Guid.Parse(src.ReferenceId),
                 src.SubTotal.Adapt<Domain.ValueObjects.Amount>(),
                 src.Tax.Adapt<Domain.ValueObjects.Amount>(),
                 src.Total.Adapt<Domain.ValueObjects.Amount>(),
@@ -74,5 +75,15 @@ public static class MapsterConfig
                 src.PaymentMethod.Adapt<Domain.ValueObjects.PaymentMethod>(),
                 (Domain.Enums.PaymentProvider)src.Provider
             ));
+
+        TypeAdapterConfig<InitiatePaymentResponseDto, InitiatePaymentResponse>
+            .NewConfig()
+            .MapWith(src => new InitiatePaymentResponse
+            {
+                PaymentId = src.PaymentId.ToString(),
+                RedirectUrl = src.RedirectUrl,
+                Success = src.Success,
+                NextAction = (NextActionType)src.NextAction
+            });
     }
 }

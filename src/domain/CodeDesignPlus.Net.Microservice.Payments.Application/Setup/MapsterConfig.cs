@@ -22,7 +22,8 @@ public static class MapsterConfigPayment
                 Module = src.Module,
                 Tenant = src.Tenant,
                 PaymentProvider = src.PaymentProvider,
-                Response = src.Response,
+                InitiateResponse = src.InitiateResponse,
+                FinalResponse = src.FinalResponse
             });
 
     }

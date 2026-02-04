@@ -18,9 +18,13 @@ public enum PaymentStatus
     /// </summary>
     Succeeded,
     /// <summary>
-    ///  The payment was rejected by the provider, bank, or fraud rules.
+    /// The payment was rejected by the provider, bank, or fraud rules.
     /// </summary>
     Failed,
+    /// <summary>
+    /// The payment session has expired before completion.
+    /// </summary>
+    Expired,
     /// <summary>
     /// The payment is pending, meaning it has not yet been confirmed or rejected.
     /// </summary>

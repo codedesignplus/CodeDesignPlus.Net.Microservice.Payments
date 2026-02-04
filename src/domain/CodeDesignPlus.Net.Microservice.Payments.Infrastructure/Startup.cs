@@ -18,15 +18,15 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
                   .ValidateDataAnnotations()
                   .ValidateOnStart();
 
-            services.AddScoped<IPayu, Payu>();
-            services.AddKeyedScoped<IPaymentProviderAdapter, Payu>(PaymentProvider.Payu);
+            services.AddScoped<IPayu, PayUAdapter>();
+            services.AddKeyedScoped<IPaymentProviderAdapter, PayUAdapter>(PaymentProvider.Payu);
             services.AddScoped<IPaymentProviderAdapterFactory, PaymentProviderAdapterFactory>();
 
             var payuOptions = section.Get<PayuOptions>();
 
             if (payuOptions != null && payuOptions.Enable)
             {
-                services.AddScoped<IPayu, Payu>();
+                services.AddScoped<IPayu, PayUAdapter>();
 
                 services.AddHttpClient("Payu", client =>
                 {

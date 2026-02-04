@@ -19,46 +19,32 @@ public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactor
     /// <summary>
     /// Webhook endpoint to receive payment notifications from the payment provider.
     /// </summary>
+    /// <param name="providerName">The name of the payment provider sending the notification.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <response code="200">Returns the payment response details.</response>
     /// <response code="400">If the request is invalid.</response>
     /// <response code="403">If the user is forbidden from accessing this resource.</response>
-    [HttpPost("[action]")]
+    [HttpPost("notify/{providerName}")]
     [AllowAnonymous]
-    public async Task<IActionResult> Notify(CancellationToken cancellationToken)
+    public async Task<IActionResult> Notify(string providerName, CancellationToken cancellationToken)
     {
-        if (Request.Form.ContainsKey("merchant_id"))
+
+        if (!Enum.TryParse(providerName, true, out PaymentProvider provider))
         {
-            var adapter = adapterFactory.GetAdapter(PaymentProvider.Payu);
-
-            var merchantId = Request.Form["merchant_id"];
-            var currency = Request.Form["currency"];
-            var state = Request.Form["state_pol"];
-            var value = Request.Form["value"];
-            var signatureReceived = Request.Form["sign"];
-            var referenceSale = Request.Form["reference_sale"];
-
-            InfrastructureGuard.IsNullOrEmpty(merchantId, Errors.MerchantIdIsRequired);
-            InfrastructureGuard.IsNullOrEmpty(currency, Errors.CurrencyIsRequired);
-            InfrastructureGuard.IsNullOrEmpty(state, Errors.StateIsRequired);
-            InfrastructureGuard.IsNullOrEmpty(value, Errors.ValueIsRequired);
-            InfrastructureGuard.IsNullOrEmpty(signatureReceived, Errors.SignatureIsRequired);
-            InfrastructureGuard.IsNullOrEmpty(referenceSale, Errors.ReferenceCodeIsRequired);
-            InfrastructureGuard.IsFalse(Guid.TryParse(referenceSale, out var reference), Errors.ReferenceCodeIsInvalid);
-
-            var signatureIsValid = await adapter.CheckSignature(merchantId!, reference!, value!, currency!, state!, signatureReceived!);
-
-            var command = new UpdateStatusCommand(
-                reference,
-                state == "4" ? PaymentStatus.Succeeded : PaymentStatus.Failed,
-                Request.Form.Keys.ToDictionary(k => k, k => Request.Form[k].ToString())
-            );
-
-            await mediator.Send(command, cancellationToken);
-
-            return Ok();
+            return BadRequest("Proveedor de pago no válido.");
         }
 
-        return BadRequest("Invalid provider notification.");
+        var adapter = adapterFactory.GetAdapter(provider);
+
+        var webhookResponse = await adapter.ProcessWebhookAsync(Request, cancellationToken);
+
+        if (!webhookResponse.IsSignatureValid)
+            return Forbid();
+
+        var command = new UpdateStatusCommand(webhookResponse.PaymentId, webhookResponse.FinalStatus, webhookResponse.RawData);
+
+        await mediator.Send(command, cancellationToken);
+
+        return Ok();
     }
 }

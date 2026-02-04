@@ -136,4 +136,15 @@ public class Errors : IErrorCodes
     public const string CurrencyMustBeThreeLetterUppercaseISO4217Code = "204 : Currency must be a three-letter uppercase ISO 4217 code";
 
     public const string ResponseCannotBeNullOrEmpty = "205 : Response cannot be null or empty";
+
+    public const string OnlyCanSetInitiateResponseIfStatusIsInitiated = "206 : Only can set initiate response if status is 'Initiated'";
+    public const string InitiateResponseCannotBeEmpty = "207 : Initiate response cannot be empty";
+
+    public const string OnlyCanSetFinalResponseIfStatusIsInitiated = "208 : Only can set final response if status is 'Initiated'";
+    public const string FinalStatusMustBeSucceededOrFailed = "209 : Final status must be 'Succeeded' or 'Failed'";
+    public const string FinalResponseCannotBeEmpty = "210 : Final response cannot be empty";
+
+    public const string ReferenceIdCannotBeEmpty = "211 : Reference ID cannot be empty";
+
+    public const string PaymentIdCannotBeEmpty = "212 : Payment ID cannot be empty";
 }
