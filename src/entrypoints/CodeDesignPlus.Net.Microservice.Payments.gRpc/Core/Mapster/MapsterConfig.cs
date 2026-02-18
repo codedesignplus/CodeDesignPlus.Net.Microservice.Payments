@@ -85,5 +85,15 @@ public static class MapsterConfig
                 Success = src.Success,
                 NextAction = (NextActionType)src.NextAction
             });
+
+        TypeAdapterConfig<InitiatePaymentResponseDto, InitiatePaymentResponse>
+            .NewConfig()
+            .MapWith(src => new InitiatePaymentResponse
+            {
+                NextAction = (NextActionType) src.NextAction,
+                PaymentId = src.PaymentId.ToString(),
+                RedirectUrl = src.RedirectUrl,
+                Success = src.Success
+            });
     }
 }
