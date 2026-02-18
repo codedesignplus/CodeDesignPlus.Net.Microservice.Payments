@@ -36,7 +36,7 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         }
         catch (CodeDesignPlusException ex)
         {
-            logger.LogWarning(ex, "An error occurred while seeding payment methods: {Message}", ex.Message);
+            logger.LogError(ex, "An error occurred while seeding payment methods: {Message}", ex.Message);
         }
     }
 

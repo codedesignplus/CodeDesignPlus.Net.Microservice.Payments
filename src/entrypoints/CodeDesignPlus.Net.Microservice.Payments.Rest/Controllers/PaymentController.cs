@@ -30,9 +30,7 @@ public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactor
     {
 
         if (!Enum.TryParse(providerName, true, out PaymentProvider provider))
-        {
-            return BadRequest("Proveedor de pago no válido.");
-        }
+            return BadRequest("Payment provider not valid.");
 
         var adapter = adapterFactory.GetAdapter(provider);
 

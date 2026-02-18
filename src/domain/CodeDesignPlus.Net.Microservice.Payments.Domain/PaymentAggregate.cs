@@ -57,7 +57,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <summary>
     /// Almacena la respuesta final y asíncrona del proveedor (ej. del webhook).
     /// </summary>
-    public Dictionary<string, string?> FinalResponse { get; private set; } = [];
+    public Dictionary<string, string> FinalResponse { get; private set; } = [];
 
 
     /// <summary>
@@ -135,7 +135,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook)
     /// y actualiza el estado del pago a 'Succeeded' o 'Failed'.
     /// </summary>
-    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response)
+    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string> response)
     {
         DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
         DomainGuard.IsTrue(finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed, Errors.FinalStatusMustBeSucceededOrFailed);

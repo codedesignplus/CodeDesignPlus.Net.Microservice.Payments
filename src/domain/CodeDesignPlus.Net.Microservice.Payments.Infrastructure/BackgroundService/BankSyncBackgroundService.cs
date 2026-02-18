@@ -31,13 +31,13 @@ public class BankSyncBackgroundService(ILogger<BankSyncBackgroundService> logger
 
                     if (banks == null)
                     {
-                        logger.LogWarning("No banks data received from PayU.");
+                        logger.LogDebug("No banks data received from PayU.");
                         continue;
                     }
 
                     if (banks.Code != "SUCCESS")
                     {
-                        logger.LogWarning("Failed to retrieve banks: {Error}", banks.Error);
+                        logger.LogDebug("Failed to retrieve banks: {Error}", banks.Error);
                         continue;
                     }
 

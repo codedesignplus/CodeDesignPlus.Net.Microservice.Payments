@@ -183,6 +183,8 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             var receivedSignature = response.RawData.GetValueOrDefault("sign");
             var referenceSale = response.RawData.GetValueOrDefault("reference_sale");
 
+            logger.LogWarning("Processing webhook for reference sale: {ReferenceSale}", referenceSale);
+
             InfrastructureGuard.IsNullOrEmpty(merchantId, Errors.MerchantIdMissing);
             InfrastructureGuard.IsNullOrEmpty(currency, Errors.CurrencyMissing);
             InfrastructureGuard.IsNullOrEmpty(state, Errors.StateMissing);
@@ -198,6 +200,8 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             var valueString = valorDecimal.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
             var expectedSignature = GenerateMd5Hash($"{payuOptions.ApiKey}~{merchantId}~{referenceSale}~{valueString}~{currency}~{state}");
 
+            logger.LogWarning("Expected signature: {ExpectedSignature}, Received signature: {ReceivedSignature}", expectedSignature, receivedSignature);
+
             response.IsSignatureValid = string.Equals(expectedSignature, receivedSignature, StringComparison.OrdinalIgnoreCase);
 
             response.FinalStatus = state switch
@@ -207,11 +211,15 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                 "5" => PaymentStatus.Expired,
                 _ => PaymentStatus.Unknown
             };
+
+            logger.LogWarning("Final status for reference sale {ReferenceSale}: {FinalStatus}", referenceSale, response.FinalStatus);
         }
         else
         {
             response.IsSignatureValid = false;
         }
+
+        logger.LogWarning("Webhook processing completed for reference sale: {ReferenceSale}", response.PaymentId);
 
         return await Task.FromResult(response);
     }
@@ -231,8 +239,6 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
     {
         var json = JsonSerializer.Serialize(request, settings);
 
-        logger.LogWarning("Sending request to Payu: {@Request}", json);
-
         var httpRequest = new HttpRequestMessage
         {
             RequestUri = new Uri(url, UriKind.Relative),
@@ -246,7 +252,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        logger.LogWarning("Received response from Payu: {@Response}", responseContent);
+        logger.LogDebug("Received response from Payu: {@Response}", responseContent);
 
         return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }

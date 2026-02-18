@@ -6,7 +6,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 public record UpdateStatusCommand(
     Guid Id,
     PaymentStatus Status,
-    Dictionary<string, string?> Metadata
+    Dictionary<string, string> Metadata
 ) : IRequest;
 
 public class Validator : AbstractValidator<UpdateStatusCommand>
