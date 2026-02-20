@@ -3,7 +3,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 
-[EventKey<PaymentAggregate>(1, "PaymentInitiatedDomainEvent")]
+[EventKey<PaymentAggregate>(1, "PaymentInitiatedDomainEvent", autoCreate: false)]
 public class PaymentInitiatedDomainEvent(
     Guid aggregateId,
     string module,
