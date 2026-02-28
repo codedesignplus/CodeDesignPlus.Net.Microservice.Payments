@@ -1,6 +1,6 @@
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 
-[EventKey<PaymentAggregate>(1, "PaymentInitiationRespondedDomainEvent", autoCreate: false)]
+[EventKey<PaymentAggregate>(1, "PaymentInitiationRespondedDomainEvent")]
 public class PaymentInitiationRespondedDomainEvent(
     Guid aggregateId,
     Dictionary<string, string?> response,
