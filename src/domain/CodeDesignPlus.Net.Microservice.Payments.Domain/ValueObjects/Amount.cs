@@ -8,10 +8,10 @@ public sealed partial class Amount
     private static partial Regex CurrencyRegex();
 
     public long Value { get; private set; }
-    public string? Currency { get; private set; }
+    public string Currency { get; private set; } = null!;
 
     [JsonConstructor]
-    private Amount(long value, string? currency)
+    private Amount(long value, string currency)
     {
         ApplicationGuard.IsLessThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
 
@@ -22,7 +22,7 @@ public sealed partial class Amount
         this.Currency = currency;
     }
 
-    public static Amount Create(long value, string? currency)
+    public static Amount Create(long value, string currency)
     {
         return new Amount(value, currency);
     }

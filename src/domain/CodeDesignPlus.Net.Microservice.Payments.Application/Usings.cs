@@ -11,6 +11,7 @@ global using CodeDesignPlus.Net.Core.Abstractions;
 global using CodeDesignPlus.Net.Serializers;
 global using NodaTime;
 global using CodeDesignPlus.Net.Cache.Abstractions;
+global using CodeDesignPlus.Net.ValueObjects.Common;
 
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain;

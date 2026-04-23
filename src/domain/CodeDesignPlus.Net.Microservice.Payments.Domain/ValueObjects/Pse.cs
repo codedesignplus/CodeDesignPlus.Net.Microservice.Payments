@@ -2,27 +2,35 @@ using Newtonsoft.Json;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-public sealed partial class Pse
+public sealed partial record Pse
 {
-    public string PseCode { get; private set; } = null!;
-    public string TypePerson { get; private set; } = null!;
-    public string PseResponseUrl { get; private set; } = null!;
+    [GeneratedRegex(@"^https?:\/\/([a-zA-Z0-9\-\.]+)(:[0-9]+)?(\/[^\s]*)?$", RegexOptions.Compiled)]
+    private static partial Regex UrlRegex();
+
+    public string PseCode { get; init; }
+    public string TypePerson { get; init; }
+    public string PseResponseUrl { get; init; }
 
     [JsonConstructor]
     private Pse(string pseCode, string typePerson, string pseResponseUrl)
     {
-        DomainGuard.IsNullOrEmpty(pseCode, Errors.PseCodeCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(pseCode.Length, 34, Errors.PseCodeCannotBeGreaterThan34Characters);
+        var normalizedPseCode = pseCode?.Trim() ?? string.Empty;
+        var normalizedTypePerson = typePerson?.Trim().ToUpperInvariant() ?? string.Empty;
+        var normalizedUrl = pseResponseUrl?.Trim() ?? string.Empty;
 
-        DomainGuard.IsNullOrEmpty(typePerson, Errors.TypePersonCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(typePerson.Length, 1, Errors.TypePersonCannotBeGreaterThan2Characters);
+        DomainGuard.IsNullOrEmpty(normalizedPseCode, Errors.PseCodeCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(normalizedPseCode.Length, 34, Errors.PseCodeCannotBeGreaterThan34Characters);
 
-        DomainGuard.IsNullOrEmpty(pseResponseUrl, Errors.PseResponseUrlCannotBeNullOrEmpty);
-        DomainGuard.IsGreaterThan(pseResponseUrl.Length, 255, Errors.PseResponseUrlCannotBeGreaterThan255Characters);
+        DomainGuard.IsNullOrEmpty(normalizedTypePerson, Errors.TypePersonCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(normalizedTypePerson.Length, 1, Errors.TypePersonCannotBeGreaterThan1Character);
 
-        PseCode = pseCode;
-        TypePerson = typePerson;
-        PseResponseUrl = pseResponseUrl;
+        DomainGuard.IsNullOrEmpty(normalizedUrl, Errors.PseResponseUrlCannotBeNullOrEmpty);
+        DomainGuard.IsGreaterThan(normalizedUrl.Length, 255, Errors.PseResponseUrlCannotBeGreaterThan255Characters);
+        DomainGuard.IsFalse(UrlRegex().IsMatch(normalizedUrl), Errors.PseResponseUrlMustBeValidFormat);
+
+        PseCode = normalizedPseCode;
+        TypePerson = normalizedTypePerson;
+        PseResponseUrl = normalizedUrl;
     }
 
     public static Pse Create(string pseCode, string typePerson, string pseResponseUrl)

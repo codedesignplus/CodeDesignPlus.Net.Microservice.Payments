@@ -1,5 +1,6 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
+using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 
@@ -7,9 +8,9 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 public class PaymentInitiatedDomainEvent(
     Guid aggregateId,
     string module,
-    Amount subTotal,
-    Amount tax,
-    Amount total,
+    Money subTotal,
+    Money tax,
+    Money total,
     Payer payer,
     PaymentMethod paymentMethod,
     string description,
@@ -21,9 +22,9 @@ public class PaymentInitiatedDomainEvent(
 ) : DomainEvent(aggregateId, eventId, occurredAt, metadata)
 {
     public string Module { get; } = module;
-    public Amount SubTotal { get; } = subTotal;
-    public Amount Tax { get; } = tax;
-    public Amount Total { get; } = total;
+    public Money SubTotal { get; } = subTotal;
+    public Money Tax { get; } = tax;
+    public Money Total { get; } = total;
     public Payer Payer { get; } = payer;
     public PaymentMethod PaymentMethod { get; } = paymentMethod;
     public string Description { get; } = description;
@@ -32,9 +33,9 @@ public class PaymentInitiatedDomainEvent(
 
     public static PaymentInitiatedDomainEvent Create(Guid aggregateId, 
         string module,
-        Amount subTotal,
-        Amount tax,
-        Amount total,
+        Money subTotal,
+        Money tax,
+        Money total,
         Payer payer,
         PaymentMethod paymentMethod,
         string description,

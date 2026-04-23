@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-public partial class Address
+public partial record Address
 {
     [GeneratedRegex(@"^[A-Z]{2}$")]
     private static partial Regex CountryRegex();

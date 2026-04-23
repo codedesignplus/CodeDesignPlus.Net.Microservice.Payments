@@ -7,6 +7,10 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Enums;
 public enum NextActionType
 {
     /// <summary>
+    /// No se requiere acción adicional.
+    /// </summary>
+    None,
+    /// <summary>
     /// Redirigir al usuario a una URL específica proporcionada por el proveedor de pagos.
     /// </summary>
     Redirect,

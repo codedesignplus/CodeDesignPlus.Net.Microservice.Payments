@@ -2,28 +2,32 @@ using System.Text.Json.Serialization;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-public sealed partial class PaymentMethod
+public sealed partial record PaymentMethod
 {
 
     public string Type { get; private set; }
 
-    public CreditCard? CreditCard { get; private set; }
+    public CreditCardToken? CreditCardToken { get; private set; }
     public Pse? Pse { get; private set; }
 
     [JsonConstructor]
-    public PaymentMethod(string type, CreditCard? creditCard, Pse? pse)
+    public PaymentMethod(string type, CreditCardToken? creditCardToken, Pse? pse)
     {
-        ApplicationGuard.IsNullOrEmpty(type, Errors.PaymentMethodCannotBeNullOrEmpty);
-        ApplicationGuard.IsTrue(creditCard is null && pse is null, Errors.PaymentMethodInfoMustHaveOnePaymentMethod);
+        DomainGuard.IsNullOrEmpty(type, Errors.PaymentMethodCannotBeNullOrEmpty);
 
-        this.CreditCard = creditCard;
+        var bothAreNull = creditCardToken == null && pse == null;
+        var bothAreProvided = creditCardToken != null && pse != null;
+
+        DomainGuard.IsTrue(bothAreNull || bothAreProvided, Errors.PaymentMethodMustHaveExactlyOneOption);
+
+        this.CreditCardToken = creditCardToken;
         this.Pse = pse;
         this.Type = type;
 
 
     }
-    public static PaymentMethod Create(string paymentMethod, CreditCard? creditCard = null, Pse? pse = null)
+    public static PaymentMethod Create(string paymentMethod, CreditCardToken? creditCardToken = null, Pse? pse = null)
     {
-        return new PaymentMethod(paymentMethod, creditCard, pse);
+        return new PaymentMethod(paymentMethod, creditCardToken, pse);
     }
 }

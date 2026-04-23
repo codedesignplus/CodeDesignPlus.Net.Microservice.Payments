@@ -5,6 +5,7 @@ global using CodeDesignPlus.Net.Mongo.Abstractions;
 global using CodeDesignPlus.Net.Serializers;
 global using System.Text.RegularExpressions;
 global using NodaTime;
+global using CodeDesignPlus.Net.ValueObjects.Common;
 
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 

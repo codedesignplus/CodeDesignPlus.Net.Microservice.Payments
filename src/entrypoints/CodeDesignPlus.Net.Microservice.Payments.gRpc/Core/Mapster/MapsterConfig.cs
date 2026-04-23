@@ -35,14 +35,14 @@ public static class MapsterConfig
                 src.BillingAddress.Adapt<Domain.ValueObjects.Address>()
             ));
 
-        TypeAdapterConfig<CreditCard, Domain.ValueObjects.CreditCard>
+        TypeAdapterConfig<CreditCard, Domain.ValueObjects.CreditCardToken>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.CreditCard.Create(
-                src.Number,
-                src.SecurityCode,
+            .MapWith(src => Domain.ValueObjects.CreditCardToken.Create(
+                src.Last4Digits,
+                src.CardHolderName,
+                src.CreditCardTokenId,
                 src.ExpirationDate,
-                src.Name,
-                (sbyte)src.InstallmentsNumber
+                src.InstallmentsNumber
             ));
 
         TypeAdapterConfig<Pse, Domain.ValueObjects.Pse>
@@ -57,7 +57,7 @@ public static class MapsterConfig
             .NewConfig()
             .MapWith(src => Domain.ValueObjects.PaymentMethod.Create(
                 src.Type,
-                src.CreditCard.Adapt<Domain.ValueObjects.CreditCard>(),
+                src.CreditCard.Adapt<Domain.ValueObjects.CreditCardToken>(),
                 src.Pse.Adapt<Domain.ValueObjects.Pse>()
             ));
 

@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
-public partial class Payer
+public partial record Payer
 {
     [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")]
     private static partial Regex EmailRegex();
@@ -32,6 +32,8 @@ public partial class Payer
 
         DomainGuard.IsNullOrEmpty(dniType, Errors.DniTypeCannotBeNullOrEmpty);
         DomainGuard.IsGreaterThan(dniType.Length, 3, Errors.DniTypeCannotBeGreaterThan3Characters);
+
+        DomainGuard.IsNull(billingAddress, Errors.BillingAddressCannotBeNull);
 
         EmailAddress = emailAddress;
         FullName = fullName;

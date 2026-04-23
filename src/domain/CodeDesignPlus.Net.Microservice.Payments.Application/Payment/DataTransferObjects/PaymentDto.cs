@@ -9,9 +9,9 @@ public class PaymentDto : IDtoBase
     public string Module { get; set; } = null!;
     public Guid? Tenant { get; set; }
     public PaymentStatus Status { get; set; }
-    public Amount SubTotal { get; set; } = null!;
-    public Amount Tax { get; set; } = null!;
-    public Amount Total { get; set; } = null!;
+    public Net.ValueObjects.Financial.Money SubTotal { get; set; } = null!;
+    public Net.ValueObjects.Financial.Money Tax { get; set; } = null!;
+    public Net.ValueObjects.Financial.Money Total { get; set; } = null!;
     public Payer Payer { get; set; } = null!;
     public Domain.ValueObjects.PaymentMethod PaymentMethod { get; set; } = null!;
     public string Description { get; set; } = null!;

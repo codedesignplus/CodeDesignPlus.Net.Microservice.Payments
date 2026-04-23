@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
+using CodeDesignPlus.Net.ValueObjects.Financial;
 using DnsClient.Internal;
 using Microsoft.Extensions.Logging;
 
@@ -24,9 +25,9 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
             request.Id,
             request.Module,
             request.ReferenceId,
-            request.SubTotal,
-            request.Tax,
-            request.Total,
+            Money.FromLong(request.SubTotal.Value, request.SubTotal.Currency),
+            Money.FromLong(request.Tax.Value, request.Tax.Currency),
+            Money.FromLong(request.Total.Value, request.Total.Currency),
             request.Payer,
             request.PaymentMethod,
             request.Description,

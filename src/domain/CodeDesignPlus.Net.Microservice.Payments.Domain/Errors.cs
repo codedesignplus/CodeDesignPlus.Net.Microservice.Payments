@@ -147,4 +147,23 @@ public class Errors : IErrorCodes
     public const string ReferenceIdCannotBeEmpty = "211 : Reference ID cannot be empty";
 
     public const string PaymentIdCannotBeEmpty = "212 : Payment ID cannot be empty";
+
+    public const string PayerIdCannotBeEmpty = "213 : Payer ID cannot be empty";
+    public const string CreditCardTokenIdCannotBeNullOrEmpty = "214 : Credit Card Token ID cannot be null or empty";
+    public const string CreditCardNameCannotBeNullOrEmpty = "215 : Credit Card Name cannot be null or empty";
+    public const string CreditCardIdentificationNumberCannotBeNullOrEmpty = "216 : Credit Card Identification Number cannot be null or empty";
+    public const string CreditCardPaymentMethodCannotBeNullOrEmpty = "217 : Credit Card Payment Method cannot be null or empty";
+    public const string CreditCardMaskedNumberCannotBeNullOrEmpty = "218 : Credit Card Masked Number cannot be null or empty";
+
+    public const string TotalMustBeEqualToSubTotalPlusTax = "219 : Total must be equal to SubTotal plus Tax";
+
+    public const string PaymentProviderIsRequired = "220 : Payment Provider is required";
+
+    public const string PaymentMethodMustHaveExactlyOneOption = "221 : PaymentMethodInfo must have either CreditCard or Pse, but not both";
+
+    public const string TypePersonCannotBeGreaterThan1Character = "222 : TypePerson cannot be greater than 1 character";
+    public const string PseResponseUrlMustBeValidFormat = "223 : Pse Response URL must be a valid format";
+
+    public const string CreditCardLast4DigitsCannotBeNullOrEmpty = "224 : Credit Card Last 4 Digits cannot be null or empty";
+    public const string CreditCardCardHolderNameCannotBeNullOrEmpty = "225 : Credit Card Card Holder Name cannot be null or empty";
 }

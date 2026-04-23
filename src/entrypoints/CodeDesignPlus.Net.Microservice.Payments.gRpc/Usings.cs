@@ -8,5 +8,6 @@ global using CodeDesignPlus.Net.Exceptions.Models;
 global using Grpc.Core.Interceptors;
 global using CodeDesignPlus.Net.Serializers;
 global using NodaTime;
+global using CodeDesignPlus.Net.ValueObjects.Common;
 
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;

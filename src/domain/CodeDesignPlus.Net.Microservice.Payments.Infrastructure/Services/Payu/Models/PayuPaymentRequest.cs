@@ -242,7 +242,7 @@ public class PayuAmount
   /// <summary>
   /// Specifies the amount of the transaction, this value cannot have decimals.
   /// </summary>
-  public long Value { get; set; }
+  public decimal Value { get; set; }
   /// <summary>
   /// ISO code of the currency.
   /// </summary>
@@ -257,12 +257,12 @@ public class PayuCreditCard
   /// <summary>
   /// Credit card number.
   /// </summary>
-  public string Number { get; set; } = null!;
+  //public string Number { get; set; } = null!;
 
   /// <summary>
   /// Security code of the credit card (CVC2, CVV2, CID).
   /// </summary>
-  public string SecurityCode { get; set; } = null!;
+  //public string SecurityCode { get; set; } = null!;
 
   /// <summary>
   /// Expiration date of the credit card in YYYY/MM format.
@@ -272,12 +272,17 @@ public class PayuCreditCard
   /// <summary>
   /// Name of the cardholder as shown on the credit card.
   /// </summary>
-  public string Name { get; set; } = null!;
+  //public string Name { get; set; } = null!;
   /// <summary>
   /// Allows processing transactions without including the security code of the credit card.
   /// Your business requires authorization from PayU before using this functionality.
   /// </summary>
-  public bool ProcessWithoutCvv2 { get; set; } = false;
+  //public bool ProcessWithoutCvv2 { get; set; } = false;
+
+  /// <summary>
+  /// The token ID of the credit card.
+  /// </summary>
+  public string CreditCardTokenId { get; set; } = null!;
 }
 
 /// <summary>

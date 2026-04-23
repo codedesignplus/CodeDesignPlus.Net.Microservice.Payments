@@ -36,11 +36,11 @@ public class PaymentMethodInfoDtoValidator : AbstractValidator<Domain.ValueObjec
 {
     public PaymentMethodInfoDtoValidator()
     {
-        RuleFor(x => x.CreditCard).SetValidator(new CreditCardInfoDtoValidator()).When(x => x.CreditCard != null);
+        RuleFor(x => x.CreditCardToken).SetValidator(new CreditCardInfoDtoValidator()).When(x => x.CreditCardToken != null);
         RuleFor(x => x.Pse).SetValidator(new PseInfoDtoValidator()).When(x => x.Pse != null);
 
         RuleFor(x => x)
-            .Must(x => (x.CreditCard != null) ^ (x.Pse != null))
+            .Must(x => (x.CreditCardToken != null) ^ (x.Pse != null))
             .WithMessage("Either CreditCard or Pse information must be provided, but not both.");
     }
 }
@@ -88,14 +88,12 @@ public class PayerInfoDtoValidator : AbstractValidator<Payer>
     }
 }
 
-public class CreditCardInfoDtoValidator : AbstractValidator<CreditCard?>
+public class CreditCardInfoDtoValidator : AbstractValidator<CreditCardToken?>
 {
     public CreditCardInfoDtoValidator()
     {
-        RuleFor(x => x!.Number).NotEmpty().Length(13, 20).CreditCard();
-        RuleFor(x => x!.SecurityCode).NotEmpty().Length(3, 4);
         RuleFor(x => x!.ExpirationDate).NotEmpty().Length(7).Matches(@"^\d{4}/\d{2}$").WithMessage("Expiration date must be in YYYY/MM format.");
-        RuleFor(x => x!.Name).NotEmpty().MaximumLength(255);
+        RuleFor(x => x!.CreditCardTokenId).NotEmpty().NotNull();
     }
 }
 

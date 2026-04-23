@@ -54,6 +54,32 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
         return await Request<BankRequest, BankResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
     }
 
+    
+    public async Task<CreditCardTokenResponse?> TokenizeCreditCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken)
+    {
+        var request = new CreditCardTokenRequest
+        {
+            Language = payuOptions.Language,
+            Test = options.Value.IsTest,
+            Merchant = new Merchant
+            {
+                ApiLogin = payuOptions.ApiLogin,
+                ApiKey = payuOptions.ApiKey
+            },
+            CreditCardToken = new CreditCardTokenPayload
+            {
+                PayerId = user.IdUser.ToString(),
+                Name = name,
+                IdentificationNumber = identificationNumber,
+                PaymentMethod = paymentMethod,
+                Number = cardNumber,
+                ExpirationDate = expirationDate
+            },
+        };
+
+        return await Request<CreditCardTokenRequest, CreditCardTokenResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
+    }
+
     public async Task<InitiatePaymentResponseDto> InitiatePaymentAsync(PaymentAggregate payment, CancellationToken cancellationToken)
     {
         var payuRequest = new PayuPaymentRequest()
@@ -87,18 +113,18 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                     {
                         SubTotal = new PayuAmount
                         {
-                            Value = payment.SubTotal.Value,
-                            Currency = payment.SubTotal.Currency ?? payuOptions.Currency
+                            Value = payment.SubTotal.Amount,
+                            Currency = payment.SubTotal.Currency
                         },
                         Tax = new PayuAmount
                         {
-                            Value = payment.Tax.Value,
-                            Currency = payment.Tax.Currency ?? payuOptions.Currency
+                            Value = payment.Tax.Amount,
+                            Currency = payment.Tax.Currency
                         },
                         Total = new PayuAmount
                         {
-                            Value = payment.Total.Value,
-                            Currency = payment.Total.Currency ?? payuOptions.Currency
+                            Value = payment.Total.Amount,
+                            Currency = payment.Total.Currency
                         }
                     },
                 },
@@ -122,17 +148,13 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             }
         };
 
-        if (payment.PaymentMethod.CreditCard != null)
+        if (payment.PaymentMethod.CreditCardToken != null)
         {
+            payuRequest.Transaction.CreditCardTokenId = payment.PaymentMethod.CreditCardToken.CreditCardTokenId;
             payuRequest.Transaction.CreditCard = new PayuCreditCard
             {
-                Number = payment.PaymentMethod.CreditCard!.Number,
-                ExpirationDate = payment.PaymentMethod.CreditCard.ExpirationDate,
-                SecurityCode = payment.PaymentMethod.CreditCard.SecurityCode,
-                Name = payment.PaymentMethod.CreditCard.Name,
+                ExpirationDate = payment.PaymentMethod.CreditCardToken.ExpirationDate,
             };
-
-            payuRequest.Transaction.ExtraParameters.Add("INSTALLMENTS_NUMBER", payment.PaymentMethod.CreditCard.InstallmentsNumber.ToString());
         }
 
         if (payment.PaymentMethod.Pse != null)

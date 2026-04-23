@@ -8,6 +8,7 @@ global using Microsoft.Extensions.Options;
 global using MongoDB.Driver;
 global using CodeDesignPlus.Net.Serializers;
 global using NodaTime;
+global using CodeDesignPlus.Net.ValueObjects.Common;
 
 global using CodeDesignPlus.Net.Microservice.Payments.Domain;
 

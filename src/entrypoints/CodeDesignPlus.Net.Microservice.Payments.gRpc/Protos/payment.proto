@@ -56,10 +56,10 @@ message Address {
 }
 
 message CreditCard {
-  string number = 1;
-  string securityCode = 2;
-  string expirationDate = 3;
-  string name = 4;
+  string last4Digits = 1;
+  string cardHolderName = 2;
+  string creditCardTokenId = 3;
+  string expirationDate = 4;
   int32 installmentsNumber = 5;
 }
 
