@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Exceptions.Guards;
+using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
@@ -11,7 +12,7 @@ using System.Text;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 
-public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user, ILogger<PayUAdapter> logger, IHttpContextAccessor httpContextAccessor)
+public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user, ILogger<PayUAdapter> logger, IHttpContextAccessor httpContextAccessor, ICurrencyGrpc currencyGrpc)
     : IPayu
 {
     private readonly Newtonsoft.Json.JsonSerializerSettings settings = new()
@@ -54,9 +55,10 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
         return await Request<BankRequest, BankResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
     }
 
-    
+
     public async Task<CreditCardTokenResponse?> TokenizeCreditCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken)
     {
+
         var request = new CreditCardTokenRequest
         {
             Language = payuOptions.Language,
@@ -82,6 +84,8 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
     public async Task<InitiatePaymentResponseDto> InitiatePaymentAsync(PaymentAggregate payment, CancellationToken cancellationToken)
     {
+        var currency = await currencyGrpc.GetCurrencyAsync(code: payment.Total.Currency, cancellationToken: cancellationToken);
+
         var payuRequest = new PayuPaymentRequest()
         {
             Language = payuOptions.Language,
@@ -113,17 +117,17 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                     {
                         SubTotal = new PayuAmount
                         {
-                            Value = payment.SubTotal.Amount,
+                            Value = payment.SubTotal.ToDecimal(currency.DecimalDigits),
                             Currency = payment.SubTotal.Currency
                         },
                         Tax = new PayuAmount
                         {
-                            Value = payment.Tax.Amount,
+                            Value = payment.Tax.ToDecimal(currency.DecimalDigits),
                             Currency = payment.Tax.Currency
                         },
                         Total = new PayuAmount
                         {
-                            Value = payment.Total.Amount,
+                            Value = payment.Total.ToDecimal(currency.DecimalDigits),
                             Currency = payment.Total.Currency
                         }
                     },
