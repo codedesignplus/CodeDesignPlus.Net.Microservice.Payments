@@ -13,10 +13,9 @@ public sealed partial class Amount
     [JsonConstructor]
     private Amount(long value, string currency)
     {
-        ApplicationGuard.IsLessThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
-
-        if(currency is not null)
-            ApplicationGuard.IsFalse(CurrencyRegex().IsMatch(currency), Errors.CurrencyMustBeThreeLetterUppercaseISO4217Code);
+        DomainGuard.IsLessThan(value, 0, Errors.AmountValueMustBeGreaterThanZero);
+        DomainGuard.IsNullOrEmpty(currency, Errors.CurrencyIsRequired);
+        DomainGuard.IsFalse(CurrencyRegex().IsMatch(currency), Errors.CurrencyMustBeThreeLetterUppercaseISO4217Code);
 
         this.Value = value;
         this.Currency = currency;

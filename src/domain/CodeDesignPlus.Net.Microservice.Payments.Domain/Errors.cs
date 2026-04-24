@@ -166,4 +166,6 @@ public class Errors : IErrorCodes
 
     public const string CreditCardLast4DigitsCannotBeNullOrEmpty = "224 : Credit Card Last 4 Digits cannot be null or empty";
     public const string CreditCardCardHolderNameCannotBeNullOrEmpty = "225 : Credit Card Card Holder Name cannot be null or empty";
+
+    public const string CurrencyIsRequired = "226 : Currency is required";
 }
