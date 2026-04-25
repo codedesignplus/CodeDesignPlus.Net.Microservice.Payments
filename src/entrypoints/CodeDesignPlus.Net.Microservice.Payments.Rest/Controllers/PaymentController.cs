@@ -2,6 +2,7 @@ using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.TokenizeCard;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 
@@ -28,7 +29,6 @@ public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactor
     [AllowAnonymous]
     public async Task<IActionResult> Notify(string providerName, CancellationToken cancellationToken)
     {
-
         if (!Enum.TryParse(providerName, true, out PaymentProvider provider))
             return BadRequest("Payment provider not valid.");
 
@@ -44,5 +44,20 @@ public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactor
         await mediator.Send(command, cancellationToken);
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Tokenizes a credit card with the specified payment provider for future use.
+    /// </summary>
+    /// <param name="command">The tokenization request containing card details and provider.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">Returns the token and masked card data on success.</response>
+    /// <response code="400">If the request data is invalid.</response>
+    [HttpPost("tokenize")]
+    public async Task<IActionResult> TokenizeCard([FromBody] TokenizeCardCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+
+        return Ok(result);
     }
 }

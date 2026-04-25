@@ -29,4 +29,16 @@ public interface IPaymentProviderAdapter
     /// <param name="request">La solicitud HTTP entrante que contiene los datos del webhook.</param>
     /// <returns>Un DTO estandarizado con el resultado de la transacción (ej. Succeeded, Failed) y los datos validados.</returns>
     Task<ProcessWebhookResponseDto> ProcessWebhookAsync(HttpRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Tokeniza una tarjeta de crédito con el proveedor de pagos para uso futuro sin exponer el número de tarjeta.
+    /// </summary>
+    /// <param name="name">Nombre del titular de la tarjeta.</param>
+    /// <param name="identificationNumber">Número de identificación del titular.</param>
+    /// <param name="paymentMethod">Franquicia de la tarjeta (ej. VISA, MASTERCARD).</param>
+    /// <param name="cardNumber">Número completo de la tarjeta.</param>
+    /// <param name="expirationDate">Fecha de vencimiento en formato YYYY/MM.</param>
+    /// <param name="cancellationToken">Token de cancelación.</param>
+    /// <returns>Un DTO estandarizado con el token generado y los datos enmascarados de la tarjeta.</returns>
+    Task<TokenizeCardResponseDto> TokenizeCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken);
 }
