@@ -10,7 +10,7 @@ public record TokenizeCardCommand(
     string CardNumber,
     string ExpirationDate,
     PaymentProvider PaymentProvider
-) : IRequest<TokenizeCardResponseDto>;
+) : IRequest<TokenizeCardResponseDto?>;
 
 public class TokenizeCardCommandValidator : AbstractValidator<TokenizeCardCommand>
 {

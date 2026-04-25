@@ -25,5 +25,5 @@ public class ProcessWebhookResponseDto
     /// <summary>
     /// Datos crudos validados del webhook.
     /// </summary>
-    public Dictionary<string, string> RawData { get; set; } = [];
+    public Dictionary<string, string?> RawData { get; set; } = [];
 }

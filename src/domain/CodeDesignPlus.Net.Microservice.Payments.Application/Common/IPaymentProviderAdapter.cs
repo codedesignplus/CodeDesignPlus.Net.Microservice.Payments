@@ -40,5 +40,5 @@ public interface IPaymentProviderAdapter
     /// <param name="expirationDate">Fecha de vencimiento en formato YYYY/MM.</param>
     /// <param name="cancellationToken">Token de cancelación.</param>
     /// <returns>Un DTO estandarizado con el token generado y los datos enmascarados de la tarjeta.</returns>
-    Task<TokenizeCardResponseDto> TokenizeCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken);
+    Task<TokenizeCardResponseDto?> TokenizeCreditCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken);
 }

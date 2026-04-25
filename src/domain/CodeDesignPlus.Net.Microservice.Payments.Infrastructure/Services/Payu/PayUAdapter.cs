@@ -56,7 +56,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
     }
 
 
-    public async Task<CreditCardTokenResponse?> TokenizeCreditCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken)
+    public async Task<TokenizeCardResponseDto?> TokenizeCreditCardAsync(string name, string identificationNumber, string paymentMethod, string cardNumber, string expirationDate, CancellationToken cancellationToken)
     {
 
         var request = new CreditCardTokenRequest
@@ -79,7 +79,11 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             },
         };
 
-        return await Request<CreditCardTokenRequest, CreditCardTokenResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
+        var response = await Request<CreditCardTokenRequest, CreditCardTokenResponse>(request, "payments-api/4.0/service.cgi", cancellationToken);
+
+        InfrastructureGuard.IsNull(response, Errors.CreditCardTokenizationFailed);
+
+        return response.CreditCardToken;
     }
 
     public async Task<InitiatePaymentResponseDto> InitiatePaymentAsync(PaymentAggregate payment, CancellationToken cancellationToken)
@@ -200,7 +204,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
         if (request.Form.ContainsKey("merchant_id"))
         {
-            response.RawData = request.Form.Keys.ToDictionary(k => k, k => request.Form[k].ToString());
+            response.RawData = request.Form.Keys.ToDictionary(k => k, k => (string?)request.Form[k].ToString());
 
             var merchantId = response.RawData.GetValueOrDefault("merchant_id");
             var currency = response.RawData.GetValueOrDefault("currency");

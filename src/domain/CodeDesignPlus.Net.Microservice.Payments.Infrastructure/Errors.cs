@@ -25,4 +25,6 @@ public class Errors : IErrorCodes
     public const string ReferenceSaleMissing = "316 : Reference Sale Missing";
 
     public const string InvalidReferenceSale = "317 : Invalid Reference Sale";
+
+    public const string CreditCardTokenizationFailed = "318 : Credit Card Tokenization Failed";
 }
