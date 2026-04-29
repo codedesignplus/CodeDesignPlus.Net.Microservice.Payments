@@ -19,7 +19,7 @@ public class TokenizeCardCommandValidator : AbstractValidator<TokenizeCardComman
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
         RuleFor(x => x.IdentificationNumber).NotEmpty().MaximumLength(20);
         RuleFor(x => x.PaymentMethod).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.CardNumber).NotEmpty().CreditCard();
+        RuleFor(x => x.CardNumber).NotEmpty();
         RuleFor(x => x.ExpirationDate)
             .NotEmpty()
             .Length(7)
