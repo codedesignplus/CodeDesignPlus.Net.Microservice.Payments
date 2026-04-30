@@ -16,4 +16,6 @@ public class Errors: IErrorCodes
     public const string InvalidSignature = "207 : Invalid signature received";
 
     public const string PaymentProviderNotSupported = "208 : Payment provider not supported";
+
+    public const string NextActionInvalid = "209 : Next action is invalid";
 }

@@ -1,4 +1,7 @@
-﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
+﻿using CodeDesignPlus.Net.Exceptions.Extensions;
+using CodeDesignPlus.Net.Exceptions.Guards;
+using CodeDesignPlus.Net.Microservice.Payments.Application;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Core.Mapster;
 
@@ -42,6 +45,7 @@ public static class MapsterConfig
                 src.CardHolderName,
                 src.CreditCardTokenId,
                 src.ExpirationDate,
+                src.SecurityCode,
                 src.InstallmentsNumber
             ));
 
@@ -80,20 +84,21 @@ public static class MapsterConfig
             .NewConfig()
             .MapWith(src => new InitiatePaymentResponse
             {
-                PaymentId = src.PaymentId.ToString(),
-                RedirectUrl = src.RedirectUrl,
-                Success = src.Success,
-                NextAction = (NextActionType)src.NextAction
-            });
-
-        TypeAdapterConfig<InitiatePaymentResponseDto, InitiatePaymentResponse>
-            .NewConfig()
-            .MapWith(src => new InitiatePaymentResponse
-            {
-                NextAction = (NextActionType) src.NextAction,
+                NextAction = MapNextAction(src.NextAction),
                 PaymentId = src.PaymentId.ToString(),
                 RedirectUrl = src.RedirectUrl,
                 Success = src.Success
             });
+    }
+
+    private static NextActionType MapNextAction(Application.Payment.Enums.NextActionType nextAction)
+    {
+        return nextAction switch
+        {
+            Application.Payment.Enums.NextActionType.Redirect => NextActionType.Redirect,
+            Application.Payment.Enums.NextActionType.DisplayWidget => NextActionType.DisplayWidget,
+            Application.Payment.Enums.NextActionType.WaitConfirmation => NextActionType.WaitConfirmation,
+            _ => throw new CodeDesignPlusException(Layer.Infrastructure, Errors.NextActionInvalid.GetCode(), Errors.NextActionInvalid.GetMessage())
+        };
     }
 }

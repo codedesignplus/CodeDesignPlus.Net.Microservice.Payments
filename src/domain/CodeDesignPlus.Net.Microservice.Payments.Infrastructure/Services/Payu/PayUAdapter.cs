@@ -62,7 +62,6 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
         var request = new CreditCardTokenRequest
         {
             Language = payuOptions.Language,
-            Test = options.Value.IsTest,
             Merchant = new Merchant
             {
                 ApiLogin = payuOptions.ApiLogin,
@@ -162,6 +161,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             payuRequest.Transaction.CreditCard = new PayuCreditCard
             {
                 ExpirationDate = payment.PaymentMethod.CreditCardToken.ExpirationDate,
+                SecurityCode = payment.PaymentMethod.CreditCardToken.SecurityCode
             };
         }
 
@@ -282,7 +282,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        logger.LogDebug("Received response from Payu: {@Response}", responseContent);
+        logger.LogWarning("Received response from Payu: {@Response}", responseContent);
 
         return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }

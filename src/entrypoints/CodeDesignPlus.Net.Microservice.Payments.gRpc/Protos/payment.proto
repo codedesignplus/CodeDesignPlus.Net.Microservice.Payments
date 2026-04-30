@@ -60,7 +60,8 @@ message CreditCard {
   string cardHolderName = 2;
   string creditCardTokenId = 3;
   string expirationDate = 4;
-  int32 installmentsNumber = 5;
+  string securityCode = 5;
+  int32 installmentsNumber = 6;
 }
 
 message Pse {

@@ -262,7 +262,7 @@ public class PayuCreditCard
   /// <summary>
   /// Security code of the credit card (CVC2, CVV2, CID).
   /// </summary>
-  //public string SecurityCode { get; set; } = null!;
+  public string SecurityCode { get; set; } = null!;
 
   /// <summary>
   /// Expiration date of the credit card in YYYY/MM format.

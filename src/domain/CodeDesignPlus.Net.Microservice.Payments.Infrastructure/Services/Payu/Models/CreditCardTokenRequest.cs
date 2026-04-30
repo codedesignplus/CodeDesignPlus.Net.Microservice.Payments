@@ -16,10 +16,6 @@ public class CreditCardTokenRequest
   /// </summary>
   public string Command { get; } = "CREATE_TOKEN";
   /// <summary>
-  /// Assigns true if the request is in test mode. If not, assign false.
-  /// </summary>
-  public bool Test { get; set; } = false;
-  /// <summary>
   /// This object contains the authentication data.
   /// </summary>
   public Merchant Merchant { get; set; } = null!;
