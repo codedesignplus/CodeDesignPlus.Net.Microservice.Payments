@@ -1,10 +1,11 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
+using CodeDesignPlus.Net.ValueObjects.Payment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 [DtoGenerator]
-public record InitiatePaymentCommand(Guid Id, string Module, Guid ReferenceId, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, Domain.ValueObjects.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider) : IRequest<InitiatePaymentResponseDto>;
+public record InitiatePaymentCommand(Guid Id, string Module, Guid ReferenceId, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, ValueObjects.Payment.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider) : IRequest<InitiatePaymentResponseDto>;
 
 public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePaymentCommand>
 {
@@ -32,15 +33,15 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
     }
 }
 
-public class PaymentMethodInfoDtoValidator : AbstractValidator<Domain.ValueObjects.PaymentMethod>
+public class PaymentMethodInfoDtoValidator : AbstractValidator<ValueObjects.Payment.PaymentMethod>
 {
     public PaymentMethodInfoDtoValidator()
     {
-        RuleFor(x => x.CreditCardToken).SetValidator(new CreditCardInfoDtoValidator()).When(x => x.CreditCardToken != null);
+        RuleFor(x => x.CreditCard).SetValidator(new CreditCardInfoDtoValidator()).When(x => x.CreditCard != null);
         RuleFor(x => x.Pse).SetValidator(new PseInfoDtoValidator()).When(x => x.Pse != null);
 
         RuleFor(x => x)
-            .Must(x => (x.CreditCardToken != null) ^ (x.Pse != null))
+            .Must(x => (x.CreditCard != null) ^ (x.Pse != null))
             .WithMessage("Either CreditCard or Pse information must be provided, but not both.");
     }
 }
@@ -88,12 +89,12 @@ public class PayerInfoDtoValidator : AbstractValidator<Payer>
     }
 }
 
-public class CreditCardInfoDtoValidator : AbstractValidator<CreditCardToken?>
+public class CreditCardInfoDtoValidator : AbstractValidator<CreditCard?>
 {
     public CreditCardInfoDtoValidator()
     {
         RuleFor(x => x!.ExpirationDate).NotEmpty().Length(7).Matches(@"^\d{4}/\d{2}$").WithMessage("Expiration date must be in YYYY/MM format.");
-        RuleFor(x => x!.CreditCardTokenId).NotEmpty().NotNull();
+        RuleFor(x => x!.Token).NotEmpty().NotNull();
     }
 }
 

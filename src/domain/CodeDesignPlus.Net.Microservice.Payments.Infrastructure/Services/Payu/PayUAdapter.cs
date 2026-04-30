@@ -155,13 +155,13 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             }
         };
 
-        if (payment.PaymentMethod.CreditCardToken != null)
+        if (payment.PaymentMethod.CreditCard != null)
         {
-            payuRequest.Transaction.CreditCardTokenId = payment.PaymentMethod.CreditCardToken.CreditCardTokenId;
+            payuRequest.Transaction.CreditCardTokenId = payment.PaymentMethod.CreditCard.Token;
             payuRequest.Transaction.CreditCard = new PayuCreditCard
             {
-                ExpirationDate = payment.PaymentMethod.CreditCardToken.ExpirationDate,
-                SecurityCode = payment.PaymentMethod.CreditCardToken.SecurityCode
+                ExpirationDate = payment.PaymentMethod.CreditCard.ExpirationDate,
+                SecurityCode = payment.PaymentMethod.CreditCard.SecurityCode
             };
         }
 

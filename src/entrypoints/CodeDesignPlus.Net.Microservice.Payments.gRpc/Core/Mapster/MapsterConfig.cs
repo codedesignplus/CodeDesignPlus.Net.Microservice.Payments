@@ -38,31 +38,31 @@ public static class MapsterConfig
                 src.BillingAddress.Adapt<Domain.ValueObjects.Address>()
             ));
 
-        TypeAdapterConfig<CreditCard, Domain.ValueObjects.CreditCardToken>
+        TypeAdapterConfig<CreditCard, ValueObjects.Payment.CreditCard>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.CreditCardToken.Create(
-                src.Last4Digits,
-                src.CardHolderName,
+            .MapWith(src => ValueObjects.Payment.CreditCard.Create(
                 src.CreditCardTokenId,
+                src.Last4Digits,
                 src.ExpirationDate,
+                src.CardHolderName,
                 src.SecurityCode,
                 src.InstallmentsNumber
             ));
 
-        TypeAdapterConfig<Pse, Domain.ValueObjects.Pse>
+        TypeAdapterConfig<Pse, ValueObjects.Payment.Pse>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Pse.Create(
+            .MapWith(src => ValueObjects.Payment.Pse.Create(
                 src.PseCode,
                 src.TypePerson,
                 src.PseResponseUrl
             ));
 
-        TypeAdapterConfig<PaymentMethod, Domain.ValueObjects.PaymentMethod>
+        TypeAdapterConfig<PaymentMethod, ValueObjects.Payment.PaymentMethod>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.PaymentMethod.Create(
+            .MapWith(src => ValueObjects.Payment.PaymentMethod.Create(
                 src.Type,
-                src.CreditCard.Adapt<Domain.ValueObjects.CreditCardToken>(),
-                src.Pse.Adapt<Domain.ValueObjects.Pse>()
+                src.Pse.Adapt<ValueObjects.Payment.Pse>(),
+                src.CreditCard.Adapt<ValueObjects.Payment.CreditCard>()
             ));
 
         TypeAdapterConfig<InitiatePaymentRequest, InitiatePaymentCommand>
@@ -76,7 +76,7 @@ public static class MapsterConfig
                 src.Total.Adapt<Domain.ValueObjects.Amount>(),
                 src.Description,
                 src.Payer.Adapt<Domain.ValueObjects.Payer>(),
-                src.PaymentMethod.Adapt<Domain.ValueObjects.PaymentMethod>(),
+                src.PaymentMethod.Adapt<ValueObjects.Payment.PaymentMethod>(),
                 (Domain.Enums.PaymentProvider)src.Provider
             ));
 

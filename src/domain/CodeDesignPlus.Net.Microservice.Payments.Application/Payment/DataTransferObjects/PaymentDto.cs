@@ -13,7 +13,7 @@ public class PaymentDto : IDtoBase
     public Net.ValueObjects.Financial.Money Tax { get; set; } = null!;
     public Net.ValueObjects.Financial.Money Total { get; set; } = null!;
     public Payer Payer { get; set; } = null!;
-    public Domain.ValueObjects.PaymentMethod PaymentMethod { get; set; } = null!;
+    public ValueObjects.Payment.PaymentMethod PaymentMethod { get; set; } = null!;
     public string Description { get; set; } = null!;
 
     public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.None;
