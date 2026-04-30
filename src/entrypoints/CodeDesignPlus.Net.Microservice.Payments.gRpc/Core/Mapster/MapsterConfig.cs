@@ -84,21 +84,10 @@ public static class MapsterConfig
             .NewConfig()
             .MapWith(src => new InitiatePaymentResponse
             {
-                NextAction = MapNextAction(src.NextAction),
+                NextAction =(NextActionType)src.NextAction,
                 PaymentId = src.PaymentId.ToString(),
                 RedirectUrl = src.RedirectUrl,
                 Success = src.Success
             });
-    }
-
-    private static NextActionType MapNextAction(Application.Payment.Enums.NextActionType nextAction)
-    {
-        return nextAction switch
-        {
-            Application.Payment.Enums.NextActionType.Redirect => NextActionType.Redirect,
-            Application.Payment.Enums.NextActionType.DisplayWidget => NextActionType.DisplayWidget,
-            Application.Payment.Enums.NextActionType.WaitConfirmation => NextActionType.WaitConfirmation,
-            _ => throw new CodeDesignPlusException(Layer.Infrastructure, Errors.NextActionInvalid.GetCode(), Errors.NextActionInvalid.GetMessage())
-        };
     }
 }

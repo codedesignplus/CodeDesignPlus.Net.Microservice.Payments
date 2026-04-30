@@ -85,9 +85,10 @@ enum PaymentStatus {
 }
 
 enum NextActionType {
-  Redirect = 0;
-  DisplayWidget = 1;
-  WaitConfirmation = 2;
+  Undefined = 0;
+  Redirect = 1;
+  DisplayWidget = 2;
+  WaitConfirmation = 3;
 }
 
 message InitiatePaymentResponse {
