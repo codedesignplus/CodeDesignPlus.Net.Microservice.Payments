@@ -5,7 +5,19 @@ using CodeDesignPlus.Net.ValueObjects.Payment;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 [DtoGenerator]
-public record InitiatePaymentCommand(Guid Id, string Module, Guid ReferenceId, Amount SubTotal, Amount Tax, Amount Total, string Description, Payer Payer, ValueObjects.Payment.PaymentMethod PaymentMethod, PaymentProvider PaymentProvider) : IRequest<InitiatePaymentResponseDto>;
+public record InitiatePaymentCommand(
+    Guid Id,
+    string Module,
+    Guid ReferenceId,
+    Amount SubTotal,
+    Amount Tax,
+    Amount Total,
+    string Description,
+    ValueObjects.User.Buyer Buyer,
+    ValueObjects.User.Payer Payer,
+    ValueObjects.Payment.PaymentMethod PaymentMethod,
+    PaymentProvider PaymentProvider
+) : IRequest<InitiatePaymentResponseDto>;
 
 public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePaymentCommand>
 {
@@ -15,7 +27,7 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
         RuleFor(x => x.Module).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ReferenceId).NotEmpty();
         RuleFor(x => x.Description).NotEmpty().MaximumLength(255);
-        RuleFor(x => x.PaymentProvider).IsInEnum().NotEqual(PaymentProvider.None);
+        RuleFor(x => x.PaymentProvider).IsInEnum().NotEqual(Domain.Enums.PaymentProvider.None);
 
         RuleFor(x => x.SubTotal)
             .NotNull().WithMessage("SubTotal cannot be null.")
@@ -29,7 +41,8 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
             .NotNull().WithMessage("Total cannot be null.")
             .SetValidator(new AmountDtoValidator());
 
-        RuleFor(x => x.Payer).NotNull().SetValidator(new PayerInfoDtoValidator());
+        RuleFor(x => x.Buyer).NotNull().SetValidator(new BuyerInfoDtoValidator());
+        RuleFor(x => x.Payer).SetValidator(new PayerInfoDtoValidator()).When(x => x.Payer != null);
     }
 }
 
@@ -60,28 +73,47 @@ public class AmountDtoValidator : AbstractValidator<Amount>
     }
 }
 
-public class AddressDtoValidator : AbstractValidator<Address>
+public class AddressDtoValidator : AbstractValidator<ValueObjects.User.Address?>
 {
     public AddressDtoValidator()
     {
-        RuleFor(x => x.Street).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Country).NotEmpty().Length(2).Matches(@"^[A-Z]{2}$").WithMessage("Country must be a two-letter uppercase ISO 3166-1 alpha-2 code.");
-        RuleFor(x => x.State).NotEmpty().MaximumLength(40);
-        RuleFor(x => x.City).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.PostalCode).NotEmpty().Matches(@"^\d{1,8}$").MaximumLength(8);
-        RuleFor(x => x.Phone).NotEmpty().Matches(@"^\+?\d{1,11}$").MaximumLength(11);
+        When(x => x != null, () =>
+        {
+            RuleFor(x => x!.Street).NotEmpty().MaximumLength(100);
+            RuleFor(x => x!.Country).NotEmpty().Length(2).Matches(@"^[A-Z]{2}$").WithMessage("Country must be a two-letter uppercase ISO 3166-1 alpha-2 code.");
+            RuleFor(x => x!.State).NotEmpty().MaximumLength(40);
+            RuleFor(x => x!.City).NotEmpty().MaximumLength(50);
+            RuleFor(x => x!.PostalCode).NotEmpty().Matches(@"^\d{1,8}$").MaximumLength(8);
+        });
     }
 }
 
-public class PayerInfoDtoValidator : AbstractValidator<Payer>
+
+public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
+{
+    public BuyerInfoDtoValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
+        RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.TypeDocument).NotNull();
+        RuleFor(x => x.Document).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.ShippingAddress)
+            .NotNull()
+            .SetValidator(new AddressDtoValidator())
+            .When(x => x.ShippingAddress != null);  
+    }
+}
+
+public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer>
 {
     public PayerInfoDtoValidator()
     {
         RuleFor(x => x.FullName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress().MaximumLength(255);
         RuleFor(x => x.ContactPhone).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.DniNumber).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.DniType).NotEmpty().MaximumLength(3);
+        RuleFor(x => x.TypeDocument).NotNull();
+        RuleFor(x => x.DocumentNumber).NotEmpty().MaximumLength(20);
         RuleFor(x => x.BillingAddress)
             .NotNull()
             .SetValidator(new AddressDtoValidator())
@@ -89,7 +121,7 @@ public class PayerInfoDtoValidator : AbstractValidator<Payer>
     }
 }
 
-public class CreditCardInfoDtoValidator : AbstractValidator<CreditCard?>
+public class CreditCardInfoDtoValidator : AbstractValidator<ValueObjects.Payment.CreditCard?>
 {
     public CreditCardInfoDtoValidator()
     {
@@ -98,7 +130,7 @@ public class CreditCardInfoDtoValidator : AbstractValidator<CreditCard?>
     }
 }
 
-public class PseInfoDtoValidator : AbstractValidator<Pse?>
+public class PseInfoDtoValidator : AbstractValidator<ValueObjects.Payment.Pse?>
 {
     public PseInfoDtoValidator()
     {

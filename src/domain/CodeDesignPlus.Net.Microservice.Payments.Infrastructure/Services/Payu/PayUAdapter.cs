@@ -87,6 +87,9 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
     public async Task<InitiatePaymentResponseDto> InitiatePaymentAsync(PaymentAggregate payment, CancellationToken cancellationToken)
     {
+        InfrastructureGuard.IsNull( payment.Payer.EmailAddress, Errors.PayerEmailAddressCannotBeNullOrEmpty);
+        InfrastructureGuard.IsNull( payment.Payer.ContactPhone, Errors.PayerContactPhoneCannotBeNullOrEmpty);
+
         var currency = await currencyGrpc.GetCurrencyAsync(code: payment.Total.Currency, cancellationToken: cancellationToken);
 
         var payuRequest = new PayuPaymentRequest()
@@ -110,11 +113,10 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                     Buyer = new PayuBuyer
                     {
                         MerchantBuyerId = user.IdUser.ToString(),
-                        FullName = payment.Payer.FullName,
-                        EmailAddress = payment.Payer.EmailAddress,
-                        ContactPhone = payment.Payer.ContactPhone,
-                        DniNumber = payment.Payer.DniNumber,
-                        DniType = payment.Payer.DniType,
+                        FullName = payment.Buyer.Name,
+                        EmailAddress = payment.Buyer.Email,
+                        ContactPhone = payment.Buyer.Phone,
+                        DniNumber = payment.Buyer.Document
                     },
                     AdditionalValues = new PayuAdditionalValues
                     {
@@ -143,8 +145,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                     FullName = payment.Payer.FullName,
                     EmailAddress = payment.Payer.EmailAddress,
                     ContactPhone = payment.Payer.ContactPhone,
-                    DniNumber = payment.Payer.DniNumber,
-                    DniType = payment.Payer.DniType,
+                    DniNumber = payment.Payer.DocumentNumber
                 },
                 Type = payuOptions.TransactionType,
                 PaymentCountry = payuOptions.PaymentCountry,

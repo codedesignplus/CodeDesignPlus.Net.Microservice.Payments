@@ -12,7 +12,8 @@ public class PaymentDto : IDtoBase
     public Net.ValueObjects.Financial.Money SubTotal { get; set; } = null!;
     public Net.ValueObjects.Financial.Money Tax { get; set; } = null!;
     public Net.ValueObjects.Financial.Money Total { get; set; } = null!;
-    public Payer Payer { get; set; } = null!;
+    public Net.ValueObjects.User.Buyer Buyer { get; set; } = null!;
+    public Net.ValueObjects.User.Payer Payer { get; set; } = null!;
     public ValueObjects.Payment.PaymentMethod PaymentMethod { get; set; } = null!;
     public string Description { get; set; } = null!;
 

@@ -6,12 +6,8 @@ using Google.Protobuf.WellKnownTypes;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Services;
 
-public sealed partial  class PaymentService(IMediator mediator, IMapper mapper) : Payment.PaymentBase
+public class PaymentService(IMediator mediator, IMapper mapper) : Payment.PaymentBase
 {
-    
-    [GeneratedRegex(@"^\d{4}$", RegexOptions.Compiled)]
-    private static partial Regex Last4DigitsRegex();
-    
     public override async Task<InitiatePaymentResponse> InitiatePayment(InitiatePaymentRequest request, ServerCallContext context)
     {
         InfrastructureGuard.IsFalse(Guid.TryParse(request.Id, out var id), Errors.InvalidId);

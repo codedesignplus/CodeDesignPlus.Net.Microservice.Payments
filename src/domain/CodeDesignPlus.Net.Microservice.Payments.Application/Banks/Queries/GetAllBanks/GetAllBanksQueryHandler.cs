@@ -2,7 +2,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Queries.GetAllBanks;
 
-public class GetAllBanksQueryHandler(IBankRepository repository, IMapper mapper, ICacheManager cacheManager, IHostEnvironment hostEnvironment) : IRequestHandler<GetAllBanksQuery, List<BanksDto>>
+public class GetAllBanksQueryHandler(IBankRepository repository, IMapper mapper, ICacheManager cacheManager) : IRequestHandler<GetAllBanksQuery, List<BanksDto>>
 {
     private const string CACHE_KEY = "BanksList";
 

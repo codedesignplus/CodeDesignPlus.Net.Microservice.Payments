@@ -28,6 +28,7 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
             Money.FromLong(request.SubTotal.Value, request.SubTotal.Currency),
             Money.FromLong(request.Tax.Value, request.Tax.Currency),
             Money.FromLong(request.Total.Value, request.Total.Currency),
+            request.Buyer,
             request.Payer,
             request.PaymentMethod,
             request.Description,

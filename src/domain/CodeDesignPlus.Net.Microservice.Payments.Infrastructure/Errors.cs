@@ -27,4 +27,7 @@ public class Errors : IErrorCodes
     public const string InvalidReferenceSale = "317 : Invalid Reference Sale";
 
     public const string CreditCardTokenizationFailed = "318 : Credit Card Tokenization Failed";
+
+    public const string PayerEmailAddressCannotBeNullOrEmpty = "319 : Payer Email Address Cannot Be Null Or Empty";
+    public const string PayerContactPhoneCannotBeNullOrEmpty = "320 : Payer Contact Phone Cannot Be Null Or Empty";
 }

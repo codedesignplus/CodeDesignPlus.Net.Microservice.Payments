@@ -11,7 +11,8 @@ public class PaymentInitiatedDomainEvent(
     Money subTotal,
     Money tax,
     Money total,
-    Payer payer,
+    Net.ValueObjects.User.Buyer buyer,
+    Net.ValueObjects.User.Payer payer,
     PaymentMethod paymentMethod,
     string description,
     PaymentProvider paymentProvider,
@@ -25,7 +26,8 @@ public class PaymentInitiatedDomainEvent(
     public Money SubTotal { get; } = subTotal;
     public Money Tax { get; } = tax;
     public Money Total { get; } = total;
-    public Payer Payer { get; } = payer;
+    public Net.ValueObjects.User.Buyer Buyer { get; } = buyer;
+    public Net.ValueObjects.User.Payer Payer { get; } = payer;
     public PaymentMethod PaymentMethod { get; } = paymentMethod;
     public string Description { get; } = description;
     public PaymentProvider Provider { get; } = paymentProvider;
@@ -36,7 +38,8 @@ public class PaymentInitiatedDomainEvent(
         Money subTotal,
         Money tax,
         Money total,
-        Payer payer,
+        Net.ValueObjects.User.Buyer buyer,
+        Net.ValueObjects.User.Payer payer,
         PaymentMethod paymentMethod,
         string description,
         PaymentProvider paymentProvider,
@@ -51,6 +54,7 @@ public class PaymentInitiatedDomainEvent(
             subTotal,
             tax,
             total,
+            buyer,
             payer,
             paymentMethod,
             description,

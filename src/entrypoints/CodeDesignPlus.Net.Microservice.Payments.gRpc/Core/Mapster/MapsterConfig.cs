@@ -16,26 +16,37 @@ public static class MapsterConfig
                src.Currency
            ));
 
-        TypeAdapterConfig<Address, Domain.ValueObjects.Address>
+        TypeAdapterConfig<Address, ValueObjects.User.Address>
           .NewConfig()
-          .MapWith(src => Domain.ValueObjects.Address.Create(
+          .MapWith(src => ValueObjects.User.Address.Create(
               src.Street,
               src.Country,
               src.State,
               src.City,
-              src.PostalCode,
-              src.Phone
+              src.PostalCode
           ));
 
-        TypeAdapterConfig<Payer, Domain.ValueObjects.Payer>
+        TypeAdapterConfig<Buyer, ValueObjects.User.Buyer>
             .NewConfig()
-            .MapWith(src => Domain.ValueObjects.Payer.Create(
+            .MapWith(src => ValueObjects.User.Buyer.Create(
+                Guid.Parse(src.BuyerId),
+                src.Name,
+                src.Phone,
+                src.Email,
+                ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name),
+                src.Document,
+                src.ShippingAddress.Adapt<ValueObjects.User.Address>()
+            ));
+
+        TypeAdapterConfig<Payer, ValueObjects.User.Payer>
+            .NewConfig()
+            .MapWith(src => ValueObjects.User.Payer.Create(
                 src.FullName,
                 src.EmailAddress,
                 src.ContactPhone,
-                src.DniNumber,
-                src.DniType,
-                src.BillingAddress.Adapt<Domain.ValueObjects.Address>()
+                ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name),
+                src.DocumentNumber,
+                src.BillingAddress.Adapt<ValueObjects.User.Address>()
             ));
 
         TypeAdapterConfig<CreditCard, ValueObjects.Payment.CreditCard>
@@ -75,7 +86,8 @@ public static class MapsterConfig
                 src.Tax.Adapt<Domain.ValueObjects.Amount>(),
                 src.Total.Adapt<Domain.ValueObjects.Amount>(),
                 src.Description,
-                src.Payer.Adapt<Domain.ValueObjects.Payer>(),
+                src.Buyer.Adapt<ValueObjects.User.Buyer>(),
+                src.Payer.Adapt<ValueObjects.User.Payer>(),
                 src.PaymentMethod.Adapt<ValueObjects.Payment.PaymentMethod>(),
                 (Domain.Enums.PaymentProvider)src.Provider
             ));

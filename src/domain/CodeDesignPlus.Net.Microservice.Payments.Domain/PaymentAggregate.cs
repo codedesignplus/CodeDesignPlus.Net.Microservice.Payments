@@ -35,9 +35,13 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// </summary>
     public Money Total { get; private set; } = null!;
     /// <summary>
+    /// Información del comprador.
+    /// </summary>
+    public Net.ValueObjects.User.Buyer Buyer { get; private set; } = null!;
+    /// <summary>
     /// Información del pagador.
     /// </summary>
-    public Payer Payer { get; private set; } = null!;
+    public Net.ValueObjects.User.Payer Payer { get; private set; } = null!;
     /// <summary>
     /// Método de pago seleccionado por el pagador.
     /// </summary>
@@ -77,7 +81,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <param name="tenant">Identificador del tenant al que pertenece el pago.</param>
     /// <param name="createdBy">Identificador del usuario que creó el pago.</param>
     /// <returns>Nueva instancia de PaymentAggregate.</returns>
-    public static PaymentAggregate Create(Guid id, string module, Guid referenceId, Money subTotal, Money tax, Money total, Payer payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
+    public static PaymentAggregate Create(Guid id, string module, Guid referenceId, Money subTotal, Money tax, Money total, Net.ValueObjects.User.Buyer buyer, Net.ValueObjects.User.Payer? payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
     {
         DomainGuard.GuidIsEmpty(id, Errors.PaymentIdCannotBeEmpty);
         DomainGuard.IsNullOrEmpty(module, Errors.ModuleCannotBeNullOrEmpty);
@@ -85,12 +89,15 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         DomainGuard.IsNull(subTotal, Errors.SubTotalCannotBeNull);
         DomainGuard.IsNull(tax, Errors.TaxCannotBeNull);
         DomainGuard.IsNull(total, Errors.TotalCannotBeNull);
-        DomainGuard.IsNull(payer, Errors.BuyerCannotBeNull);
+        DomainGuard.IsNull(buyer, Errors.BuyerCannotBeNull);
         DomainGuard.IsNull(paymentMethod, Errors.PaymentMethodCannotBeNull);
         DomainGuard.IsNullOrEmpty(description, Errors.DescriptionCannotBeNullOrEmpty);
         DomainGuard.IsTrue(paymentProvider == PaymentProvider.None, Errors.PaymentProviderIsRequired);
         
         DomainGuard.IsTrue(total != (subTotal + tax), Errors.TotalMustBeEqualToSubTotalPlusTax);
+
+        if(payer == null)
+            payer = Net.ValueObjects.User.Payer.CreateFromBuyer(buyer);
 
         var aggregate = new PaymentAggregate(id)
         {
@@ -99,6 +106,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             SubTotal = subTotal,
             Tax = tax,
             Total = total,
+            Buyer = buyer,
             Payer = payer,
             PaymentMethod = paymentMethod,
             Description = description,
@@ -113,7 +121,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         if (tenant.HasValue)
             aggregate.Tenant = tenant.Value;
 
-        aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, payer, paymentMethod, description, paymentProvider, tenant, createdBy));
+        aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, buyer, payer, paymentMethod, description, paymentProvider, tenant, createdBy));
 
         return aggregate;
     }

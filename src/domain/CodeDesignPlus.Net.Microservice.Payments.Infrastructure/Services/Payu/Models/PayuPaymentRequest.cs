@@ -202,11 +202,6 @@ public class PayuBuyer
   public string? DniNumber { get; set; }
 
   /// <summary>
-  /// Type of identification of the buyer
-  /// </summary>
-  public string? DniType { get; set; } 
-
-  /// <summary>
   /// Shipping address of the buyer.
   /// </summary>
   public PayuAddress ShippingAddress { get; set; } = null!;
@@ -325,9 +320,4 @@ public class PayuPayer
   /// Identification number of the payer.
   /// </summary>
   public string? DniNumber { get; set; }
-
-  /// <summary>
-  /// Type of identification of the payer.
-  /// </summary>
-  public string? DniType { get; set; } = "CC";
 }
