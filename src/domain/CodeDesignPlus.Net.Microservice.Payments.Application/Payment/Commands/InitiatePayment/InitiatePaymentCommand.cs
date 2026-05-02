@@ -14,7 +14,7 @@ public record InitiatePaymentCommand(
     Amount Total,
     string Description,
     ValueObjects.User.Buyer Buyer,
-    ValueObjects.User.Payer Payer,
+    ValueObjects.User.Payer? Payer,
     ValueObjects.Payment.PaymentMethod PaymentMethod,
     PaymentProvider PaymentProvider
 ) : IRequest<InitiatePaymentResponseDto>;
@@ -105,7 +105,7 @@ public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
     }
 }
 
-public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer>
+public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer?>
 {
     public PayerInfoDtoValidator()
     {

@@ -33,9 +33,9 @@ public static class MapsterConfig
                 src.Name,
                 src.Phone,
                 src.Email,
-                ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name),
+                src.TypeDocument != null ? ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name) : null!,
                 src.Document,
-                src.ShippingAddress.Adapt<ValueObjects.User.Address>()
+                src.ShippingAddress != null ? src.ShippingAddress.Adapt<ValueObjects.User.Address>() : null!
             ));
 
         TypeAdapterConfig<Payer, ValueObjects.User.Payer>
@@ -44,9 +44,9 @@ public static class MapsterConfig
                 src.FullName,
                 src.EmailAddress,
                 src.ContactPhone,
-                ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name),
+                src.TypeDocument != null ? ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name) : null!,
                 src.DocumentNumber,
-                src.BillingAddress.Adapt<ValueObjects.User.Address>()
+                src.BillingAddress != null ? src.BillingAddress.Adapt<ValueObjects.User.Address>() : null!
             ));
 
         TypeAdapterConfig<CreditCard, ValueObjects.Payment.CreditCard>
@@ -72,8 +72,8 @@ public static class MapsterConfig
             .NewConfig()
             .MapWith(src => ValueObjects.Payment.PaymentMethod.Create(
                 src.Type,
-                src.Pse.Adapt<ValueObjects.Payment.Pse>(),
-                src.CreditCard.Adapt<ValueObjects.Payment.CreditCard>()
+                src.Pse != null ? src.Pse .Adapt<ValueObjects.Payment.Pse>() : null,
+                src.CreditCard != null ? src.CreditCard.Adapt<ValueObjects.Payment.CreditCard>() : null
             ));
 
         TypeAdapterConfig<InitiatePaymentRequest, InitiatePaymentCommand>
@@ -87,7 +87,7 @@ public static class MapsterConfig
                 src.Total.Adapt<Domain.ValueObjects.Amount>(),
                 src.Description,
                 src.Buyer.Adapt<ValueObjects.User.Buyer>(),
-                src.Payer.Adapt<ValueObjects.User.Payer>(),
+                src.Payer != null ? src.Payer.Adapt<ValueObjects.User.Payer>() : null,
                 src.PaymentMethod.Adapt<ValueObjects.Payment.PaymentMethod>(),
                 (Domain.Enums.PaymentProvider)src.Provider
             ));
