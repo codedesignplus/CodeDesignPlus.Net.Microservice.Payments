@@ -36,6 +36,12 @@ A production-ready microservice for processing payments and managing transaction
 
 ## 🎯 Overview
 
+## What is this microservice?
+
+The Payments microservice handles all online monetary transactions in the platform. It solves the problem of integrating with multiple payment gateways (PayU for Colombia, with extensibility for Stripe and others) behind a single, unified API. Residents use it to pay their administration fees, common area reservations, and lease rent; potential customers use it to purchase a subscription plan. It communicates asynchronously with other microservices via domain events: when a payment is confirmed, it triggers provisioning (Tenants), invoice reconciliation (Invoicing), and reservation confirmation (Common Areas).
+
+---
+
 The Payments microservice provides a unified API for payment processing across different payment providers. It abstracts the complexity of payment gateway integrations, offering features like:
 
 - **Multi-provider support**: PayU, Stripe, and extensible to other providers
