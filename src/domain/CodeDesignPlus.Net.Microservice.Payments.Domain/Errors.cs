@@ -168,4 +168,29 @@ public class Errors : IErrorCodes
     public const string CreditCardCardHolderNameCannotBeNullOrEmpty = "225 : Credit Card Card Holder Name cannot be null or empty";
 
     public const string CurrencyIsRequired = "226 : Currency is required";
+
+    // Beneficiary errors
+    public const string BeneficiaryUserIdIsRequired = "227 : Beneficiary UserId is required";
+    public const string BankCodeIsRequired = "228 : Bank Code is required";
+    public const string AccountNumberIsRequired = "229 : Account Number is required";
+    public const string DocumentNumberIsRequired = "230 : Document Number is required";
+    public const string HolderNameIsRequired = "231 : Holder Name is required";
+    public const string DocumentTypeIsRequired = "232 : Document Type is required";
+    public const string BankNameIsRequired = "233 : Bank Name is required";
+    public const string CountryIsRequired = "234 : Country is required";
+
+    // DisbursementRule errors
+    public const string CommissionAmountMustBePositive = "235 : Commission Amount must be positive";
+    public const string DisbursementRuleCurrencyIsRequired = "236 : Disbursement Rule Currency is required";
+
+    // Disbursement errors
+    public const string DisbursementPaymentIdIsRequired = "237 : Disbursement Payment ID is required";
+    public const string DisbursementBeneficiaryIdIsRequired = "238 : Disbursement Beneficiary ID is required";
+    public const string DisbursementBeneficiaryUserIdIsRequired = "239 : Disbursement Beneficiary User ID is required";
+    public const string DisbursementAmountMustBePositive = "240 : Disbursement Amount must be positive";
+    public const string DisbursementTotalAmountMustBePositive = "241 : Disbursement Total Amount must be positive";
+    public const string DisbursementNotPending = "242 : Disbursement is not in Pending status";
+    public const string DisbursementNotProcessing = "243 : Disbursement is not in Processing status";
+    public const string ProviderReferenceIsRequired = "244 : Provider Reference is required";
+    public const string FailureReasonIsRequired = "245 : Failure Reason is required";
 }

@@ -18,4 +18,16 @@ public class Errors: IErrorCodes
     public const string PaymentProviderNotSupported = "208 : Payment provider not supported";
 
     public const string NextActionInvalid = "209 : Next action is invalid";
+
+    // Beneficiary errors
+    public const string BeneficiaryAlreadyExists = "210 : Beneficiary already exists";
+    public const string BeneficiaryNotFound = "211 : Beneficiary not found";
+
+    // DisbursementRule errors
+    public const string DisbursementRuleAlreadyExists = "212 : Disbursement Rule already exists";
+    public const string DisbursementRuleNotFound = "213 : Disbursement Rule not found";
+
+    // Disbursement errors
+    public const string DisbursementAlreadyExists = "214 : Disbursement already exists";
+    public const string DisbursementNotFound = "215 : Disbursement not found";
 }
