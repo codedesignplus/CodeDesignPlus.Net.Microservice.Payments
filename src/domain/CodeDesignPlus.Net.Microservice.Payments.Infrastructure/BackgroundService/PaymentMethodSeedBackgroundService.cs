@@ -38,6 +38,10 @@ public class PaymentMethodSeedBackgroundService(ILogger<PaymentMethodSeedBackgro
         {
             logger.LogError(ex, "An error occurred while seeding payment methods: {Message}", ex.Message);
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while seeding payment methods: {Message}", ex.Message);
+        }
     }
 
     private readonly List<PaymentMethodAggregate> paymentMethods = new()
