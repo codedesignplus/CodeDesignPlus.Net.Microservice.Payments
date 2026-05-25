@@ -17,8 +17,6 @@ public class DisbursementRequiredHandler(
     ILogger<DisbursementRequiredHandler> logger
 ) : IEventHandler<DisbursementRequiredDomainEvent>
 {
-    private static readonly Guid SystemUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-
     public async Task HandleAsync(DisbursementRequiredDomainEvent data, CancellationToken token)
     {
         // Idempotency check: use the document ID (AggregateId) as disbursement ID

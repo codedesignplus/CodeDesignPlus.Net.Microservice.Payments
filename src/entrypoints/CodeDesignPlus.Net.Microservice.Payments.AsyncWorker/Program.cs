@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.gRpc.Clients.Extensions;
 using CodeDesignPlus.Net.Logger.Extensions;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.HealthChecks;
@@ -30,11 +31,14 @@ builder.Services.AddFluentValidation();
 builder.Services.AddMediatR<CodeDesignPlus.Net.Microservice.Payments.Application.Startup>();
 builder.Services.AddHealthChecksServices();
 builder.Services.AddObservability(builder.Configuration, builder.Environment);
+builder.Services.AddGrpcClients(builder.Configuration);
+builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
+builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.PaymentMethodSeedBackgroundService>();
 
 var app = builder.Build();
 
 app.UseHealthChecks();
-
+    
 var home = app.MapGroup("/");
 
 home.MapGet("/", () => "Ready");
