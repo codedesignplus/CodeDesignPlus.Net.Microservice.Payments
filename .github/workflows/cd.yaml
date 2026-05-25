@@ -47,6 +47,6 @@ jobs:
       microservice-name: ms-payments
       enable-rest: true
       enable-grpc: true
-      enable-worker: false
+      enable-worker: true
       environment: ${{ github.event.inputs.environment }}
     secrets: inherit
