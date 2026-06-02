@@ -26,5 +26,19 @@ public static class MapsterConfigPayment
                 FinalResponse = src.FinalResponse
             });
 
+        TypeAdapterConfig<SavedCardAggregate, SavedCardDto>
+            .NewConfig()
+            .MapWith(src => new SavedCardDto
+            {
+                Id = src.Id,
+                MaskedNumber = src.MaskedNumber,
+                Franchise = src.Franchise,
+                CardHolderName = src.CardHolderName,
+                ExpirationDate = src.ExpirationDate,
+                Last4Digits = src.Last4Digits,
+                IsDefault = src.IsDefault,
+                IsActive = src.IsActive
+            });
+
     }
 }

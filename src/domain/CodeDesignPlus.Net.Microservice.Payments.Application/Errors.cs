@@ -30,4 +30,8 @@ public class Errors: IErrorCodes
     // Disbursement errors
     public const string DisbursementAlreadyExists = "214 : Disbursement already exists";
     public const string DisbursementNotFound = "215 : Disbursement not found";
+
+    // SavedCard errors
+    public const string SavedCardAlreadyExists = "216 : Saved Card already exists";
+    public const string SavedCardNotFound = "217 : Saved Card not found";
 }

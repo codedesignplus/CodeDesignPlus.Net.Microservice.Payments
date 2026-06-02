@@ -193,4 +193,14 @@ public class Errors : IErrorCodes
     public const string DisbursementNotProcessing = "243 : Disbursement is not in Processing status";
     public const string ProviderReferenceIsRequired = "244 : Provider Reference is required";
     public const string FailureReasonIsRequired = "245 : Failure Reason is required";
+
+    // SavedCard errors
+    public const string SavedCardIdCannotBeEmpty = "246 : Saved Card ID cannot be empty";
+    public const string SavedCardUserIdCannotBeEmpty = "247 : Saved Card User ID cannot be empty";
+    public const string SavedCardTokenCannotBeNullOrEmpty = "248 : Saved Card Token cannot be null or empty";
+    public const string SavedCardMaskedNumberCannotBeNullOrEmpty = "249 : Saved Card Masked Number cannot be null or empty";
+    public const string SavedCardFranchiseCannotBeNullOrEmpty = "250 : Saved Card Franchise cannot be null or empty";
+    public const string SavedCardCardHolderNameCannotBeNullOrEmpty = "251 : Saved Card Card Holder Name cannot be null or empty";
+    public const string SavedCardExpirationDateCannotBeNullOrEmpty = "252 : Saved Card Expiration Date cannot be null or empty";
+    public const string SavedCardLast4DigitsCannotBeNullOrEmpty = "253 : Saved Card Last 4 Digits cannot be null or empty";
 }

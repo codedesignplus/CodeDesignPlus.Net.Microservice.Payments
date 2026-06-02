@@ -22,3 +22,8 @@ global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.UpdatePaymentMethod;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Queries.GetPaymentMethodsByProvider;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.CreateSavedCard;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.DeleteSavedCard;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.SetDefaultCard;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Queries.GetSavedCardsByUser;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Queries.GetSavedCardById;
