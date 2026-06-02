@@ -87,8 +87,8 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
     public async Task<InitiatePaymentResponseDto> InitiatePaymentAsync(PaymentAggregate payment, CancellationToken cancellationToken)
     {
-        InfrastructureGuard.IsNull( payment.Payer.EmailAddress, Errors.PayerEmailAddressCannotBeNullOrEmpty);
-        InfrastructureGuard.IsNull( payment.Payer.ContactPhone, Errors.PayerContactPhoneCannotBeNullOrEmpty);
+        InfrastructureGuard.IsNull(payment.Payer.EmailAddress, Errors.PayerEmailAddressCannotBeNullOrEmpty);
+        InfrastructureGuard.IsNull(payment.Payer.ContactPhone, Errors.PayerContactPhoneCannotBeNullOrEmpty);
 
         var currency = await currencyGrpc.GetCurrencyAsync(code: payment.Total.Currency, cancellationToken: cancellationToken);
 
@@ -269,6 +269,8 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
     private async Task<TResponse> Request<T, TResponse>(T request, string url, CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(request, settings);
+
+        logger.LogWarning("Sending request to Payu: {@Request}", json);
 
         var httpRequest = new HttpRequestMessage
         {
