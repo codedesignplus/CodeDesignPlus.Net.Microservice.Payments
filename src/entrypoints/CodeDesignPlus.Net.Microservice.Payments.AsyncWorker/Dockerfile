@@ -3,6 +3,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["src/domain/", "domain/"]
 COPY ["src/entrypoints/CodeDesignPlus.Net.Microservice.Payments.AsyncWorker/", "entrypoints/CodeDesignPlus.Net.Microservice.Payments.AsyncWorker/"]
+COPY ["nuget.config", "nuget.config"]
 RUN dotnet restore "./entrypoints/CodeDesignPlus.Net.Microservice.Payments.AsyncWorker/CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.csproj"
 
 FROM build AS publish
