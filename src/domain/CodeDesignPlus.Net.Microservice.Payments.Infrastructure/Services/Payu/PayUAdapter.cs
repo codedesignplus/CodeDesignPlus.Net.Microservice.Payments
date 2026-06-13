@@ -5,17 +5,18 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
-using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Resilience;
+using CodeDesignPlus.Net.Resilience.Abstractions;
+using CodeDesignPlus.Net.Resilience.Factories;
 using CodeDesignPlus.Net.Security.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Polly;
-using Polly.Retry;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 
-public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user, ILogger<PayUAdapter> logger, IHttpContextAccessor httpContextAccessor, ICurrencyGrpc currencyGrpc)
+public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOptions> options, IUserContext user, ILogger<PayUAdapter> logger, ILoggerFactory loggerFactory, IHttpContextAccessor httpContextAccessor, ICurrencyGrpc currencyGrpc)
     : IPayu
 {
     private readonly Newtonsoft.Json.JsonSerializerSettings settings = new()
@@ -34,24 +35,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
     private readonly PayuOptions payuOptions = options.Value;
 
-    private readonly ResiliencePipeline softErrorPipeline = BuildSoftErrorPipeline(options.Value.Resilience);
-
-    private static ResiliencePipeline BuildSoftErrorPipeline(ResilienceOptions opts)
-    {
-        if (!opts.Enable || !opts.RetryOnProviderSoftErrors)
-            return ResiliencePipeline.Empty;
-
-        return new ResiliencePipelineBuilder()
-            .AddRetry(new RetryStrategyOptions
-            {
-                MaxRetryAttempts = opts.MaxSoftErrorRetryAttempts,
-                Delay = TimeSpan.FromSeconds(opts.SoftErrorRetryBaseDelaySeconds),
-                MaxDelay = TimeSpan.FromSeconds(opts.SoftErrorMaxDelaySeconds),
-                BackoffType = DelayBackoffType.Exponential,
-                ShouldHandle = new PredicateBuilder().Handle<PaymentProviderSoftErrorException>()
-            })
-            .Build();
-    }
+    private readonly ResiliencePipeline softErrorPipeline = SoftErrorPipelineFactory.Create(options.Value.Resilience, loggerFactory);
 
     public PaymentProvider Provider => PaymentProvider.Payu;
 
@@ -312,8 +296,10 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
             if (PayuResponseEvaluator.IsRetryableError(content))
             {
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, "PayU returned code=ERROR");
+                Activity.Current?.SetTag("payu.error.retryable", true);
                 logger.LogWarning("Retryable error detected from Payu, triggering retry.");
-                throw new PaymentProviderSoftErrorException("PayU returned code=ERROR", content);
+                throw new ResilienceSoftErrorException("PayU returned code=ERROR", content);
             }
 
             return content;

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Resilience;
+using CodeDesignPlus.Net.Resilience.Abstractions.Options;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
 

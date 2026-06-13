@@ -33,7 +33,7 @@ public class TokenizeCardResponseDto
     /// <summary>
     /// The masked card number safe for display (e.g., "403799******1984").
     /// </summary>
-    public string? MaskedNumber { get; set; }
+    public string MaskedNumber { get; set; } = null!;
 
     /// <summary>
     /// Description of the error if the tokenization failed.

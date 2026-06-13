@@ -3,6 +3,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.DataTra
 public class SavedCardDto : IDtoBase
 {
     public required Guid Id { get; set; }
+    public string Token { get; set; } = null!;
     public string MaskedNumber { get; set; } = null!;
     public string Franchise { get; set; } = null!;
     public string CardHolderName { get; set; } = null!;

@@ -34,4 +34,6 @@ public class Errors: IErrorCodes
     // SavedCard errors
     public const string SavedCardAlreadyExists = "216 : Saved Card already exists";
     public const string SavedCardNotFound = "217 : Saved Card not found";
+
+    public const string TokenizationFailed = "218 : Tokenization failed";
 }
