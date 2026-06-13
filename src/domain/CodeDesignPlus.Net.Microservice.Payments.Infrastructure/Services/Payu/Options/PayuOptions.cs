@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Resilience;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
 
@@ -21,6 +22,7 @@ public class PayuOptions: IValidatableObject
     public string PaymentCountry { get; internal set; } = "CO";
     public string SecretKey { get; set; } = null!;
     public string NotificationUrl { get; set; } = null!;
+    public ResilienceOptions Resilience { get; set; } = new();
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

@@ -3,6 +3,8 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
+using Microsoft.Extensions.Http.Resilience;
+using Polly;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
 {
@@ -28,10 +30,35 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
             {
                 services.AddScoped<IPayu, PayUAdapter>();
 
-                services.AddHttpClient("Payu", client =>
+                var httpClientBuilder = services.AddHttpClient("Payu", client =>
                 {
                     client.BaseAddress = payuOptions.Url;
                 });
+
+                var resilience = payuOptions.Resilience;
+
+                if (resilience is { Enable: true })
+                {
+                    httpClientBuilder.AddResilienceHandler("Payu-transport", builder =>
+                    {
+                        builder
+                            .AddTimeout(TimeSpan.FromSeconds(resilience.TimeoutSeconds))
+                            .AddRetry(new HttpRetryStrategyOptions
+                            {
+                                MaxRetryAttempts = resilience.MaxRetryAttempts,
+                                Delay = TimeSpan.FromSeconds(resilience.RetryBaseDelaySeconds),
+                                MaxDelay = TimeSpan.FromSeconds(resilience.RetryMaxDelaySeconds),
+                                BackoffType = DelayBackoffType.Exponential
+                            })
+                            .AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+                            {
+                                FailureRatio = resilience.CircuitBreakerFailureRatio,
+                                MinimumThroughput = resilience.CircuitBreakerMinimumThroughput,
+                                BreakDuration = TimeSpan.FromSeconds(resilience.CircuitBreakerBreakDurationSeconds),
+                                SamplingDuration = TimeSpan.FromSeconds(resilience.CircuitBreakerSamplingDurationSeconds)
+                            });
+                    });
+                }
             }
 
         }

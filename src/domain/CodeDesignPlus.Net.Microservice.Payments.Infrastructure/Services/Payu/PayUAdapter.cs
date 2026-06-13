@@ -5,8 +5,11 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Models;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Resilience;
 using CodeDesignPlus.Net.Security.Abstractions;
 using Microsoft.AspNetCore.Http;
+using Polly;
+using Polly.Retry;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -30,6 +33,25 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
     private readonly HttpClient httpClient = httpClientFactory.CreateClient("Payu");
 
     private readonly PayuOptions payuOptions = options.Value;
+
+    private readonly ResiliencePipeline softErrorPipeline = BuildSoftErrorPipeline(options.Value.Resilience);
+
+    private static ResiliencePipeline BuildSoftErrorPipeline(ResilienceOptions opts)
+    {
+        if (!opts.Enable || !opts.RetryOnProviderSoftErrors)
+            return ResiliencePipeline.Empty;
+
+        return new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                MaxRetryAttempts = opts.MaxSoftErrorRetryAttempts,
+                Delay = TimeSpan.FromSeconds(opts.SoftErrorRetryBaseDelaySeconds),
+                MaxDelay = TimeSpan.FromSeconds(opts.SoftErrorMaxDelaySeconds),
+                BackoffType = DelayBackoffType.Exponential,
+                ShouldHandle = new PredicateBuilder().Handle<PaymentProviderSoftErrorException>()
+            })
+            .Build();
+    }
 
     public PaymentProvider Provider => PaymentProvider.Payu;
 
@@ -272,20 +294,30 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
         logger.LogWarning("Sending request to Payu: {@Request}", json);
 
-        var httpRequest = new HttpRequestMessage
+        var responseContent = await softErrorPipeline.ExecuteAsync(async ct =>
         {
-            RequestUri = new Uri(url, UriKind.Relative),
-            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
-            Method = HttpMethod.Post
-        };
+            var httpRequest = new HttpRequestMessage
+            {
+                RequestUri = new Uri(url, UriKind.Relative),
+                Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
+                Method = HttpMethod.Post
+            };
 
-        httpRequest.Headers.Add("Accept", "application/json");
+            httpRequest.Headers.Add("Accept", "application/json");
 
-        var response = await httpClient.SendAsync(httpRequest, cancellationToken);
+            var response = await httpClient.SendAsync(httpRequest, ct);
+            var content = await response.Content.ReadAsStringAsync(ct);
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogWarning("Received response from Payu: {@Response}", content);
 
-        logger.LogWarning("Received response from Payu: {@Response}", responseContent);
+            if (PayuResponseEvaluator.IsRetryableError(content))
+            {
+                logger.LogWarning("Retryable error detected from Payu, triggering retry.");
+                throw new PaymentProviderSoftErrorException("PayU returned code=ERROR", content);
+            }
+
+            return content;
+        }, cancellationToken);
 
         return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
     }
