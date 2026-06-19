@@ -11,8 +11,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
     public string Currency { get; private set; } = null!;
     public string PaymentCountry { get; private set; } = null!;
     public bool IsTest { get; private set; }
-    public string NotificationUrl { get; private set; } = null!;
-    public bool RequiresDisbursement { get; private set; }
 
     public static PaymentProviderConfigAggregate Create(
         Guid id,
@@ -25,8 +23,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
         string currency,
         string paymentCountry,
         bool isTest,
-        string notificationUrl,
-        bool requiresDisbursement,
         Guid tenant,
         Guid createdBy)
     {
@@ -36,7 +32,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
         DomainGuard.IsNullOrEmpty(apiLogin, Errors.PaymentProviderConfigApiLoginIsRequired);
         DomainGuard.IsNullOrEmpty(secretKey, Errors.PaymentProviderConfigSecretKeyIsRequired);
         DomainGuard.IsNullOrEmpty(currency, Errors.CurrencyIsRequired);
-        DomainGuard.IsNullOrEmpty(notificationUrl, Errors.PaymentProviderConfigNotificationUrlIsRequired);
 
         return new PaymentProviderConfigAggregate(id)
         {
@@ -49,8 +44,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
             Currency = currency,
             PaymentCountry = paymentCountry,
             IsTest = isTest,
-            NotificationUrl = notificationUrl,
-            RequiresDisbursement = requiresDisbursement,
             IsActive = true,
             Tenant = tenant,
             CreatedBy = createdBy,
@@ -67,8 +60,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
         string currency,
         string paymentCountry,
         bool isTest,
-        string notificationUrl,
-        bool requiresDisbursement,
         bool isActive,
         Guid updatedBy)
     {
@@ -85,8 +76,6 @@ public class PaymentProviderConfigAggregate(Guid id) : AggregateRoot(id)
         Currency = currency;
         PaymentCountry = paymentCountry;
         IsTest = isTest;
-        NotificationUrl = notificationUrl;
-        RequiresDisbursement = requiresDisbursement;
         IsActive = isActive;
         UpdatedBy = updatedBy;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();

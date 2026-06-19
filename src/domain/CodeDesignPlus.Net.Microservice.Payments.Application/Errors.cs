@@ -36,4 +36,7 @@ public class Errors: IErrorCodes
     public const string SavedCardNotFound = "217 : Saved Card not found";
 
     public const string TokenizationFailed = "218 : Tokenization failed";
+
+    public const string PaymentProviderConfigAlreadyExists = "219 : Payment provider config already exists";
+    public const string PaymentProviderConfigNotFound = "220 : Payment provider config not found";
 }

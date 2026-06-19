@@ -22,3 +22,4 @@ global using CodeDesignPlus.Net.Microservice.Payments.Domain.Repositories;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.DataTransferObjects;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.DataTransferObjects;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.DataTransferObjects;
+global using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;

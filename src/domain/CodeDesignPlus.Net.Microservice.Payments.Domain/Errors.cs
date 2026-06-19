@@ -210,7 +210,7 @@ public class Errors : IErrorCodes
     public const string PaymentProviderConfigApiKeyIsRequired = "256 : API Key is required";
     public const string PaymentProviderConfigApiLoginIsRequired = "257 : API Login is required";
     public const string PaymentProviderConfigSecretKeyIsRequired = "258 : Secret Key is required";
-    public const string PaymentProviderConfigNotificationUrlIsRequired = "259 : Notification URL is required";
+    public const string PaymentProviderConfigNotificationUrlIsRequired = "259 : Notification URL is required"; // reserved
     public const string PaymentProviderConfigNotFound = "260 : Payment Provider Config not found";
     public const string PaymentProviderConfigAlreadyExists = "261 : Payment Provider Config already exists";
 }
