@@ -9,5 +9,6 @@ global using CodeDesignPlus.Net.ValueObjects.Common;
 global using CodeDesignPlus.Net.ValueObjects.Payment;
 
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
+global using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 
 

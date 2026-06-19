@@ -203,4 +203,14 @@ public class Errors : IErrorCodes
     public const string SavedCardCardHolderNameCannotBeNullOrEmpty = "251 : Saved Card Card Holder Name cannot be null or empty";
     public const string SavedCardExpirationDateCannotBeNullOrEmpty = "252 : Saved Card Expiration Date cannot be null or empty";
     public const string SavedCardLast4DigitsCannotBeNullOrEmpty = "253 : Saved Card Last 4 Digits cannot be null or empty";
+
+    // PaymentProviderConfig errors
+    public const string PaymentProviderConfigIdIsRequired = "254 : Payment Provider Config ID is required";
+    public const string PaymentProviderConfigMerchantIdIsRequired = "255 : Merchant ID is required";
+    public const string PaymentProviderConfigApiKeyIsRequired = "256 : API Key is required";
+    public const string PaymentProviderConfigApiLoginIsRequired = "257 : API Login is required";
+    public const string PaymentProviderConfigSecretKeyIsRequired = "258 : Secret Key is required";
+    public const string PaymentProviderConfigNotificationUrlIsRequired = "259 : Notification URL is required";
+    public const string PaymentProviderConfigNotFound = "260 : Payment Provider Config not found";
+    public const string PaymentProviderConfigAlreadyExists = "261 : Payment Provider Config already exists";
 }
