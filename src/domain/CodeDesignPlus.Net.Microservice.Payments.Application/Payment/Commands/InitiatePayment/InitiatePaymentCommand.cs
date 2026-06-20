@@ -111,7 +111,6 @@ public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer>
         RuleFor(x => x.FullName).NotEmpty().MaximumLength(150);
         RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress().MaximumLength(255);
         RuleFor(x => x.ContactPhone).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.TypeDocument).NotNull();
         RuleFor(x => x.DocumentNumber).NotEmpty().MaximumLength(20);
         RuleFor(x => x.BillingAddress)
             .NotNull()
