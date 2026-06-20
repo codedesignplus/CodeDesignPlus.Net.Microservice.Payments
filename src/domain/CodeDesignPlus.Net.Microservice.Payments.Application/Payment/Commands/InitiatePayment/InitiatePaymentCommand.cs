@@ -96,7 +96,6 @@ public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
         RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.TypeDocument).NotNull();
         RuleFor(x => x.Document).NotEmpty().MaximumLength(20);
         RuleFor(x => x.ShippingAddress)
             .NotNull()
@@ -105,7 +104,7 @@ public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
     }
 }
 
-public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer?>
+public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer>
 {
     public PayerInfoDtoValidator()
     {
