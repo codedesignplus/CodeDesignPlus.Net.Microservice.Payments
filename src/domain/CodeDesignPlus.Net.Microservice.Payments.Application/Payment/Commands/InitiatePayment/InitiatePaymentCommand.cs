@@ -35,7 +35,7 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
 
         RuleFor(x => x.Tax)
             .NotNull().WithMessage("Tax cannot be null.")
-            .SetValidator(new AmountDtoValidator());
+            .SetValidator(new TaxAmountDtoValidator());
 
         RuleFor(x => x.Total)
             .NotNull().WithMessage("Total cannot be null.")
@@ -64,6 +64,20 @@ public class AmountDtoValidator : AbstractValidator<Amount>
     public AmountDtoValidator()
     {
         RuleFor(x => x.Value).GreaterThan(0).WithMessage("Amount value must be greater than zero.");
+        RuleFor(x => x.Currency)
+        .NotEmpty()
+        .Length(3)
+        .Matches(@"^[A-Z]{3}$")
+        .WithMessage("Currency must be a three-letter uppercase ISO 4217 code.")
+        .When(x => x.Currency is not null);
+    }
+}
+
+public class TaxAmountDtoValidator : AbstractValidator<Amount>
+{
+    public TaxAmountDtoValidator()
+    {
+        RuleFor(x => x.Value).GreaterThanOrEqualTo(0).WithMessage("Tax amount value must not be negative.");
         RuleFor(x => x.Currency)
         .NotEmpty()
         .Length(3)
