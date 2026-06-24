@@ -126,9 +126,10 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
                     },
                     AdditionalValues = new PayuAdditionalValues
                     {
+                        // TX_TAX_RETURN_BASE must be 0 when TX_TAX is 0 (PayU validation rule)
                         SubTotal = new PayuAmount
                         {
-                            Value = payment.SubTotal.ToDecimal(currency.DecimalDigits),
+                            Value = payment.Tax.Amount > 0 ? payment.SubTotal.ToDecimal(currency.DecimalDigits) : 0m,
                             Currency = payment.SubTotal.Currency
                         },
                         Tax = new PayuAmount
