@@ -146,9 +146,19 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// </summary>
     public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response)
     {
-        DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
-        DomainGuard.IsTrue(finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed, Errors.FinalStatusMustBeSucceededOrFailed);
+        DomainGuard.IsTrue(
+            finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed,
+            Errors.FinalStatusMustBeSucceededOrFailed);
         DomainGuard.IsEmpty(response, Errors.FinalResponseCannotBeEmpty);
+
+        // Idempotent: if already at the same final status, skip (webhook retry)
+        if (Status == finalStatus)
+            return;
+
+        // Reject conflicting transitions (e.g., Succeeded → Failed)
+        DomainGuard.IsTrue(
+            Status != PaymentStatus.Initiated && Status != finalStatus,
+            Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
 
         Status = finalStatus;
         FinalResponse = response;

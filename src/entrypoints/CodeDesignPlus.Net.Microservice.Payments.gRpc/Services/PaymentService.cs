@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentById;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure;
 using Google.Protobuf.WellKnownTypes;
 
@@ -23,5 +24,17 @@ public class PaymentService(IMediator mediator, IMapper mapper) : Payment.Paymen
                 result.Metadata.Add(item.Key, item.Value);
 
         return result;
+    }
+
+    public override async Task<GetPaymentStatusResponse> GetPaymentStatus(GetPaymentStatusRequest request, ServerCallContext context)
+    {
+        InfrastructureGuard.IsFalse(Guid.TryParse(request.Id, out var id), Errors.InvalidId);
+
+        var payment = await mediator.Send(new GetPaymentByIdQuery(id));
+
+        return new GetPaymentStatusResponse
+        {
+            Status = (PaymentStatus)(int)payment.Status
+        };
     }
 }

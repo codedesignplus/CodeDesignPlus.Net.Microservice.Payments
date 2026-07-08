@@ -11,6 +11,6 @@
     <ProjectReference Include="..\CodeDesignPlus.Net.Microservice.Payments.Application\CodeDesignPlus.Net.Microservice.Payments.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CodeDesignPlus.Net.Resilience" Version="1.0.0-beta.12907" />
+    <PackageReference Include="CodeDesignPlus.Net.Resilience" Version="1.0.0-beta.12910" />
   </ItemGroup>
 </Project>
