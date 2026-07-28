@@ -5,6 +5,7 @@ public class DisbursementCompletedDomainEvent(
     Guid aggregateId,
     Guid beneficiaryId,
     long disbursedAmount,
+    string currency,
     string providerReference,
     Guid tenant,
     Guid? eventId = null,
@@ -14,6 +15,10 @@ public class DisbursementCompletedDomainEvent(
 {
     public Guid BeneficiaryId { get; } = beneficiaryId;
     public long DisbursedAmount { get; } = disbursedAmount;
+
+    /// <summary>El codigo de moneda ISO 4217 de <see cref="DisbursedAmount"/>.</summary>
+    public string Currency { get; } = currency;
+
     public string ProviderReference { get; } = providerReference;
     public Guid Tenant { get; } = tenant;
 
@@ -21,6 +26,7 @@ public class DisbursementCompletedDomainEvent(
         Guid aggregateId,
         Guid beneficiaryId,
         long disbursedAmount,
+        string currency,
         string providerReference,
         Guid tenant,
         Guid? eventId = null,
@@ -31,6 +37,7 @@ public class DisbursementCompletedDomainEvent(
             aggregateId,
             beneficiaryId,
             disbursedAmount,
+            currency,
             providerReference,
             tenant,
             eventId ?? Guid.NewGuid(),

@@ -41,15 +41,7 @@ public class DisbursementRequiredHandler(
         // Get disbursement rule for tenant
         var rule = await ruleRepository.GetActiveByTenantAsync(data.Tenant, token);
 
-        // Calculate commission
-        long commission = 0;
-
-        if (rule != null)
-        {
-            commission = rule.CommissionType == CommissionType.Fixed
-                ? rule.CommissionAmount
-                : (long)(data.Amount * rule.CommissionAmount / 10000m); // basis points (e.g., 200 = 2%)
-        }
+        var commission = rule?.CalculateCommission(data.Amount) ?? 0;
 
         var disbursedAmount = data.Amount - commission;
 

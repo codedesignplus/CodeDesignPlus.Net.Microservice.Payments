@@ -1,0 +1,11 @@
+# Excepciones al guardrail del estandar de dinero.
+#
+# Cada linea es un patron literal que se compara contra "archivo:linea:contenido".
+# Toda excepcion lleva encima el porque. Si no sabe por que esta una linea aqui, no la imite:
+# averigue primero.
+
+# ─── Monedas que soporta PayU ───────────────────────────────────────────────────
+#
+# Esta lista no es una moneda elegida por nosotros: es el catalogo que acepta la pasarela, y sirve
+# para rechazar un pago antes de enviarlo. Si PayU añade o quita una moneda, esta linea cambia.
+Services/Payu/Options/PayuOptions.cs:9:    private readonly string[] CurrenciesSupported = ["COP", "USD", "MXN", "BRL", "PEN", "ARS", "CLP", "CRC", "GTQ", "HNL", "SVC"];

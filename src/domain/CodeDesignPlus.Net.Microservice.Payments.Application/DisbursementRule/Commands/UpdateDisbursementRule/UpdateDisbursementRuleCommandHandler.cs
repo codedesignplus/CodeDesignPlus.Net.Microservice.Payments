@@ -1,6 +1,9 @@
+using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
+using CodeDesignPlus.Net.ValueObjects.Financial;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.DisbursementRule.Commands.UpdateDisbursementRule;
 
-public class UpdateDisbursementRuleCommandHandler(IDisbursementRuleRepository repository, IUserContext user) : IRequestHandler<UpdateDisbursementRuleCommand>
+public class UpdateDisbursementRuleCommandHandler(IDisbursementRuleRepository repository, IUserContext user, ICurrencyGrpc currencyGrpc) : IRequestHandler<UpdateDisbursementRuleCommand>
 {
     public async Task Handle(UpdateDisbursementRuleCommand request, CancellationToken cancellationToken)
     {
@@ -10,10 +13,19 @@ public class UpdateDisbursementRuleCommandHandler(IDisbursementRuleRepository re
 
         ApplicationGuard.IsNull(aggregate, Errors.DisbursementRuleNotFound);
 
+        long? fixedCommission = null;
+
+        if (request.FixedCommission is not null)
+        {
+            var currency = await currencyGrpc.GetCurrencyAsync(code: request.FixedCommission.Currency, cancellationToken: cancellationToken);
+            fixedCommission = request.FixedCommission.ToMinorUnits(currency.DecimalDigits);
+        }
+
         aggregate.Update(
             request.CommissionType,
-            request.CommissionAmount,
-            request.Currency,
+            fixedCommission,
+            request.FixedCommission?.Currency,
+            request.CommissionPercentage.HasValue ? BasisPoints.FromPercentage(request.CommissionPercentage.Value) : null,
             request.Description
         );
 

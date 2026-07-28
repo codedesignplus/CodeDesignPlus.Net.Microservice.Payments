@@ -1,4 +1,4 @@
-using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
+﻿using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
 using CodeDesignPlus.Net.gRpc.Clients.Services.Payment;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 
@@ -25,18 +25,16 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
 
         if (request.Status == CodeDesignPlus.Net.Microservice.Payments.Domain.Enums.PaymentStatus.Failed)
         {
-            await notification.SendToUserAsync(new CodeDesignPlus.Net.gRpc.Clients.Services.Notification.NotificationUserRequest
-            {
-                UserId = payment.Buyer.BuyerId.ToString(),
-                EventName = "OrderPaymentFailed",
-                Id = request.Id.ToString(),
-                SentBy = payment.Buyer.BuyerId.ToString(),
-                Tenant = user.Tenant.ToString(),
-                JsonPayload = CodeDesignPlus.Net.Serializers.JsonSerializer.Serialize(new
+            await notification.NotifyUserAsync(
+                payment.Buyer.BuyerId,
+                "OrderPaymentFailed",
+                new
                 {
                     message = $"The transaction has failed | {request.Id}"
-                })
-            }, cancellationToken);
+                },
+                user.Tenant,
+                payment.Buyer.BuyerId,
+                cancellationToken);
         }
     }
 }

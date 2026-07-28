@@ -241,7 +241,7 @@ public class PayuAmount
   /// <summary>
   /// ISO code of the currency.
   /// </summary>
-  public string Currency { get; set; } = "COP";
+  public string Currency { get; set; } = null!;
 }
 
 /// <summary>

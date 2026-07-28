@@ -75,7 +75,7 @@ public class DisbursementAggregate(Guid id) : AggregateRootBase(id)
         ProcessedAt = SystemClock.Instance.GetCurrentInstant();
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(DisbursementCompletedDomainEvent.Create(Id, BeneficiaryId, DisbursedAmount, providerReference, Tenant));
+        AddEvent(DisbursementCompletedDomainEvent.Create(Id, BeneficiaryId, DisbursedAmount, Currency, providerReference, Tenant));
     }
 
     public void Fail(string reason)
