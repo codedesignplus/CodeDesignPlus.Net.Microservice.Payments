@@ -235,7 +235,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
             response.PaymentId = paymentId;
 
             var valorDecimal = decimal.Parse(value!, System.Globalization.CultureInfo.InvariantCulture);
-            var valueString = valorDecimal.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+            var valueString = FormatValueForSignature(valorDecimal);
             var expectedSignature = GenerateMd5Hash($"{payuOptions.ApiKey}~{merchantId}~{referenceSale}~{valueString}~{currency}~{state}");
 
             logger.LogWarning("Expected signature: {ExpectedSignature}, Received signature: {ReceivedSignature}", expectedSignature, receivedSignature);
@@ -307,6 +307,29 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
         }, cancellationToken);
 
         return JsonSerializer.Deserialize<TResponse>(responseContent, settings);
+    }
+
+    /// <summary>
+    /// Formats the transaction amount exactly as PayU does when it signs a confirmation.
+    /// </summary>
+    /// <remarks>
+    /// PayU uses two decimals and drops the last one <b>only when it is a zero</b>: 150.00 is signed as
+    /// "150.0" and 150.26 as "150.26".
+    /// <para>
+    /// This used to be a plain <c>ToString("F1")</c>, which happens to agree with PayU whenever the cents end
+    /// in zero and disagrees otherwise — and it rounds, so 4935052.09 became "4935052.1". Every confirmation
+    /// whose cents did not end in zero failed the signature check and the webhook answered 403, leaving the
+    /// payment charged at PayU and unrecorded here. It looked intermittent because whether it worked depended
+    /// on the last cent of the amount.
+    /// </para>
+    /// </remarks>
+    /// <param name="value">The transaction amount reported by PayU.</param>
+    /// <returns>The amount formatted the way PayU signs it.</returns>
+    internal static string FormatValueForSignature(decimal value)
+    {
+        var formatted = value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+        return formatted.EndsWith('0') ? formatted[..^1] : formatted;
     }
 
     private static string GenerateMd5Hash(string input)
