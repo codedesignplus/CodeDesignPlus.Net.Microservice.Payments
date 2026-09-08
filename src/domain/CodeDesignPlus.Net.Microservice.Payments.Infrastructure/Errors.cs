@@ -30,4 +30,11 @@ public class Errors : IErrorCodes
 
     public const string PayerEmailAddressCannotBeNullOrEmpty = "319 : Payer Email Address Cannot Be Null Or Empty";
     public const string PayerContactPhoneCannotBeNullOrEmpty = "320 : Payer Contact Phone Cannot Be Null Or Empty";
+
+    /// <summary>La pasarela rechazo la peticion y dijo por que.</summary>
+    /// <remarks>
+    /// Quien la lanza le concatena el motivo que reporto PayU, que es dinamico. Asi el codigo se mantiene
+    /// estable para el cliente y el detalle real llega al ProblemDetails, en vez de quedarse en un log.
+    /// </remarks>
+    public const string PaymentGatewayRejectedTheRequest = "321 : The payment gateway rejected the request.";
 }

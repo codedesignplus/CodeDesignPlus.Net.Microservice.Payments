@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Exceptions;
+using CodeDesignPlus.Net.Exceptions.Extensions;
 using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
@@ -295,12 +297,32 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
 
             logger.LogWarning("Received response from Payu: {@Response}", content);
 
+            var motivo = PayuResponseEvaluator.GetErrorMessage(content);
+
             if (PayuResponseEvaluator.IsRetryableError(content))
             {
                 Activity.Current?.SetStatus(ActivityStatusCode.Error, "PayU returned code=ERROR");
                 Activity.Current?.SetTag("payu.error.retryable", true);
                 logger.LogWarning("Retryable error detected from Payu, triggering retry.");
                 throw new ResilienceSoftErrorException("PayU returned code=ERROR", content);
+            }
+
+            // PAYU EXPLICO QUE ESTA MAL, ASI QUE NO SE REINTENTA Y EL MOTIVO VIAJA.
+            //
+            // Antes cualquier code=ERROR era reintentable: una fecha de tarjeta vencida —permanente— se
+            // reintentaba siete veces durante ~26 s para acabar fallando igual. Y el motivo se quedaba en el
+            // segundo argumento de la excepcion, que el middleware no publica: el cliente solo veia
+            // "PayU returned code=ERROR", sin saber si reintentar, corregir la tarjeta o llamar a soporte.
+            if (motivo is not null)
+            {
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, motivo);
+                Activity.Current?.SetTag("payu.error.retryable", false);
+                logger.LogWarning("Payu rejected the request: {Reason}", motivo);
+
+                throw new CodeDesignPlusException(
+                    Layer.Infrastructure,
+                    Errors.PaymentGatewayRejectedTheRequest.GetCode(),
+                    $"{Errors.PaymentGatewayRejectedTheRequest.GetMessage()} {motivo}");
             }
 
             return content;
