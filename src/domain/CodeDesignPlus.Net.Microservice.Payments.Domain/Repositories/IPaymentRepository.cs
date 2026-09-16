@@ -3,7 +3,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.Repositories;
 public interface IPaymentRepository : IRepositoryBase
 {
     /// <summary>
-    /// Los cobros que siguen en vuelo y ya son mas viejos que el corte.
+    /// Los cobros que siguen en curso y ya son mas viejos que el corte.
     /// </summary>
     /// <remarks>
     /// Mira <c>CreatedAt</c> y no <c>UpdatedAt</c>: lo que importa es cuanto lleva el cobro sin resolverse
@@ -14,5 +14,5 @@ public interface IPaymentRepository : IRepositoryBase
     /// <param name="cutoff">La frontera: se devuelven los creados antes de este instante.</param>
     /// <param name="limit">Cuantos como mucho, para que el barrido no se lea la coleccion entera de golpe.</param>
     /// <param name="cancellationToken">Token de cancelacion.</param>
-    Task<List<PaymentAggregate>> GetInFlightOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken);
+    Task<List<PaymentAggregate>> GetInProgressOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken);
 }

@@ -147,7 +147,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <b>Tambien acepta <see cref="PaymentStatus.Expired"/>, y no es un añadido cosmetico.</b> PayU manda
     /// <c>state_pol=5</c> cuando la sesion caduca, que es precisamente lo que hace una transaccion PSE que el
     /// comprador no termina. El adaptador ya lo traducia, y aqui se rechazaba: el aviso reventaba, se iba a la
-    /// cola de errores y el cobro se quedaba en vuelo para siempre. La pasarela nos estaba contando el
+    /// cola de errores y el cobro se quedaba en curso para siempre. La pasarela nos estaba contando el
     /// desenlace y lo tirabamos.
     /// <para>
     /// Es distinto de <see cref="Expire"/>: alli no hay respuesta porque nadie contesto, y el cierre lo decide
@@ -208,7 +208,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     {
         DomainGuard.IsTrue(
             Status != PaymentStatus.Initiated && Status != PaymentStatus.Pending,
-            Errors.OnlyInFlightPaymentsCanExpire);
+            Errors.OnlyPaymentsInProgressCanExpire);
 
         Status = PaymentStatus.Expired;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();

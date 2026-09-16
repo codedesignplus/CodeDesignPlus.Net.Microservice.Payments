@@ -5,17 +5,17 @@ using CodeDesignPlus.Net.ValueObjects.Financial;
 using Microsoft.Extensions.Logging;
 // El namespace del micro tiene un segmento "Payment", y la busqueda del namespace envolvente gana a
 // las directivas using: "PaymentMethod" a secas resuelve a un namespace, no al objeto de valor.
-using MetodoDePago = CodeDesignPlus.Net.ValueObjects.Payment.PaymentMethod;
-using Tarjeta = CodeDesignPlus.Net.ValueObjects.Payment.CreditCard;
+using GatewayMethod = CodeDesignPlus.Net.ValueObjects.Payment.PaymentMethod;
+using Card = CodeDesignPlus.Net.ValueObjects.Payment.CreditCard;
 using CodeDesignPlus.Net.ValueObjects.User;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.Payment.Commands.ExpireStalePayments;
 
 /// <summary>
-/// Cubre el barrido que cierra los cobros que se quedaron en vuelo.
+/// Cubre el barrido que cierra los cobros que se quedaron en curso.
 /// </summary>
 /// <remarks>
-/// Fase 5 del plan de pagos en vuelo. Un comprador abre la pasarela, se va, y el cobro se queda en
+/// Fase 5 del plan de pagos en curso. Un comprador abre la pasarela, se va, y el cobro se queda en
 /// <c>Initiated</c> para siempre: el proveedor solo avisa de lo que resuelve, no de lo que se abandona.
 /// <para>
 /// Lo que de verdad se protege aqui no esta en este servicio: al cerrarlos, el agregado levanta
@@ -27,15 +27,15 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.Payment.Comm
 public class ExpireStalePaymentsCommandHandlerTest
 {
     private static readonly Guid Tenant = Guid.Parse("20d2459d-674e-476e-adb4-dcb0f7a224fa");
-    private static readonly Guid Comprador = Guid.Parse("cc000000-0000-4000-8000-000000000003");
-    private static readonly Guid Documento = Guid.Parse("6cc38dea-d7c4-5d5d-a5f7-8a6394e5b166");
+    private static readonly Guid Buyer = Guid.Parse("cc000000-0000-4000-8000-000000000003");
+    private static readonly Guid Document = Guid.Parse("6cc38dea-d7c4-5d5d-a5f7-8a6394e5b166");
 
-    private static readonly Duration UnDia = Duration.FromDays(1);
+    private static readonly Duration OneDay = Duration.FromDays(1);
 
     private readonly Mock<IPaymentRepository> repository = new();
     private readonly Mock<IPubSub> pubsub = new();
 
-    private readonly List<IDomainEvent> publicados = [];
+    private readonly List<IDomainEvent> published = [];
 
     public ExpireStalePaymentsCommandHandlerTest()
     {
@@ -45,144 +45,149 @@ public class ExpireStalePaymentsCommandHandlerTest
 
         pubsub
             .Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => publicados.AddRange(events))
+            .Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events))
             .Returns(Task.CompletedTask);
     }
 
+    /// <summary>Un cobro colgado se cierra como expirado.</summary>
     [Fact]
-    public async Task UnCobroColgadoSeCierraComoExpirado()
+    public async Task AStrandedPaymentIsClosedAsExpired()
     {
-        var colgado = Cobro();
+        var stranded = Payment();
 
-        Encuentra(colgado);
+        Found(stranded);
 
         await Handle();
 
-        Assert.Equal(PaymentStatus.Expired, colgado.Status);
+        Assert.Equal(PaymentStatus.Expired, stranded.Status);
     }
 
+    /// <summary>El cierre anuncia el evento que facturacion escucha.</summary>
     [Fact]
-    public async Task ElCierreAnunciaElEventoQueFacturacionEscucha()
+    public async Task ClosingAnnouncesTheEventInvoicingListensFor()
     {
         // **Es el punto entero de la fase.** Facturacion trata Expired igual que Failed y retira la
         // cotizacion de ese pago, asi que un solo cierre resuelve las dos limpiezas. Sin este evento, el
         // cobro queda cerrado aqui y la cotizacion viva alli, y nada avisa.
-        var colgado = Cobro();
+        var stranded = Payment();
 
-        Encuentra(colgado);
+        Found(stranded);
 
         await Handle();
 
-        var evento = Assert.Single(publicados.OfType<PaymentResponseAssociatedDomainEvent>());
+        var published = Assert.Single(this.published.OfType<PaymentResponseAssociatedDomainEvent>());
 
-        Assert.Equal(PaymentStatus.Expired, evento.Status);
-        Assert.Equal(Documento, evento.ReferenceId);
-        Assert.Equal(Tenant, evento.Tenant);
+        Assert.Equal(PaymentStatus.Expired, published.Status);
+        Assert.Equal(Document, published.ReferenceId);
+        Assert.Equal(Tenant, published.Tenant);
     }
 
+    /// <summary>El cierre deja dicho que lo decidio la plataforma.</summary>
     [Fact]
-    public async Task ElCierreDiceQueLoDecidioLaPlataforma()
+    public async Task ClosingRecordsThatThePlatformDecidedIt()
     {
         // Quien lea el registro manana tiene que poder distinguir un rechazo del banco de un cierre nuestro
         // por silencio. Sin esto, los dos se ven igual: un cobro que no prospero.
-        var colgado = Cobro();
+        var stranded = Payment();
 
-        Encuentra(colgado);
+        Found(stranded);
 
         await Handle();
 
-        Assert.Equal("platform", colgado.FinalResponse["expiredBy"]);
+        Assert.Equal("platform", stranded.FinalResponse["expiredBy"]);
     }
 
+    /// <summary>Sin cobros colgados no se anuncia nada.</summary>
     [Fact]
-    public async Task SinCobrosColgadosNoSeAnunciaNada()
+    public async Task WithNoStrandedPaymentsNothingIsAnnounced()
     {
-        Encuentra();
+        Found();
 
         await Handle();
 
-        Assert.Empty(publicados);
+        Assert.Empty(published);
         repository.Verify(x => x.UpdateAsync(It.IsAny<PaymentAggregate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    /// <summary>Un cobro que falla no impide cerrar los demas.</summary>
     [Fact]
-    public async Task UnCobroQueFallaNoImpideCerrarLosDemas()
+    public async Task AFailingPaymentDoesNotStopTheOthers()
     {
         // Y al terminar se lanza, porque continuar y decir que todo fue bien son cosas distintas: sin esto la
         // corrida sale en verde en el panel con cobros sin cerrar.
-        var malo = Cobro();
-        var bueno = Cobro();
+        var bad = Payment();
+        var good = Payment();
 
-        Encuentra(malo, bueno);
+        Found(bad, good);
 
         repository
-            .Setup(x => x.UpdateAsync(malo, It.IsAny<CancellationToken>()))
+            .Setup(x => x.UpdateAsync(bad, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("mongo caido"));
 
         await Assert.ThrowsAsync<InvalidOperationException>(Handle);
 
-        Assert.Equal(PaymentStatus.Expired, bueno.Status);
-        Assert.Single(publicados.OfType<PaymentResponseAssociatedDomainEvent>());
+        Assert.Equal(PaymentStatus.Expired, good.Status);
+        Assert.Single(published.OfType<PaymentResponseAssociatedDomainEvent>());
     }
 
+    /// <summary>El corte se calcula desde el plazo pedido.</summary>
     [Fact]
-    public async Task ElCorteSeCalculaDesdeElPlazoPedido()
+    public async Task TheCutoffIsDerivedFromTheRequestedWindow()
     {
-        Instant? corte = null;
+        Instant? cutoff = null;
 
         repository
-            .Setup(x => x.GetInFlightOlderThanAsync(It.IsAny<Instant>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .Callback<Instant, int, CancellationToken>((c, _, __) => corte = c)
+            .Setup(x => x.GetInProgressOlderThanAsync(It.IsAny<Instant>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Callback<Instant, int, CancellationToken>((c, _, __) => cutoff = c)
             .ReturnsAsync([]);
 
-        var ahora = SystemClock.Instance.GetCurrentInstant();
+        var now = SystemClock.Instance.GetCurrentInstant();
 
         await Handle();
 
-        Assert.NotNull(corte);
+        Assert.NotNull(cutoff);
 
-        // Un dia atras, con holgura para lo que tarde la prueba.
-        var esperado = ahora.Minus(UnDia);
+        var expected = now.Minus(OneDay);
 
-        Assert.True((corte!.Value - esperado).TotalSeconds is > -5 and < 5, $"corte={corte} esperado={esperado}");
+        Assert.True((cutoff!.Value - expected).TotalSeconds is > -5 and < 5, $"cutoff={cutoff} expected={expected}");
     }
 
-    private void Encuentra(params PaymentAggregate[] cobros) =>
+    private void Found(params PaymentAggregate[] payments) =>
         repository
-            .Setup(x => x.GetInFlightOlderThanAsync(It.IsAny<Instant>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([.. cobros]);
+            .Setup(x => x.GetInProgressOlderThanAsync(It.IsAny<Instant>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([.. payments]);
 
     private Task Handle()
     {
         var handler = new ExpireStalePaymentsCommandHandler(
             repository.Object, pubsub.Object, Mock.Of<ILogger<ExpireStalePaymentsCommandHandler>>());
 
-        return handler.Handle(new ExpireStalePaymentsCommand(UnDia, 500), CancellationToken.None);
+        return handler.Handle(new ExpireStalePaymentsCommand(OneDay, 500), CancellationToken.None);
     }
 
     /// <summary>Un cobro de facturacion, que es el que le importa a esta fase.</summary>
     /// <remarks>
-    /// Nace en <c>Initiated</c>, que es el unico estado en vuelo que hoy se puede alcanzar: nada escribe
+    /// Nace en <c>Initiated</c>, que es el unico estado en curso que hoy se puede alcanzar: nada escribe
     /// <c>Pending</c> todavia. El barrido lo incluye igual porque el enum lo tiene y PayU lo reporta; el dia
     /// que llegue, ya estara cubierto.
     /// </remarks>
-    private static PaymentAggregate Cobro()
+    private static PaymentAggregate Payment()
     {
         var subTotal = Money.FromLong(80_216_669L, "COP");
         var tax = Money.FromLong(0L, "COP");
 
-        var comprador = Buyer.CreateWithoutShipping(
-            Comprador, "Jorge Enrique Montoya", "+573001112233", "jorge@example.com",
+        var buyer = Net.ValueObjects.User.Buyer.CreateWithoutShipping(
+            Buyer, "Jorge Enrique Montoya", "+573001112233", "jorge@example.com",
             TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
 
-        var cobro = PaymentAggregate.Create(
-            Guid.NewGuid(), "Invoicing", Documento,
-            subTotal, tax, subTotal + tax, comprador, null,
-            MetodoDePago.Create("PSE", null, Tarjeta.Create("tok_1", "4242", "2030/12", "Jorge Enrique Montoya", "123")),
-            "Pago documento CC-000003", PaymentProvider.Payu, Tenant, Comprador);
+        var payment = PaymentAggregate.Create(
+            Guid.NewGuid(), "Invoicing", Document,
+            subTotal, tax, subTotal + tax, buyer, null,
+            GatewayMethod.Create("PSE", null, Card.Create("tok_1", "4242", "2030/12", "Jorge Enrique Montoya", "123")),
+            "Pago documento CC-000003", PaymentProvider.Payu, Tenant, Buyer);
 
-        cobro.GetAndClearEvents();
+        payment.GetAndClearEvents();
 
-        return cobro;
+        return payment;
     }
 }

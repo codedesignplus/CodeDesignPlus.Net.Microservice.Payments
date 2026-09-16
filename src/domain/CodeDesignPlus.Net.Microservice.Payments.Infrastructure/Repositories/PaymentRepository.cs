@@ -4,16 +4,16 @@ public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoO
     : RepositoryBase(serviceProvider, mongoOptions, logger), IPaymentRepository
 {
     /// <inheritdoc/>
-    public async Task<List<PaymentAggregate>> GetInFlightOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken)
+    public async Task<List<PaymentAggregate>> GetInProgressOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken)
     {
         var collection = GetCollection<PaymentAggregate>();
 
-        // `In` sobre los dos estados en vuelo, y no dos `Ne` sobre los resueltos: con `Ne` cualquier estado
+        // `In` sobre los dos estados en curso, y no dos `Ne` sobre los resueltos: con `Ne` cualquier estado
         // nuevo que se anadiera al enum entraria en el barrido por omision, y lo que hay que enumerar es lo
         // que se cierra, no lo que se salva.
-        var enVuelo = new[] { PaymentStatus.Initiated, PaymentStatus.Pending };
+        var inProgress = new[] { PaymentStatus.Initiated, PaymentStatus.Pending };
 
-        var filter = Builders<PaymentAggregate>.Filter.In(x => x.Status, enVuelo)
+        var filter = Builders<PaymentAggregate>.Filter.In(x => x.Status, inProgress)
             & Builders<PaymentAggregate>.Filter.Lt(x => x.CreatedAt, cutoff)
             & Builders<PaymentAggregate>.Filter.Eq(x => x.IsActive, true);
 

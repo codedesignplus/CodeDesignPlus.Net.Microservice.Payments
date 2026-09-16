@@ -6,7 +6,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// Manejador de <see cref="ExpireStalePaymentsCommand"/>.
 /// </summary>
 /// <remarks>
-/// Un cobro que nadie termina se queda en vuelo para siempre, y el modulo que lo pidio sigue esperandolo. En
+/// Un cobro que nadie termina se queda en curso para siempre, y el modulo que lo pidio sigue esperandolo. En
 /// facturacion eso deja viva la cotizacion que congela el importe, y con ella el saldo del propietario
 /// retenido: la mora de ese documento no vuelve a moverse y un segundo intento de pago no puede reemplazarla.
 /// <para>
@@ -31,11 +31,11 @@ public class ExpireStalePaymentsCommandHandler(
 
         var cutoff = SystemClock.Instance.GetCurrentInstant().Minus(request.OlderThan);
 
-        var stale = await repository.GetInFlightOlderThanAsync(cutoff, request.BatchSize, cancellationToken);
+        var stale = await repository.GetInProgressOlderThanAsync(cutoff, request.BatchSize, cancellationToken);
 
         if (stale.Count == 0)
         {
-            logger.LogInformation("No hay cobros en vuelo anteriores a {Cutoff}.", cutoff);
+            logger.LogInformation("No hay cobros en curso anteriores a {Cutoff}.", cutoff);
 
             return;
         }
@@ -71,10 +71,10 @@ public class ExpireStalePaymentsCommandHandler(
         }
 
         logger.LogInformation(
-            "Cobros en vuelo anteriores a {Cutoff}: {Expired} cerrado(s), {Failed} fallido(s).",
+            "Cobros en curso anteriores a {Cutoff}: {Expired} cerrado(s), {Failed} fallido(s).",
             cutoff, expired, failed);
 
         if (failed > 0)
-            throw new InvalidOperationException($"No se pudieron cerrar {failed} cobro(s) en vuelo.");
+            throw new InvalidOperationException($"No se pudieron cerrar {failed} cobro(s) en curso.");
     }
 }

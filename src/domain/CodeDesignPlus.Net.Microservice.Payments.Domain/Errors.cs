@@ -216,5 +216,5 @@ public class Errors : IErrorCodes
     public const string PaymentProviderConfigNotFound = "260 : Payment Provider Config not found";
     public const string PaymentProviderConfigAlreadyExists = "261 : Payment Provider Config already exists";
 
-    public const string OnlyInFlightPaymentsCanExpire = "262 : Only a payment still in flight can expire";
+    public const string OnlyPaymentsInProgressCanExpire = "262 : Only a payment still in progress can expire";
 }
