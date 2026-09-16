@@ -1,7 +1,7 @@
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ExpireStalePayments;
 
 /// <summary>
-/// Cierra como expirados los cobros que llevan demasiado tiempo en vuelo.
+/// Cierra como expirados los cobros que llevan demasiado tiempo en curso.
 /// </summary>
 /// <remarks>
 /// No lleva tenant: el barrido es transversal a todas las copropiedades a proposito. Un cobro colgado no

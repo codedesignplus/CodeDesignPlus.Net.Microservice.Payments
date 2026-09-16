@@ -9,7 +9,7 @@ using NodaTime;
 namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Jobs;
 
 /// <summary>
-/// Cierra los cobros que se quedaron en vuelo y nadie va a terminar.
+/// Cierra los cobros que se quedaron en curso y nadie va a terminar.
 /// </summary>
 /// <remarks>
 /// Un comprador abre la pasarela, se va, y el cobro se queda en <c>Initiated</c> para siempre. Nadie vuelve a
@@ -41,7 +41,8 @@ public class ExpireStalePaymentsJob(
     /// <para>
     /// Si se cerrara antes de tiempo y la pasarela contestara despues, el agregado rechazaria la transicion y
     /// el aviso acabaria en la cola de errores: <b>dinero cobrado que no se aplica</b>. Esperar de mas, en
-    /// cambio, solo alarga una cotizacion congelada, y para eso esta el escape manual del administrador.
+    /// cambio, solo alarga una cotizacion congelada, y eso no bloquea a nadie: facturacion deja de tener en
+    /// cuenta una cotizacion pasados 30 minutos, mucho antes de que este barrido llegue a mirarla.
     /// </para>
     /// </remarks>
     private static readonly Duration StaleAfter = Duration.FromDays(1);
@@ -59,7 +60,7 @@ public class ExpireStalePaymentsJob(
     [DisableConcurrentExecution(timeoutInSeconds: 5 * 60)]
     public async Task ExecuteAsync(IJobCancellationToken cancellationToken)
     {
-        logger.LogInformation("ExpireStalePaymentsJob: cerrando los cobros en vuelo de mas de {StaleAfter}.", StaleAfter);
+        logger.LogInformation("ExpireStalePaymentsJob: cerrando los cobros en curso de mas de {StaleAfter}.", StaleAfter);
 
         await mediator.Send(new ExpireStalePaymentsCommand(StaleAfter, BatchSize), cancellationToken.ShutdownToken);
     }

@@ -34,7 +34,7 @@ builder.Services.AddHealthChecksServices();
 builder.Services.AddObservability(builder.Configuration, builder.Environment);
 builder.Services.AddGrpcClients(builder.Configuration);
 
-// El barrido que cierra los cobros que se quedaron en vuelo. Es el primer trabajo programado de este
+// El barrido que cierra los cobros que se quedaron en curso. Es el primer trabajo programado de este
 // servicio: hasta ahora solo tenia servicios en segundo plano, que corren en cada replica y no se
 // coordinan entre si.
 builder.Services.AddHangfire<Program>(builder.Configuration);

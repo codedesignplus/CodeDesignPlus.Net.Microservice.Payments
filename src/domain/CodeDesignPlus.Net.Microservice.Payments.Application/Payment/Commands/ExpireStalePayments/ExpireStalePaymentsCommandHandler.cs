@@ -52,7 +52,8 @@ public class ExpireStalePaymentsCommandHandler(
                 // El agregado antes que el evento: si la publicacion falla, el cobro ya esta cerrado y el
                 // barrido de manana no vuelve a encontrarlo, pero facturacion no se ha enterado y su
                 // cotizacion sigue viva. Al reves seria peor —anunciar un cierre que no llego a escribirse—
-                // asi que el orden es este y el hueco se cubre con el escape manual de la fase 6.
+                // asi que el orden es este, y el hueco no atrapa a nadie: facturacion deja de tener en cuenta
+                // una cotizacion pasados 30 minutos, sin necesidad de este evento.
                 await repository.UpdateAsync(payment, cancellationToken);
 
                 await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
