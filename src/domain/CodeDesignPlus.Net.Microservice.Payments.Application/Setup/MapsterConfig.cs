@@ -26,6 +26,30 @@ public static class MapsterConfigPayment
                 FinalResponse = src.FinalResponse
             });
 
+        // Campo a campo y a mano, igual que el de arriba, pero aqui la razon no es la comodidad: el mapeo
+        // por convencion copiaria todo lo que coincida de nombre, y el agregado guarda el token de la
+        // tarjeta, el titular, el codigo de seguridad y el documento del comprador. Enumerar lo que sale es
+        // lo que hace que anadir un campo al agregado no lo publique solo.
+        TypeAdapterConfig<PaymentAggregate, PaymentSummaryDto>
+            .NewConfig()
+            .MapWith(src => new PaymentSummaryDto
+            {
+                Id = src.Id,
+                Module = src.Module,
+                ReferenceId = src.ReferenceId,
+                Status = src.Status,
+                Total = src.Total,
+                Description = src.Description,
+                PaymentProvider = src.PaymentProvider,
+                CreatedAt = src.CreatedAt,
+                PaymentMethodType = src.PaymentMethod.Type,
+                BuyerName = src.Buyer.Name,
+
+                // De la tarjeta, lo unico que se puede mostrar. Es nulo cuando se pago por PSE, que no
+                // tiene tarjeta detras.
+                Last4Digits = src.PaymentMethod.CreditCard != null ? src.PaymentMethod.CreditCard.Last4Digits : null
+            });
+
         TypeAdapterConfig<SavedCardAggregate, SavedCardDto>
             .NewConfig()
             .MapWith(src => new SavedCardDto
