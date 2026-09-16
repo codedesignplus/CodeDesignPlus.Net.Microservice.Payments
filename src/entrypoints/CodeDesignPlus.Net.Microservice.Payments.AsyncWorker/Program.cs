@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.gRpc.Clients.Extensions;
+using CodeDesignPlus.Net.Hangfire.Extensions;
 using CodeDesignPlus.Net.Logger.Extensions;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
 using CodeDesignPlus.Net.Microservice.Commons.HealthChecks;
@@ -32,12 +33,18 @@ builder.Services.AddMediatR<CodeDesignPlus.Net.Microservice.Payments.Application
 builder.Services.AddHealthChecksServices();
 builder.Services.AddObservability(builder.Configuration, builder.Environment);
 builder.Services.AddGrpcClients(builder.Configuration);
+
+// El barrido que cierra los cobros que se quedaron en vuelo. Es el primer trabajo programado de este
+// servicio: hasta ahora solo tenia servicios en segundo plano, que corren en cada replica y no se
+// coordinan entre si.
+builder.Services.AddHangfire<Program>(builder.Configuration);
 builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
 builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.PaymentMethodSeedBackgroundService>();
 
 var app = builder.Build();
 
 app.UseHealthChecks();
+app.UseHangfireDashboard<Program>(builder.Configuration);
     
 var home = app.MapGroup("/");
 

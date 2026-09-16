@@ -141,14 +141,25 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     }
 
     /// <summary>
-    /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook)
-    /// y actualiza el estado del pago a 'Succeeded' o 'Failed'.
+    /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook) y cierra el cobro.
     /// </summary>
+    /// <remarks>
+    /// <b>Tambien acepta <see cref="PaymentStatus.Expired"/>, y no es un añadido cosmetico.</b> PayU manda
+    /// <c>state_pol=5</c> cuando la sesion caduca, que es precisamente lo que hace una transaccion PSE que el
+    /// comprador no termina. El adaptador ya lo traducia, y aqui se rechazaba: el aviso reventaba, se iba a la
+    /// cola de errores y el cobro se quedaba en vuelo para siempre. La pasarela nos estaba contando el
+    /// desenlace y lo tirabamos.
+    /// <para>
+    /// Es distinto de <see cref="Expire"/>: alli no hay respuesta porque nadie contesto, y el cierre lo decide
+    /// la plataforma por silencio. Aqui contesto el proveedor y se guarda lo que dijo. Los dos acaban en
+    /// <c>Expired</c> y los dos levantan el mismo evento, pero el registro no miente sobre quien lo decidio.
+    /// </para>
+    /// </remarks>
     public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response)
     {
         DomainGuard.IsTrue(
-            finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed,
-            Errors.FinalStatusMustBeSucceededOrFailed);
+            finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed && finalStatus != PaymentStatus.Expired,
+            Errors.FinalStatusMustBeResolved);
         DomainGuard.IsEmpty(response, Errors.FinalResponseCannotBeEmpty);
 
         // Idempotent: if already at the same final status, skip (webhook retry)
@@ -167,4 +178,50 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant));
     }
 
+    /// <summary>
+    /// Cierra un cobro que lleva demasiado tiempo sin respuesta de la pasarela.
+    /// </summary>
+    /// <remarks>
+    /// Un cobro que nadie termina se queda en <see cref="PaymentStatus.Initiated"/> para siempre, y eso no es
+    /// inofensivo: el modulo que lo pidio sigue esperandolo. En facturacion, la cotizacion que congela el
+    /// importe a cobrar queda viva indefinidamente, y con ella el saldo del propietario retenido.
+    /// <para>
+    /// <b>Va por su propio metodo y no por <see cref="SetFinalResponse"/>.</b> Aquel exige una respuesta del
+    /// proveedor, y aqui no la hay: nadie contesto, que es justo el problema. Meter un
+    /// <c>Dictionary</c> inventado para poder reutilizarlo seria escribir en los libros una respuesta que la
+    /// pasarela nunca dio.
+    /// </para>
+    /// <para>
+    /// <b>Levanta el mismo evento que un rechazo</b>, y eso es el punto entero: el consumidor de facturacion
+    /// ya trata <c>Expired</c> igual que <c>Failed</c> y retira la cotizacion de ese pago. Un solo cierre
+    /// resuelve las dos limpiezas, sin inventar un segundo barrido que hurgue en el estado de otro servicio.
+    /// </para>
+    /// <para>
+    /// <b>Es irreversible, y por eso quien lo llama tiene que ser generoso con el plazo.</b> Si la pasarela
+    /// contesta despues, <see cref="SetFinalResponse"/> rechaza la transicion y el aviso acaba en la cola de
+    /// errores: el dinero se cobro y no se aplico. Esperar de mas solo alarga una cotizacion congelada;
+    /// cerrar de menos pierde un cobro real.
+    /// </para>
+    /// </remarks>
+    /// <param name="reason">Por que se cierra, que viaja en la respuesta para que quede dicho en el registro.</param>
+    public void Expire(string reason)
+    {
+        DomainGuard.IsTrue(
+            Status != PaymentStatus.Initiated && Status != PaymentStatus.Pending,
+            Errors.OnlyInFlightPaymentsCanExpire);
+
+        Status = PaymentStatus.Expired;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        // Se deja constancia de que esto lo decidio la plataforma y no el proveedor. La clave dice quien
+        // habla: quien lea el registro manana tiene que poder distinguir un rechazo del banco de un cierre
+        // nuestro por silencio.
+        FinalResponse = new Dictionary<string, string?>
+        {
+            ["expiredBy"] = "platform",
+            ["reason"] = reason,
+        };
+
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant));
+    }
 }

@@ -15,6 +15,7 @@
     <PackageReference Include="CodeDesignPlus.Net.Observability" Version="1.0.0-beta.12995" />
     <PackageReference Include="CodeDesignPlus.Net.Security" Version="1.0.0-beta.12995" />
     <PackageReference Include="CodeDesignPlus.Net.Redis.Cache" Version="1.0.0-beta.12995" />
+    <PackageReference Include="CodeDesignPlus.Net.Hangfire" Version="1.0.0-beta.12995" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Test" />

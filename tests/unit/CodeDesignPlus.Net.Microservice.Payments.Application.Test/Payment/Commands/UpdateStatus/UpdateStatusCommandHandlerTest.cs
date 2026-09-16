@@ -76,6 +76,36 @@ public class UpdateStatusCommandHandlerTest
         Assert.Null(captured);
     }
 
+    [Fact]
+    public async Task UnaSesionCaducadaSeAceptaYNoRevienta()
+    {
+        // PayU manda `state_pol=5` cuando la sesion expira, que es justo lo que hace una transaccion PSE que
+        // el comprador no termina. El adaptador ya lo traducia a Expired y el agregado lo rechazaba: el aviso
+        // reventaba, se iba a la cola de errores y el cobro se quedaba en vuelo para siempre. La pasarela nos
+        // contaba el desenlace y lo tirabamos.
+        var cobro = BuildPayment();
+
+        repository
+            .Setup(x => x.FindAsync<PaymentAggregate>(PaymentId, Tenant, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cobro);
+
+        await CaptureAsync(PaymentStatus.Expired);
+
+        Assert.Equal(PaymentStatus.Expired, cobro.Status);
+    }
+
+    [Fact]
+    public async Task UnEstadoSinResolverSigueSiendoUnError()
+    {
+        // `Unknown` es lo que devuelve el adaptador para cualquier codigo que no sabe traducir. Aceptarlo
+        // cerraria el cobro sin saber como acabo, que es peor que fallar ruidosamente.
+        repository
+            .Setup(x => x.FindAsync<PaymentAggregate>(PaymentId, Tenant, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(BuildPayment());
+
+        await Assert.ThrowsAsync<CodeDesignPlusException>(() => CaptureAsync(PaymentStatus.Unknown));
+    }
+
     private async Task<LiveUserPush?> CaptureAsync(PaymentStatus status)
     {
         LiveUserPush? captured = null;

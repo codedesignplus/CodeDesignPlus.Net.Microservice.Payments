@@ -141,7 +141,7 @@ public class Errors : IErrorCodes
     public const string InitiateResponseCannotBeEmpty = "207 : Initiate response cannot be empty";
 
     public const string OnlyCanSetFinalResponseIfStatusIsInitiated = "208 : Only can set final response if status is 'Initiated'";
-    public const string FinalStatusMustBeSucceededOrFailed = "209 : Final status must be 'Succeeded' or 'Failed'";
+    public const string FinalStatusMustBeResolved = "209 : Final status must be 'Succeeded', 'Failed' or 'Expired'";
     public const string FinalResponseCannotBeEmpty = "210 : Final response cannot be empty";
 
     public const string ReferenceIdCannotBeEmpty = "211 : Reference ID cannot be empty";
@@ -215,4 +215,6 @@ public class Errors : IErrorCodes
     public const string CommissionBasisPointsMustBePositive = "260 : Commission Basis Points must be positive";
     public const string PaymentProviderConfigNotFound = "260 : Payment Provider Config not found";
     public const string PaymentProviderConfigAlreadyExists = "261 : Payment Provider Config already exists";
+
+    public const string OnlyInFlightPaymentsCanExpire = "262 : Only a payment still in flight can expire";
 }
