@@ -2,7 +2,7 @@
   "language": "pt",
   "errors": {
     "300": "Erro desconhecido.",
-    "301": "O código de meio de pagamento '{0}' não é válido.",
+    "301": "O cartão de crédito é obrigatório.",
     "302": "Os dados do PSE são obrigatórios.",
     "303": "O identificador não é válido.",
     "304": "O código de referência não é válido.",
@@ -22,6 +22,7 @@
     "318": "Não foi possível tokenizar o cartão.",
     "319": "O é-mail do pagador é obrigatório.",
     "320": "O telefone do pagador é obrigatório.",
-    "321": "O provedor de pagamento recusou a solicitação."
+    "321": "O provedor de pagamento recusou a solicitação.",
+    "322": "O código de meio de pagamento '{0}' não é válido."
   }
 }

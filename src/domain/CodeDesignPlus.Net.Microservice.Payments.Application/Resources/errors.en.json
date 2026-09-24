@@ -1,0 +1,26 @@
+{
+  "language": "en",
+  "errors": {
+    "200": "UnknownError",
+    "201": "Invalid Request",
+    "202": "Payment already exists",
+    "203": "Payment not found",
+    "204": "Payment method already exists",
+    "205": "Payment method not found",
+    "206": "Payment provider transaction id not found",
+    "207": "Invalid signature received",
+    "208": "Payment provider not supported",
+    "209": "Next action is invalid",
+    "210": "Beneficiary already exists",
+    "211": "Beneficiary not found",
+    "212": "Disbursement Rule already exists",
+    "213": "Disbursement Rule not found",
+    "214": "Disbursement already exists",
+    "215": "Disbursement not found",
+    "216": "Saved Card already exists",
+    "217": "Saved Card not found",
+    "218": "Tokenization failed",
+    "219": "Payment provider config already exists",
+    "220": "Payment provider config not found"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "language": "en",
+  "errors": {
+    "300": "UnknownError",
+    "301": "Credit Card Cannot Be Null",
+    "302": "Pse Cannot Be Null",
+    "303": "Invalid Id",
+    "304": "Reference Code Is Invalid",
+    "305": "Merchant Id Is Required",
+    "306": "Currency Is Required",
+    "307": "State Is Required",
+    "308": "Value Is Required",
+    "309": "Signature Is Required",
+    "310": "Reference Code Is Required",
+    "311": "Merchant Id Missing",
+    "312": "Currency Missing",
+    "313": "State Missing",
+    "314": "Value Missing",
+    "315": "Signature Missing",
+    "316": "Reference Sale Missing",
+    "317": "Invalid Reference Sale",
+    "318": "Credit Card Tokenization Failed",
+    "319": "Payer Email Address Cannot Be Null Or Empty",
+    "320": "Payer Contact Phone Cannot Be Null Or Empty",
+    "321": "The payment gateway rejected the request.",
+    "322": "The payment method code '{0}' is not valid."
+  }
+}
