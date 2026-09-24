@@ -22,14 +22,14 @@
     "218": "Não foi possível tokenizar o cartão.",
     "219": "Essa configuração de provedor já existe.",
     "220": "Não encontramos a configuração do provedor.",
-    "221": "A lista de bancos é obrigatória.",
-    "222": "A lista de bancos não pode conter entradas vazias.",
-    "223": "Informe os dados do cartão ou os do PSE, mas não os dois.",
-    "224": "A moeda deve ser um código ISO 4217 de três letras maiúsculas.",
-    "225": "O país deve ser um código ISO 3166-1 alfa-2 de duas letras maiúsculas.",
-    "226": "A data de validade deve seguir o formato AAAA/MM.",
-    "227": "A URL não é válida.",
-    "228": "Os últimos quatro dígitos devem ser exatamente quatro números.",
-    "229": "O prazo deve ser maior que zero; caso contrário, fecharia uma cobrança recém-iniciada."
+    "285": "A lista de bancos é obrigatória.",
+    "286": "A lista de bancos não pode conter entradas vazias.",
+    "287": "Informe os dados do cartão ou os do PSE, mas não os dois.",
+    "288": "A moeda deve ser um código ISO 4217 de três letras maiúsculas.",
+    "289": "O país deve ser um código ISO 3166-1 alfa-2 de duas letras maiúsculas.",
+    "290": "A data de validade deve seguir o formato AAAA/MM.",
+    "291": "A URL não é válida.",
+    "292": "Os últimos quatro dígitos devem ser exatamente quatro números.",
+    "293": "O prazo deve ser maior que zero; caso contrário, fecharia uma cobrança recém-iniciada."
   }
 }

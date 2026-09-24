@@ -43,29 +43,29 @@ public class Errors: IErrorCodes
     public static readonly Error PaymentProviderConfigNotFound = new("220");
 
     /// <summary>La lista de bancos es obligatoria.</summary>
-    public static readonly Error BanksListIsRequired = new("221");
+    public static readonly Error BanksListIsRequired = new("285");
 
     /// <summary>La lista de bancos no puede traer entradas vacías.</summary>
-    public static readonly Error BanksListHasEmptyEntries = new("222");
+    public static readonly Error BanksListHasEmptyEntries = new("286");
 
     /// <summary>Indica los datos de la tarjeta o los de PSE, pero no los dos.</summary>
-    public static readonly Error PaymentMethodIsAmbiguous = new("223");
+    public static readonly Error PaymentMethodIsAmbiguous = new("287");
 
     /// <summary>La moneda debe ser un código ISO 4217 de tres letras en mayúscula.</summary>
-    public static readonly Error CurrencyFormatIsInvalid = new("224");
+    public static readonly Error CurrencyFormatIsInvalid = new("288");
 
     /// <summary>El país debe ser un código ISO 3166-1 alfa-2 de dos letras en mayúscula.</summary>
-    public static readonly Error CountryFormatIsInvalid = new("225");
+    public static readonly Error CountryFormatIsInvalid = new("289");
 
     /// <summary>La fecha de vencimiento debe seguir el formato AAAA/MM.</summary>
-    public static readonly Error ExpirationDateFormatIsInvalid = new("226");
+    public static readonly Error ExpirationDateFormatIsInvalid = new("290");
 
     /// <summary>La URL no es válida.</summary>
-    public static readonly Error UrlIsInvalid = new("227");
+    public static readonly Error UrlIsInvalid = new("291");
 
     /// <summary>Los últimos cuatro dígitos deben ser exactamente cuatro números.</summary>
-    public static readonly Error LastFourDigitsFormatIsInvalid = new("228");
+    public static readonly Error LastFourDigitsFormatIsInvalid = new("292");
 
     /// <summary>El plazo para dar un cobro por perdido debe ser mayor que cero.</summary>
-    public static readonly Error StalePaymentAgeMustBePositive = new("229");
+    public static readonly Error StalePaymentAgeMustBePositive = new("293");
 }

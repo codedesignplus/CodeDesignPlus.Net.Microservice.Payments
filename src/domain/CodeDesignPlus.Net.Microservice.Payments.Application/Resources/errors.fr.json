@@ -22,14 +22,14 @@
     "218": "La tokenisation de la carte a échoué.",
     "219": "Cette configuration de prestataire existe déjà.",
     "220": "Configuration du prestataire introuvable.",
-    "221": "La liste des banques est obligatoire.",
-    "222": "La liste des banques ne peut pas contenir d'entrées vides.",
-    "223": "Indiquez les données de la carte ou celles de PSE, mais pas les deux.",
-    "224": "La devise doit être un code ISO 4217 de trois lettres majuscules.",
-    "225": "Le pays doit être un code ISO 3166-1 alpha-2 de deux lettres majuscules.",
-    "226": "La date d'expiration doit suivre le format AAAA/MM.",
-    "227": "L'URL n'est pas valide.",
-    "228": "Les quatre derniers chiffres doivent être exactement quatre nombres.",
-    "229": "Le délai doit être supérieur à zéro, sinon un paiement à peine commencé serait clôturé."
+    "285": "La liste des banques est obligatoire.",
+    "286": "La liste des banques ne peut pas contenir d'entrées vides.",
+    "287": "Indiquez les données de la carte ou celles de PSE, mais pas les deux.",
+    "288": "La devise doit être un code ISO 4217 de trois lettres majuscules.",
+    "289": "Le pays doit être un code ISO 3166-1 alpha-2 de deux lettres majuscules.",
+    "290": "La date d'expiration doit suivre le format AAAA/MM.",
+    "291": "L'URL n'est pas valide.",
+    "292": "Les quatre derniers chiffres doivent être exactement quatre nombres.",
+    "293": "Le délai doit être supérieur à zéro, sinon un paiement à peine commencé serait clôturé."
   }
 }
