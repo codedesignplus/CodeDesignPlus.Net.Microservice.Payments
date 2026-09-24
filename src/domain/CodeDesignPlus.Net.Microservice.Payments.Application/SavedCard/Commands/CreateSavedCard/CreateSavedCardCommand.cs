@@ -24,11 +24,11 @@ public class Validator : AbstractValidator<CreateSavedCardCommand>
             .NotEmpty()
             .Length(7)
             .Matches(@"^\d{4}/\d{2}$")
-            .WithMessage("Expiration date must be in YYYY/MM format.");
+            .WithErrorCode(Errors.ExpirationDateFormatIsInvalid.Code);
         RuleFor(x => x.Last4Digits)
             .NotEmpty()
             .Length(4)
             .Matches(@"^\d{4}$")
-            .WithMessage("Last 4 digits must be exactly 4 numeric characters.");
+            .WithErrorCode(Errors.LastFourDigitsFormatIsInvalid.Code);
     }
 }

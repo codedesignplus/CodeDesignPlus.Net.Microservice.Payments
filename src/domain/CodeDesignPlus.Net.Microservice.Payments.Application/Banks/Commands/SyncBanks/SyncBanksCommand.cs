@@ -10,9 +10,9 @@ public class Validator : AbstractValidator<SyncBanksCommand>
         RuleFor(x => x.Banks)
             .NotEmpty()
             .NotNull()
-            .WithMessage("Banks list cannot be null or empty.")
+            .WithErrorCode(Errors.BanksListIsRequired.Code)
             .Must(banks => banks.All(bank => bank != null))
-            .WithMessage("All banks in the list must be non-null.");
+            .WithErrorCode(Errors.BanksListHasEmptyEntries.Code);
 
         RuleForEach(x => x.Banks)
             .SetValidator(new BankValidator());
@@ -25,25 +25,21 @@ public class BankValidator : AbstractValidator<BanksDto>
     {
         RuleFor(x => x.Id)
             .NotEmpty()
-            .NotNull()
-            .WithMessage("Bank ID cannot be null or empty.");
+            .NotNull();
         
         RuleFor(x => x.Name)
             .NotEmpty()
             .NotNull()
-            .MaximumLength(255)
-            .WithMessage("Description cannot be null or empty and must not exceed 255 characters.");
+            .MaximumLength(255);
 
         RuleFor(x => x.Description)
             .NotEmpty()
             .NotNull()
-            .MaximumLength(255)
-            .WithMessage("Description cannot be null or empty and must not exceed 255 characters.");
+            .MaximumLength(255);
 
         RuleFor(x => x.Code)
             .NotEmpty()
             .NotNull()
-            .MaximumLength(50)
-            .WithMessage("Code cannot be null or empty and must not exceed 50 characters.");
+            .MaximumLength(50);
     }
 }

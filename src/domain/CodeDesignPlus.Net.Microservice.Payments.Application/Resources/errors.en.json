@@ -21,6 +21,15 @@
     "217": "Saved Card not found",
     "218": "Tokenization failed",
     "219": "Payment provider config already exists",
-    "220": "Payment provider config not found"
+    "220": "Payment provider config not found",
+    "221": "The list of banks is required.",
+    "222": "The list of banks cannot contain empty entries.",
+    "223": "Provide either the credit card or the PSE details, but not both.",
+    "224": "The currency must be a three-letter uppercase ISO 4217 code.",
+    "225": "The country must be a two-letter uppercase ISO 3166-1 alpha-2 code.",
+    "226": "The expiration date must follow the YYYY/MM format.",
+    "227": "The URL is not valid.",
+    "228": "The last four digits must be exactly four numbers.",
+    "229": "The age must be greater than zero, otherwise a payment that just started would be closed."
   }
 }

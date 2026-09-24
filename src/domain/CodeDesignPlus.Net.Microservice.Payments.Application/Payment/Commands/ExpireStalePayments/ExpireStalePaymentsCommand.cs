@@ -17,7 +17,11 @@ public class Validator : AbstractValidator<ExpireStalePaymentsCommand>
     public Validator()
     {
         // Un plazo de cero cerraria el cobro que acaba de iniciarse, con el comprador todavia en el banco.
-        RuleFor(x => x.OlderThan).Must(x => x > Duration.Zero);
+        // Lleva codigo propio porque el mensaje de un `Must` no dice nada -«no es valido»- y aqui lo que
+        // hay que contar es que el plazo tiene que ser mayor que cero.
+        RuleFor(x => x.OlderThan)
+            .Must(x => x > Duration.Zero)
+            .WithErrorCode(Errors.StalePaymentAgeMustBePositive.Code);
         RuleFor(x => x.BatchSize).GreaterThan(0);
     }
 }

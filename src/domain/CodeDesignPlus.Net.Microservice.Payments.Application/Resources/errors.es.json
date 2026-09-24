@@ -21,6 +21,15 @@
     "217": "No encontramos esa tarjeta guardada.",
     "218": "No se pudo tokenizar la tarjeta.",
     "219": "Esa configuración de pasarela ya existe.",
-    "220": "No encontramos la configuración de la pasarela."
+    "220": "No encontramos la configuración de la pasarela.",
+    "221": "La lista de bancos es obligatoria.",
+    "222": "La lista de bancos no puede traer entradas vacías.",
+    "223": "Indica los datos de la tarjeta o los de PSE, pero no los dos.",
+    "224": "La moneda debe ser un código ISO 4217 de tres letras en mayúscula.",
+    "225": "El país debe ser un código ISO 3166-1 alfa-2 de dos letras en mayúscula.",
+    "226": "La fecha de vencimiento debe seguir el formato AAAA/MM.",
+    "227": "La URL no es válida.",
+    "228": "Los últimos cuatro dígitos deben ser exactamente cuatro números.",
+    "229": "El plazo debe ser mayor que cero; si no, se cerraría un cobro recién iniciado."
   }
 }

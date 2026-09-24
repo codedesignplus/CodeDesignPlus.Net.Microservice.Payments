@@ -30,15 +30,15 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
         RuleFor(x => x.PaymentProvider).IsInEnum().NotEqual(Domain.Enums.PaymentProvider.None);
 
         RuleFor(x => x.SubTotal)
-            .NotNull().WithMessage("SubTotal cannot be null.")
+            .NotNull()
             .SetValidator(new AmountDtoValidator());
 
         RuleFor(x => x.Tax)
-            .NotNull().WithMessage("Tax cannot be null.")
+            .NotNull()
             .SetValidator(new TaxAmountDtoValidator());
 
         RuleFor(x => x.Total)
-            .NotNull().WithMessage("Total cannot be null.")
+            .NotNull()
             .SetValidator(new AmountDtoValidator());
 
         RuleFor(x => x.Buyer).NotNull().SetValidator(new BuyerInfoDtoValidator());
@@ -55,7 +55,7 @@ public class PaymentMethodInfoDtoValidator : AbstractValidator<ValueObjects.Paym
 
         RuleFor(x => x)
             .Must(x => (x.CreditCard != null) ^ (x.Pse != null))
-            .WithMessage("Either CreditCard or Pse information must be provided, but not both.");
+            .WithErrorCode(Errors.PaymentMethodIsAmbiguous.Code);
     }
 }
 
@@ -63,12 +63,12 @@ public class AmountDtoValidator : AbstractValidator<Amount>
 {
     public AmountDtoValidator()
     {
-        RuleFor(x => x.Value).GreaterThan(0).WithMessage("Amount value must be greater than zero.");
+        RuleFor(x => x.Value).GreaterThan(0);
         RuleFor(x => x.Currency)
         .NotEmpty()
         .Length(3)
         .Matches(@"^[A-Z]{3}$")
-        .WithMessage("Currency must be a three-letter uppercase ISO 4217 code.")
+        .WithErrorCode(Errors.CurrencyFormatIsInvalid.Code)
         .When(x => x.Currency is not null);
     }
 }
@@ -77,12 +77,12 @@ public class TaxAmountDtoValidator : AbstractValidator<Amount>
 {
     public TaxAmountDtoValidator()
     {
-        RuleFor(x => x.Value).GreaterThanOrEqualTo(0).WithMessage("Tax amount value must not be negative.");
+        RuleFor(x => x.Value).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Currency)
         .NotEmpty()
         .Length(3)
         .Matches(@"^[A-Z]{3}$")
-        .WithMessage("Currency must be a three-letter uppercase ISO 4217 code.")
+        .WithErrorCode(Errors.CurrencyFormatIsInvalid.Code)
         .When(x => x.Currency is not null);
     }
 }
@@ -94,7 +94,7 @@ public class AddressDtoValidator : AbstractValidator<ValueObjects.User.Address?>
         When(x => x != null, () =>
         {
             RuleFor(x => x!.Street).NotEmpty().MaximumLength(100);
-            RuleFor(x => x!.Country).NotEmpty().Length(2).Matches(@"^[A-Z]{2}$").WithMessage("Country must be a two-letter uppercase ISO 3166-1 alpha-2 code.");
+            RuleFor(x => x!.Country).NotEmpty().Length(2).Matches(@"^[A-Z]{2}$").WithErrorCode(Errors.CountryFormatIsInvalid.Code);
             RuleFor(x => x!.State).NotEmpty().MaximumLength(40);
             RuleFor(x => x!.City).NotEmpty().MaximumLength(50);
             RuleFor(x => x!.PostalCode).NotEmpty().Matches(@"^\d{1,8}$").MaximumLength(8);
@@ -137,7 +137,7 @@ public class CreditCardInfoDtoValidator : AbstractValidator<ValueObjects.Payment
 {
     public CreditCardInfoDtoValidator()
     {
-        RuleFor(x => x!.ExpirationDate).NotEmpty().Length(7).Matches(@"^\d{4}/\d{2}$").WithMessage("Expiration date must be in YYYY/MM format.");
+        RuleFor(x => x!.ExpirationDate).NotEmpty().Length(7).Matches(@"^\d{4}/\d{2}$").WithErrorCode(Errors.ExpirationDateFormatIsInvalid.Code);
         RuleFor(x => x!.Token).NotEmpty().NotNull();
     }
 }
@@ -148,7 +148,7 @@ public class PseInfoDtoValidator : AbstractValidator<ValueObjects.Payment.Pse?>
     {
         RuleFor(x => x!.PseCode).NotEmpty().MaximumLength(34);
         RuleFor(x => x!.TypePerson).NotEmpty().MaximumLength(2); // "N" o "J"
-        RuleFor(x => x!.PseResponseUrl).NotEmpty().MaximumLength(255).Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _)).WithMessage("Must be a valid URL.");
+        RuleFor(x => x!.PseResponseUrl).NotEmpty().MaximumLength(255).Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _)).WithErrorCode(Errors.UrlIsInvalid.Code);
     }
 }
 
