@@ -95,7 +95,7 @@ public class PayuPaymentMethods
   /// <returns>Returns the PaymentMethod object corresponding to the provided code.</returns>
   public static PaymentMethod GetPaymentMethod(string code)
   {
-    InfrastructureGuard.IsFalse(IsValidPaymentMethod(code), $"The payment method code '{code}' is not valid.");
+    InfrastructureGuard.IsFalse(IsValidPaymentMethod(code), Errors.PaymentMethodCodeIsNotValid.With(code));
 
     return paymentMethods.First(pm => pm.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
   }
