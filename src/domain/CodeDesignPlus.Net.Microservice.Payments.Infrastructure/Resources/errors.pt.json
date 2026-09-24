@@ -1,0 +1,27 @@
+{
+  "language": "pt",
+  "errors": {
+    "300": "Erro desconhecido.",
+    "301": "O código de meio de pagamento '{0}' não é válido.",
+    "302": "Os dados do PSE são obrigatórios.",
+    "303": "O identificador não é válido.",
+    "304": "O código de referência não é válido.",
+    "305": "O identificador do estabelecimento é obrigatório.",
+    "306": "A moeda é obrigatória.",
+    "307": "O status é obrigatório.",
+    "308": "O valor é obrigatório.",
+    "309": "A assinatura é obrigatória.",
+    "310": "O código de referência é obrigatório.",
+    "311": "Falta o identificador do estabelecimento.",
+    "312": "Falta a moeda.",
+    "313": "Falta o status.",
+    "314": "Falta o valor.",
+    "315": "Falta a assinatura.",
+    "316": "Falta a referência da venda.",
+    "317": "A referência da venda não é válida.",
+    "318": "Não foi possível tokenizar o cartão.",
+    "319": "O é-mail do pagador é obrigatório.",
+    "320": "O telefone do pagador é obrigatório.",
+    "321": "O provedor de pagamento recusou a solicitação."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "language": "fr",
+  "errors": {
+    "200": "Erreur inconnue.",
+    "201": "La requête n'est pas valide.",
+    "202": "Ce paiement existe déjà.",
+    "203": "Paiement introuvable.",
+    "204": "Ce moyen de paiement existe déjà.",
+    "205": "Moyen de paiement introuvable.",
+    "206": "Identifiant de transaction introuvable chez le prestataire.",
+    "207": "La signature reçue n'est pas valide.",
+    "208": "Ce prestataire de paiement n'est pas pris en charge.",
+    "209": "L'action suivante n'est pas valide.",
+    "210": "Ce bénéficiaire existe déjà.",
+    "211": "Bénéficiaire introuvable.",
+    "212": "Cette règle de versement existe déjà.",
+    "213": "Règle de versement introuvable.",
+    "214": "Ce versement existe déjà.",
+    "215": "Versement introuvable.",
+    "216": "Cette carte est déjà enregistrée.",
+    "217": "Carte enregistrée introuvable.",
+    "218": "La tokenisation de la carte a échoué.",
+    "219": "Cette configuration de prestataire existe déjà.",
+    "220": "Configuration du prestataire introuvable."
+  }
+}

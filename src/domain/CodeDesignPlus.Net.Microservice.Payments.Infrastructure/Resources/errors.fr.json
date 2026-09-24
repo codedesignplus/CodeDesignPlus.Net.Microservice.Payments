@@ -1,0 +1,27 @@
+{
+  "language": "fr",
+  "errors": {
+    "300": "Erreur inconnue.",
+    "301": "Le code de moyen de paiement '{0}' n'est pas valide.",
+    "302": "Les données PSE sont obligatoires.",
+    "303": "L'identifiant n'est pas valide.",
+    "304": "Le code de référence n'est pas valide.",
+    "305": "L'identifiant du commerçant est obligatoire.",
+    "306": "La devise est obligatoire.",
+    "307": "Le statut est obligatoire.",
+    "308": "La valeur est obligatoire.",
+    "309": "La signature est obligatoire.",
+    "310": "Le code de référence est obligatoire.",
+    "311": "L'identifiant du commerçant est manquant.",
+    "312": "La devise est manquante.",
+    "313": "Le statut est manquant.",
+    "314": "La valeur est manquante.",
+    "315": "La signature est manquante.",
+    "316": "La référence de la vente est manquante.",
+    "317": "La référence de la vente n'est pas valide.",
+    "318": "La tokenisation de la carte a échoué.",
+    "319": "L'e-mail du payeur est obligatoire.",
+    "320": "Le téléphone du payeur est obligatoire.",
+    "321": "Le prestataire de paiement a refusé la demande."
+  }
+}

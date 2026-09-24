@@ -1,0 +1,26 @@
+{
+  "language": "pt",
+  "errors": {
+    "200": "Erro desconhecido.",
+    "201": "A requisição não é válida.",
+    "202": "Esse pagamento já existe.",
+    "203": "Não encontramos esse pagamento.",
+    "204": "Esse meio de pagamento já existe.",
+    "205": "Não encontramos esse meio de pagamento.",
+    "206": "Não encontramos o identificador da transação no provedor.",
+    "207": "A assinatura recebida não é válida.",
+    "208": "Esse provedor de pagamento não é suportado.",
+    "209": "A próxima ação não é válida.",
+    "210": "Esse beneficiário já existe.",
+    "211": "Não encontramos esse beneficiário.",
+    "212": "Essa regra de repasse já existe.",
+    "213": "Não encontramos essa regra de repasse.",
+    "214": "Esse repasse já existe.",
+    "215": "Não encontramos esse repasse.",
+    "216": "Esse cartão já está salvo.",
+    "217": "Não encontramos esse cartão salvo.",
+    "218": "Não foi possível tokenizar o cartão.",
+    "219": "Essa configuração de provedor já existe.",
+    "220": "Não encontramos a configuração do provedor."
+  }
+}
