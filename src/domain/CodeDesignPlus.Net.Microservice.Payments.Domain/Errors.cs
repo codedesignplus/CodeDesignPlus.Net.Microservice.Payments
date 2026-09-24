@@ -30,7 +30,7 @@ public class Errors : IErrorCodes
     public static readonly Error EmailAddressMustBeValidFormat = new("123", "EmailAddress must be valid format");
     public static readonly Error ContactPhoneCannotBeNullOrEmpty = new("124", "ContactPhone cannot be null or empty");
     public static readonly Error ContactPhoneCannotBeGreaterThan20Characters = new("125", "ContactPhone cannot be greater than 20 characters");
-    public static readonly Error ShippingAddressCannotBeNullOrEmpty = new("126", "ð€ä³å4ter");
+    public static readonly Error ShippingAddressCannotBeNullOrEmpty = new("126", "Shipping Address cannot be null or empty");
     public static readonly Error DniNumberCannotBeNullOrEmpty = new("127", "DniNumber cannot be null or empty");
     public static readonly Error DniNumberCannotBeGreaterThan20Characters = new("128", "DniNumber cannot be greater than 20 characters");
     public static readonly Error FullNameCannotBeGreaterThan150Characters = new("129", "FullName cannot be greater than 150 characters");
