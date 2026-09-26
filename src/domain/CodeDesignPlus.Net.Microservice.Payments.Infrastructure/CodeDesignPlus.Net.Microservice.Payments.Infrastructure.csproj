@@ -11,7 +11,7 @@
     <ProjectReference Include="..\CodeDesignPlus.Net.Microservice.Payments.Application\CodeDesignPlus.Net.Microservice.Payments.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CodeDesignPlus.Net.Resilience" Version="1.0.0-beta.13463" />
+    <PackageReference Include="CodeDesignPlus.Net.Resilience" Version="1.0.0-beta.13476" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Test" />
@@ -20,6 +20,6 @@
     <EmbeddedResource Include="Resources\errors.*.json" LogicalName="%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CodeDesignPlus.Net.Exceptions" Version="1.0.0-beta.13463" />
+    <PackageReference Include="CodeDesignPlus.Net.Exceptions" Version="1.0.0-beta.13476" />
   </ItemGroup>
 </Project>
