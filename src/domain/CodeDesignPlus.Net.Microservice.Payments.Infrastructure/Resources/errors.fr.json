@@ -23,6 +23,7 @@
     "319": "L'e-mail du payeur est obligatoire.",
     "320": "Le téléphone du payeur est obligatoire.",
     "321": "Le prestataire de paiement a refusé la demande.",
-    "322": "Le code de moyen de paiement '{0}' n'est pas valide."
+    "322": "Le code de moyen de paiement '{0}' n'est pas valide.",
+    "323": "La copropriété à purger ne peut pas être vide."
   }
 }

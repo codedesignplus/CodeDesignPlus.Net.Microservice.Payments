@@ -15,4 +15,17 @@ public interface IPaymentRepository : IRepositoryBase
     /// <param name="limit">Cuantos como mucho, para que el barrido no se lea la coleccion entera de golpe.</param>
     /// <param name="cancellationToken">Token de cancelacion.</param>
     Task<List<PaymentAggregate>> GetInProgressOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Borra los pagos de una copropiedad purgada, salvo los de la venta de licencias.
+    /// </summary>
+    /// <remarks>
+    /// Un pago de <see cref="PaymentAggregate.LicensesModule"/> es la venta de la plataforma, no un dato de la
+    /// copropiedad, y puede llevar su <c>Tenant</c> si se compró desde dentro de ella. Por eso no basta con
+    /// <c>DeleteByTenantAsync</c>.
+    /// </remarks>
+    /// <param name="tenant">La copropiedad purgada.</param>
+    /// <param name="cancellationToken">Token de cancelacion.</param>
+    /// <returns>Cuántos pagos se borraron.</returns>
+    Task<long> DeleteByTenantKeepingLicensesAsync(Guid tenant, CancellationToken cancellationToken);
 }

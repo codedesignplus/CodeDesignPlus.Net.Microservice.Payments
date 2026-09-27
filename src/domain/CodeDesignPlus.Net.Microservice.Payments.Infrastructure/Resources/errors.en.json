@@ -23,6 +23,7 @@
     "319": "Payer Email Address Cannot Be Null Or Empty",
     "320": "Payer Contact Phone Cannot Be Null Or Empty",
     "321": "The payment gateway rejected the request.",
-    "322": "The payment method code '{0}' is not valid."
+    "322": "The payment method code '{0}' is not valid.",
+    "323": "The tenant to purge cannot be empty."
   }
 }

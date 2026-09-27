@@ -41,4 +41,6 @@ public class Errors : IErrorCodes
     public static readonly Error PaymentGatewayRejectedTheRequest = new("321");
 
     public static readonly Error PaymentMethodCodeIsNotValid = new("322");
+
+    public static readonly Error TenantToPurgeIsEmpty = new("323");
 }

@@ -23,6 +23,7 @@
     "319": "El correo del pagador es obligatorio.",
     "320": "El teléfono del pagador es obligatorio.",
     "321": "La pasarela de pago rechazo la solicitud.",
-    "322": "El código de medio de pago '{0}' no es válido."
+    "322": "El código de medio de pago '{0}' no es válido.",
+    "323": "La copropiedad a purgar no puede estar vacía."
   }
 }

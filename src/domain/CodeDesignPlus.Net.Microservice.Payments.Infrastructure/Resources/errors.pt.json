@@ -23,6 +23,7 @@
     "319": "O é-mail do pagador é obrigatório.",
     "320": "O telefone do pagador é obrigatório.",
     "321": "O provedor de pagamento recusou a solicitação.",
-    "322": "O código de meio de pagamento '{0}' não é válido."
+    "322": "O código de meio de pagamento '{0}' não é válido.",
+    "323": "O condomínio a apagar não pode estar vazio."
   }
 }

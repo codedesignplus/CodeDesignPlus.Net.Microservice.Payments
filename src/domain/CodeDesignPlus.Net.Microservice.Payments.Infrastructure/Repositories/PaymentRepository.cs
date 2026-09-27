@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Exceptions.Guards;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Repositories;
 
 public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoOptions> mongoOptions, ILogger<PaymentRepository> logger)
@@ -24,5 +26,19 @@ public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoO
             .SortBy(x => x.CreatedAt)
             .Limit(limit)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<long> DeleteByTenantKeepingLicensesAsync(Guid tenant, CancellationToken cancellationToken)
+    {
+        // Un tenant vacío es un fallo aguas arriba, nunca una orden de vaciar la colección.
+        InfrastructureGuard.GuidIsEmpty(tenant, Errors.TenantToPurgeIsEmpty);
+
+        var filter = Builders<PaymentAggregate>.Filter.Eq(x => x.Tenant, tenant)
+            & Builders<PaymentAggregate>.Filter.Ne(x => x.Module, PaymentAggregate.LicensesModule);
+
+        var result = await GetCollection<PaymentAggregate>().DeleteManyAsync(filter, cancellationToken);
+
+        return result.DeletedCount;
     }
 }

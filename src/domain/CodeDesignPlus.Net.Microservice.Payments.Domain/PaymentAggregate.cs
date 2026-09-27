@@ -7,6 +7,15 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
 public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 {
     /// <summary>
+    /// El módulo con el que ms-licenses cobra la venta de una licencia.
+    /// </summary>
+    /// <remarks>
+    /// Esos pagos son registro de la plataforma y no de la copropiedad: se conservan al purgarla aunque lleven su
+    /// <see cref="Tenant"/>, que sale del <c>X-Tenant</c> de quien compra (plan 078).
+    /// </remarks>
+    public const string LicensesModule = "Licenses";
+
+    /// <summary>
     /// Módulo o contexto que genera el pago (ej. "Orders", "Subscriptions").
     /// </summary>
     public string Module { get; private set; } = null!;
