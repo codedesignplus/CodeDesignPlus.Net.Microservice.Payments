@@ -1,10 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["nuget.config", "nuget.config"]
+COPY ["src/domain/CodeDesignPlus.Net.Microservice.Payments.Application/CodeDesignPlus.Net.Microservice.Payments.Application.csproj", "domain/CodeDesignPlus.Net.Microservice.Payments.Application/"]
+COPY ["src/domain/CodeDesignPlus.Net.Microservice.Payments.Domain/CodeDesignPlus.Net.Microservice.Payments.Domain.csproj", "domain/CodeDesignPlus.Net.Microservice.Payments.Domain/"]
+COPY ["src/domain/CodeDesignPlus.Net.Microservice.Payments.Infrastructure/CodeDesignPlus.Net.Microservice.Payments.Infrastructure.csproj", "domain/CodeDesignPlus.Net.Microservice.Payments.Infrastructure/"]
+COPY ["src/entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/CodeDesignPlus.Net.Microservice.Payments.gRpc.csproj", "entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/"]
+RUN dotnet restore "./entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/CodeDesignPlus.Net.Microservice.Payments.gRpc.csproj" /p:PublishReadyToRun=true
 COPY ["src/domain/", "domain/"]
 COPY ["src/entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/", "entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/"]
-COPY ["nuget.config", "nuget.config"]
-RUN dotnet restore "./entrypoints/CodeDesignPlus.Net.Microservice.Payments.gRpc/CodeDesignPlus.Net.Microservice.Payments.gRpc.csproj"
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
