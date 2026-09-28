@@ -37,7 +37,7 @@ builder.Services.AddLogger(builder.Configuration);
 builder.Services.AddRabbitMQ<CodeDesignPlus.Net.Microservice.Payments.Domain.Startup>(builder.Configuration);
 builder.Services.AddServiceBus<CodeDesignPlus.Net.Microservice.Payments.Domain.Startup>(builder.Configuration);
 builder.Services.AddMapster();
-builder.Services.AddFluentValidation();
+builder.Services.AddFluentValidation<CodeDesignPlus.Net.Microservice.Payments.Application.Startup>();
 builder.Services.AddMediatR<CodeDesignPlus.Net.Microservice.Payments.Application.Startup>();
 builder.Services.AddSecurity(builder.Configuration);
 builder.Services.AddCoreSwagger<Program>(builder.Configuration);
