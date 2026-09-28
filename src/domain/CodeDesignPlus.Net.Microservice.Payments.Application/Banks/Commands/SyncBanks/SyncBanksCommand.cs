@@ -30,12 +30,12 @@ public class BankValidator : AbstractValidator<BanksDto>
         RuleFor(x => x.Name)
             .NotEmpty()
             .NotNull()
-            .MaximumLength(255);
+            .MaximumLength(FieldLength.Name);
 
         RuleFor(x => x.Description)
             .NotEmpty()
             .NotNull()
-            .MaximumLength(255);
+            .MaximumLength(FieldLength.Description);
 
         RuleFor(x => x.Code)
             .NotEmpty()
