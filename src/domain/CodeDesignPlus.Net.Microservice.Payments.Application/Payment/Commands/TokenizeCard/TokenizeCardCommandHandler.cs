@@ -3,16 +3,16 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.TokenizeCard;
 
 public class TokenizeCardCommandHandler(IPaymentProviderAdapterFactory adapterFactory, ISavedCardRepository repository, IUserContext userContext, IMapper mapper)
-    : IRequestHandler<TokenizeCardCommand, SavedCardDto>
+    : IRequestHandler<TokenizeCardCommand, TokenizedCardDto>
 {
-    public async Task<SavedCardDto> Handle(TokenizeCardCommand request, CancellationToken cancellationToken)
+    public async Task<TokenizedCardDto> Handle(TokenizeCardCommand request, CancellationToken cancellationToken)
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 
         var existingCard = await repository.GetCreditCardsAsync(userContext.IdUser, request.CardNumber, request.ExpirationDate, cancellationToken);
 
         if (existingCard != null)
-            return mapper.Map<SavedCardDto>(existingCard);
+            return mapper.Map<TokenizedCardDto>(existingCard);
 
         var adapter = adapterFactory.GetAdapter(request.PaymentProvider);
 
@@ -29,7 +29,7 @@ public class TokenizeCardCommandHandler(IPaymentProviderAdapterFactory adapterFa
 
         ApplicationGuard.IsNull(tokenResponse, Errors.TokenizationFailed);
 
-        var savedCardDto = mapper.Map<SavedCardDto>(tokenResponse);
+        var savedCardDto = mapper.Map<TokenizedCardDto>(tokenResponse);
 
         savedCardDto.CardHolderName = request.Name;
         savedCardDto.Franchise = request.PaymentMethod;

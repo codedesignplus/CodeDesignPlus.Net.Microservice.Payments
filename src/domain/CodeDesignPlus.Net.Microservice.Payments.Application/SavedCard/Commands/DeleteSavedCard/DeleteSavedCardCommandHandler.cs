@@ -10,6 +10,9 @@ public class DeleteSavedCardCommandHandler(ISavedCardRepository repository, IUse
 
         ApplicationGuard.IsNull(aggregate, Errors.SavedCardNotFound);
 
+        // Una tarjeta ajena responde igual que una que no existe: no se revela que existe (pendings/180).
+        ApplicationGuard.IsTrue(aggregate.UserId != user.IdUser, Errors.SavedCardNotFound);
+
         aggregate.Delete(user.IdUser);
 
         // Una tarjeta es un dato de pago: al borrarla se borra del todo, también el token de la pasarela.

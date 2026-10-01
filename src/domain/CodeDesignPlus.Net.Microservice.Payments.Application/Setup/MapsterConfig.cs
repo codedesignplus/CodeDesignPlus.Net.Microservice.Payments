@@ -55,7 +55,6 @@ public static class MapsterConfigPayment
             .MapWith(src => new SavedCardDto
             {
                 Id = src.Id,
-                Token = src.Token,
                 MaskedNumber = src.MaskedNumber,
                 Franchise = src.Franchise,
                 CardHolderName = src.CardHolderName,
@@ -65,9 +64,9 @@ public static class MapsterConfigPayment
                 IsActive = src.IsActive
             });
 
-        TypeAdapterConfig<TokenizeCardResponseDto, SavedCardDto>
+        TypeAdapterConfig<TokenizeCardResponseDto, TokenizedCardDto>
             .NewConfig()
-            .MapWith(src => new SavedCardDto
+            .MapWith(src => new TokenizedCardDto
             {
                 Id = Guid.Empty,
                 Token = src.CreditCardTokenId ?? string.Empty,
@@ -75,9 +74,20 @@ public static class MapsterConfigPayment
                 Franchise = src.PaymentMethod ?? string.Empty,
                 CardHolderName = src.Name ?? string.Empty,
                 ExpirationDate = string.Empty,
-                Last4Digits = string.Empty,
-                IsDefault = false,
-                IsActive = false
+                Last4Digits = string.Empty
+            });
+
+        TypeAdapterConfig<SavedCardAggregate, TokenizedCardDto>
+            .NewConfig()
+            .MapWith(src => new TokenizedCardDto
+            {
+                Id = src.Id,
+                Token = src.Token,
+                MaskedNumber = src.MaskedNumber,
+                Franchise = src.Franchise,
+                CardHolderName = src.CardHolderName,
+                ExpirationDate = src.ExpirationDate,
+                Last4Digits = src.Last4Digits
             });
 
 

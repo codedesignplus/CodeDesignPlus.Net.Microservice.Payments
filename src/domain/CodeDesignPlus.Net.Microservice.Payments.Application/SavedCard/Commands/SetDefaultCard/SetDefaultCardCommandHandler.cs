@@ -10,6 +10,9 @@ public class SetDefaultCardCommandHandler(ISavedCardRepository repository, IUser
 
         ApplicationGuard.IsNull(aggregate, Errors.SavedCardNotFound);
 
+        // Una tarjeta ajena responde igual que una que no existe: no se revela que existe (pendings/180).
+        ApplicationGuard.IsTrue(aggregate.UserId != user.IdUser, Errors.SavedCardNotFound);
+
         // Unset any existing default cards for this user
         var userCards = await repository.GetByUserIdAsync(user.IdUser, cancellationToken);
 

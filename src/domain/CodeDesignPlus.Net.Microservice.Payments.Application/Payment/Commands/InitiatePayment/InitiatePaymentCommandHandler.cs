@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
-public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IPaymentProviderAdapterFactory adapterFactory) 
+public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISavedCardRepository savedCardRepository, IUserContext user, IPubSub pubsub, IPaymentProviderAdapterFactory adapterFactory) 
     : IRequestHandler<InitiatePaymentCommand, InitiatePaymentResponseDto>
 {
     public async Task<InitiatePaymentResponseDto> Handle(InitiatePaymentCommand request, CancellationToken cancellationToken)
@@ -21,6 +21,8 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
 
         ApplicationGuard.IsTrue(exist, Errors.PaymentAlredyExists);
 
+        var paymentMethod = await SavedCardToken.ResolveAsync(request.PaymentMethod, savedCardRepository, user, cancellationToken);
+
         var payment = PaymentAggregate.Create(
             request.Id,
             request.Module,
@@ -30,7 +32,7 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
             Money.FromLong(request.Total.Value, request.Total.Currency),
             request.Buyer,
             request.Payer,
-            request.PaymentMethod,
+            paymentMethod,
             request.Description,
             request.PaymentProvider,
             user.Tenant,
