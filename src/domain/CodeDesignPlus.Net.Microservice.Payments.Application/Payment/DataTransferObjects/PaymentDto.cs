@@ -12,7 +12,8 @@ public class PaymentDto : IDtoBase
     public Net.ValueObjects.Financial.Money SubTotal { get; set; } = null!;
     public Net.ValueObjects.Financial.Money Tax { get; set; } = null!;
     public Net.ValueObjects.Financial.Money Total { get; set; } = null!;
-    public Net.ValueObjects.User.Buyer Buyer { get; set; } = null!;
+    // Sin Buyer a proposito: el mapeo nunca lo copio (siempre salia null) y nadie lo lee, y copiarlo publicaria el
+    // documento del comprador, que MapsterConfig evita exponer (pendings/174).
     public Net.ValueObjects.User.Payer Payer { get; set; } = null!;
     public ValueObjects.Payment.PaymentMethod PaymentMethod { get; set; } = null!;
     public string Description { get; set; } = null!;
