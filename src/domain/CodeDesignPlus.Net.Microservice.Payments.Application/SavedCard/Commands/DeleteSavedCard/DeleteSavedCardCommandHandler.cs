@@ -12,7 +12,8 @@ public class DeleteSavedCardCommandHandler(ISavedCardRepository repository, IUse
 
         aggregate.Delete(user.IdUser);
 
-        await repository.UpdateAsync(aggregate, cancellationToken);
+        // Una tarjeta es un dato de pago: al borrarla se borra del todo, también el token de la pasarela.
+        await repository.DeleteAsync<SavedCardAggregate>(aggregate.Id, cancellationToken);
 
         await pubSub.PublishAsync(aggregate.GetAndClearEvents(), cancellationToken);
     }
