@@ -41,6 +41,8 @@ public class BanksAggregate(Guid id) : AggregateRootBase(id)
     public void Delete()
     {
         IsActive = false;
-        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+        IsDeleted = true;
+        DeletedAt = SystemClock.Instance.GetCurrentInstant();
+        UpdatedAt = DeletedAt;
     }
 }

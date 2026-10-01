@@ -10,7 +10,7 @@ public class DeleteSavedCardCommandHandler(ISavedCardRepository repository, IUse
 
         ApplicationGuard.IsNull(aggregate, Errors.SavedCardNotFound);
 
-        aggregate.Delete();
+        aggregate.Delete(user.IdUser);
 
         await repository.UpdateAsync(aggregate, cancellationToken);
 

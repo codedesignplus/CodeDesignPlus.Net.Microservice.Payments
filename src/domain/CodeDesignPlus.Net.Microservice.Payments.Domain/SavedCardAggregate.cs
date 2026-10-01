@@ -79,12 +79,16 @@ public class SavedCardAggregate(Guid id) : AggregateRootBase(id)
     }
 
     /// <summary>
-    /// Soft-deletes the saved card by deactivating it.
+    /// Soft-deletes the saved card: it is marked as deleted and deactivated, so no query returns it anymore.
     /// </summary>
-    public void Delete()
+    /// <param name="deletedBy">The user who deletes the card.</param>
+    public void Delete(Guid deletedBy)
     {
         IsActive = false;
-        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+        IsDeleted = true;
+        DeletedAt = SystemClock.Instance.GetCurrentInstant();
+        DeletedBy = deletedBy;
+        UpdatedAt = DeletedAt;
 
         AddEvent(SavedCardDeletedDomainEvent.Create(Id, UserId));
     }
