@@ -84,6 +84,6 @@ public class PurgeTenantDataHandlerTest
 
         // Assert
         Assert.Contains(typeof(PaymentAggregate), types);
-        Assert.Contains(typeof(PaymentProviderConfigAggregate), types);
+        Assert.Contains(typeof(DisbursementAggregate), types);
     }
 }

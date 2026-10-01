@@ -41,8 +41,7 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISaved
 
         await repository.CreateAsync(payment, cancellationToken);
 
-        var resolution = await adapterFactory.GetAdapterAsync(request.PaymentProvider, user.Tenant, cancellationToken);
-        var adapter = resolution.Adapter;
+        var adapter = adapterFactory.GetAdapter(request.PaymentProvider);
 
         var providerResponse = await adapter.InitiatePaymentAsync(payment, cancellationToken);
 

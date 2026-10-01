@@ -155,15 +155,7 @@
     "251": "El titular de la tarjeta guardada es obligatorio.",
     "252": "La fecha de vencimiento de la tarjeta guardada es obligatoria.",
     "253": "Los últimos 4 dígitos de la tarjeta guardada son obligatorios.",
-    "254": "El identificador de la configuración de la pasarela es obligatorio.",
-    "255": "El identificador de comercio es obligatorio.",
-    "256": "La clave de API es obligatoria.",
-    "257": "El usuario de API es obligatorio.",
-    "258": "La clave secreta es obligatoria.",
-    "259": "La URL de notificación es obligatoria.",
     "260": "La comisión en puntos básicos debe ser mayor que cero.",
-    "261": "No encontramos la configuración de la pasarela.",
-    "262": "Esa configuración de pasarela ya existe.",
     "263": "Solo puede expirar un pago que siga en curso."
   }
 }

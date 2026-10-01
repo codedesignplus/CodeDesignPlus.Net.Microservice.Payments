@@ -20,8 +20,6 @@
     "216": "Saved Card already exists",
     "217": "Saved Card not found",
     "218": "Tokenization failed",
-    "219": "Payment provider config already exists",
-    "220": "Payment provider config not found",
     "285": "The list of banks is required.",
     "286": "The list of banks cannot contain empty entries.",
     "287": "Provide either the credit card or the PSE details, but not both.",

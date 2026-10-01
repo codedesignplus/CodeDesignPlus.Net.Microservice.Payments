@@ -155,15 +155,7 @@
     "251": "Le titulaire de la carte enregistrée est obligatoire.",
     "252": "La date d'expiration de la carte enregistrée est obligatoire.",
     "253": "Les 4 derniers chiffres de la carte enregistrée sont obligatoires.",
-    "254": "L'identifiant de la configuration du prestataire est obligatoire.",
-    "255": "L'identifiant du commerçant est obligatoire.",
-    "256": "La clé d'API est obligatoire.",
-    "257": "L'identifiant d'API est obligatoire.",
-    "258": "La clé secrète est obligatoire.",
-    "259": "L'URL de notification est obligatoire.",
     "260": "La commission en points de base doit être supérieure à zéro.",
-    "261": "Configuration du prestataire introuvable.",
-    "262": "Cette configuration de prestataire existe déjà.",
     "263": "Seul un paiement encore en cours peut expirer."
   }
 }

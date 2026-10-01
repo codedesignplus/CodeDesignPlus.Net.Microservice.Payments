@@ -206,17 +206,10 @@ public class Errors : IErrorCodes
     public static readonly Error SavedCardExpirationDateCannotBeNullOrEmpty = new("252");
     public static readonly Error SavedCardLast4DigitsCannotBeNullOrEmpty = new("253");
 
-    // PaymentProviderConfig errors
-    public static readonly Error PaymentProviderConfigIdIsRequired = new("254");
-    public static readonly Error PaymentProviderConfigMerchantIdIsRequired = new("255");
-    public static readonly Error PaymentProviderConfigApiKeyIsRequired = new("256");
-    public static readonly Error PaymentProviderConfigApiLoginIsRequired = new("257");
-    public static readonly Error PaymentProviderConfigSecretKeyIsRequired = new("258");
-    public static readonly Error PaymentProviderConfigNotificationUrlIsRequired = new("259"); // reserved
+    // 254 a 259, 261 y 262 eran de la configuración de pasarela por copropiedad, retirada en el plan 186. No se
+    // reutilizan.
 
     public static readonly Error CommissionBasisPointsMustBePositive = new("260");
-    public static readonly Error PaymentProviderConfigNotFound = new("261");
-    public static readonly Error PaymentProviderConfigAlreadyExists = new("262");
 
     public static readonly Error OnlyPaymentsInProgressCanExpire = new("263");
 }

@@ -20,8 +20,6 @@
     "216": "Esa tarjeta ya está guardada.",
     "217": "No encontramos esa tarjeta guardada.",
     "218": "No se pudo tokenizar la tarjeta.",
-    "219": "Esa configuración de pasarela ya existe.",
-    "220": "No encontramos la configuración de la pasarela.",
     "285": "La lista de bancos es obligatoria.",
     "286": "La lista de bancos no puede traer entradas vacías.",
     "287": "Indica los datos de la tarjeta o los de PSE, pero no los dos.",

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Consumers;
 
 /// <summary>
-/// Al purgarse una copropiedad, borra sus pagos, su configuración de pasarela y sus dispersiones.
+/// Al purgarse una copropiedad, borra sus pagos y sus dispersiones.
 /// </summary>
 /// <remarks>
 /// Lo publica ms-tenants cuando vence el plazo para restaurar una copropiedad eliminada, y puede llegar más de una
@@ -27,13 +27,12 @@ public class PurgeTenantDataHandler(IPaymentRepository repository, ILogger<Purge
         var tenant = data.AggregateId;
 
         var payments = await repository.DeleteByTenantKeepingLicensesAsync(tenant, token);
-        var configs = await repository.DeleteByTenantAsync<PaymentProviderConfigAggregate>(tenant, token);
         var beneficiaries = await repository.DeleteByTenantAsync<BeneficiaryAggregate>(tenant, token);
         var disbursements = await repository.DeleteByTenantAsync<DisbursementAggregate>(tenant, token);
         var rules = await repository.DeleteByTenantAsync<DisbursementRuleAggregate>(tenant, token);
 
         logger.LogInformation(
-            "Tenant {TenantId} purged: {Payments} payments, {Configs} provider configs, {Beneficiaries} beneficiaries, {Disbursements} disbursements and {Rules} disbursement rules deleted",
-            tenant, payments, configs, beneficiaries, disbursements, rules);
+            "Tenant {TenantId} purged: {Payments} payments, {Beneficiaries} beneficiaries, {Disbursements} disbursements and {Rules} disbursement rules deleted",
+            tenant, payments, beneficiaries, disbursements, rules);
     }
 }

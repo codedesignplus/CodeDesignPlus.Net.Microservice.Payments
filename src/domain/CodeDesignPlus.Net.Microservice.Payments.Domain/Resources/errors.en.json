@@ -155,15 +155,7 @@
     "251": "Saved Card Card Holder Name cannot be null or empty",
     "252": "Saved Card Expiration Date cannot be null or empty",
     "253": "Saved Card Last 4 Digits cannot be null or empty",
-    "254": "Payment Provider Config ID is required",
-    "255": "Merchant ID is required",
-    "256": "API Key is required",
-    "257": "API Login is required",
-    "258": "Secret Key is required",
-    "259": "Notification URL is required",
     "260": "Commission Basis Points must be positive",
-    "261": "Payment Provider Config not found",
-    "262": "Payment Provider Config already exists",
     "263": "Only a payment still in progress can expire"
   }
 }

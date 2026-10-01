@@ -39,8 +39,7 @@ public class Errors: IErrorCodes
 
     public static readonly Error TokenizationFailed = new("218");
 
-    public static readonly Error PaymentProviderConfigAlreadyExists = new("219");
-    public static readonly Error PaymentProviderConfigNotFound = new("220");
+    // 219 y 220 eran de la configuración de pasarela por copropiedad, retirada en el plan 186. No se reutilizan.
 
     /// <summary>La lista de bancos es obligatoria.</summary>
     public static readonly Error BanksListIsRequired = new("285");

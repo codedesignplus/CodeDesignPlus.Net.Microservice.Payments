@@ -155,15 +155,7 @@
     "251": "O titular do cartão salvo é obrigatório.",
     "252": "A data de validade do cartão salvo é obrigatória.",
     "253": "Os últimos 4 dígitos do cartão salvo são obrigatórios.",
-    "254": "O identificador da configuração do provedor é obrigatório.",
-    "255": "O identificador do estabelecimento é obrigatório.",
-    "256": "A chave de API é obrigatória.",
-    "257": "O usuário de API é obrigatório.",
-    "258": "A chave secreta é obrigatória.",
-    "259": "A URL de notificação é obrigatória.",
     "260": "A comissão em pontos base deve ser maior que zero.",
-    "261": "Não encontramos a configuração do provedor.",
-    "262": "Essa configuração de provedor já existe.",
     "263": "Só pode expirar um pagamento que ainda esteja em andamento."
   }
 }

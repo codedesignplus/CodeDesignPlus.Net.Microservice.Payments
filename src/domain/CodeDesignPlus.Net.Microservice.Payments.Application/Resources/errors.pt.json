@@ -20,8 +20,6 @@
     "216": "Esse cartão já está salvo.",
     "217": "Não encontramos esse cartão salvo.",
     "218": "Não foi possível tokenizar o cartão.",
-    "219": "Essa configuração de provedor já existe.",
-    "220": "Não encontramos a configuração do provedor.",
     "285": "A lista de bancos é obrigatória.",
     "286": "A lista de bancos não pode conter entradas vazias.",
     "287": "Informe os dados do cartão ou os do PSE, mas não os dois.",
