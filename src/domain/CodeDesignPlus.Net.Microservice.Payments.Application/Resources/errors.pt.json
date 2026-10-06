@@ -28,6 +28,7 @@
     "290": "A data de validade deve seguir o formato AAAA/MM.",
     "291": "A URL não é válida.",
     "292": "Os últimos quatro dígitos devem ser exatamente quatro números.",
-    "293": "O prazo deve ser maior que zero; caso contrário, fecharia uma cobrança recém-iniciada."
+    "293": "O prazo deve ser maior que zero; caso contrário, fecharia uma cobrança recém-iniciada.",
+    "294": "Entre em um condomínio para ver os pagamentos."
   }
 }

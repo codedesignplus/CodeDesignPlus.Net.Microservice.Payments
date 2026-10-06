@@ -28,6 +28,7 @@
     "290": "The expiration date must follow the YYYY/MM format.",
     "291": "The URL is not valid.",
     "292": "The last four digits must be exactly four numbers.",
-    "293": "The age must be greater than zero, otherwise a payment that just started would be closed."
+    "293": "The age must be greater than zero, otherwise a payment that just started would be closed.",
+    "294": "Open a property first to see its payments."
   }
 }

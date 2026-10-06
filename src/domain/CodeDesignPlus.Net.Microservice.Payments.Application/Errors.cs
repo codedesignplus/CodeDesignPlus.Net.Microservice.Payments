@@ -67,4 +67,7 @@ public class Errors: IErrorCodes
 
     /// <summary>El plazo para dar un cobro por perdido debe ser mayor que cero.</summary>
     public static readonly Error StalePaymentAgeMustBePositive = new("293");
+
+    /// <summary>Para listar los cobros hace falta la copropiedad en sesión.</summary>
+    public static readonly Error TenantIsRequiredToListPayments = new("294");
 }

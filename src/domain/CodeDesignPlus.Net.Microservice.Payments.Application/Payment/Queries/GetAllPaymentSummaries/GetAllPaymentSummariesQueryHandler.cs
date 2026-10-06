@@ -22,7 +22,10 @@ public class GetAllPaymentSummariesQueryHandler(IPaymentRepository repository, I
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 
-        var payments = await repository.MatchingAsync<PaymentAggregate>(request.Criteria, user.Tenant, cancellationToken);
+        // El tenant va en el filtro: el repositorio no lo aplica a este agregado (pendings/295).
+        var scoped = TenantScopedCriteria.Scope(user.Tenant, request.Criteria);
+
+        var payments = await repository.MatchingAsync<PaymentAggregate>(scoped, cancellationToken);
 
         return mapper.Map<Pagination<PaymentSummaryDto>>(payments);
     }

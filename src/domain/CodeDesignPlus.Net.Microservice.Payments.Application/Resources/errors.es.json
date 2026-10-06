@@ -28,6 +28,7 @@
     "290": "La fecha de vencimiento debe seguir el formato AAAA/MM.",
     "291": "La URL no es válida.",
     "292": "Los últimos cuatro dígitos deben ser exactamente cuatro números.",
-    "293": "El plazo debe ser mayor que cero; si no, se cerraría un cobro recién iniciado."
+    "293": "El plazo debe ser mayor que cero; si no, se cerraría un cobro recién iniciado.",
+    "294": "Para ver los cobros hay que entrar a una copropiedad."
   }
 }

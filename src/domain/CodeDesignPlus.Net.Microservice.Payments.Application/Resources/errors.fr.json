@@ -28,6 +28,7 @@
     "290": "La date d'expiration doit suivre le format AAAA/MM.",
     "291": "L'URL n'est pas valide.",
     "292": "Les quatre derniers chiffres doivent être exactement quatre nombres.",
-    "293": "Le délai doit être supérieur à zéro, sinon un paiement à peine commencé serait clôturé."
+    "293": "Le délai doit être supérieur à zéro, sinon un paiement à peine commencé serait clôturé.",
+    "294": "Ouvrez d’abord une copropriété pour voir ses paiements."
   }
 }

@@ -37,18 +37,20 @@ public class GetAllPaymentSummariesQueryHandlerTest
     }
 
     [Fact]
-    public async Task LaBusquedaSeAcotaALaCopropiedadDeQuienConsulta()
+    public async Task Handle_FiltersByTheSessionPropertyInTheCriteria()
     {
-        Guid? consultado = null;
+        // The repository ignores the tenant argument for this aggregate (it is not an AggregateRoot), so the scope has
+        // to travel in the filter itself (pendings/295).
+        C.Criteria? sent = null;
 
         repository
-            .Setup(x => x.MatchingAsync<PaymentAggregate>(It.IsAny<C.Criteria>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .Callback<C.Criteria, Guid, CancellationToken>((_, tenant, _) => consultado = tenant)
+            .Setup(x => x.MatchingAsync<PaymentAggregate>(It.IsAny<C.Criteria>(), It.IsAny<CancellationToken>()))
+            .Callback<C.Criteria, CancellationToken>((criteria, _) => sent = criteria)
             .ReturnsAsync(Pagination<PaymentAggregate>.Create([], 0, 10, 0));
 
         await Handle();
 
-        Assert.Equal(Tenant, consultado);
+        Assert.Equal($"tenant={Tenant}", sent?.Filters);
     }
 
     [Fact]
@@ -58,7 +60,7 @@ public class GetAllPaymentSummariesQueryHandlerTest
         // retorno al DTO interno, el token y el codigo de seguridad saldrian por el endpoint sin que nada
         // mas en el sistema tuviera que cambiar.
         repository
-            .Setup(x => x.MatchingAsync<PaymentAggregate>(It.IsAny<C.Criteria>(), Tenant, It.IsAny<CancellationToken>()))
+            .Setup(x => x.MatchingAsync<PaymentAggregate>(It.IsAny<C.Criteria>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Pagination<PaymentAggregate>.Create([Construir()], 1, 10, 0));
 
         var pagina = await Handle();
