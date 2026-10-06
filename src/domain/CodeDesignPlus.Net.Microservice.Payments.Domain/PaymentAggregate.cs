@@ -10,8 +10,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// El módulo con el que ms-licenses cobra la venta de una licencia.
     /// </summary>
     /// <remarks>
-    /// Esos pagos son registro de la plataforma y no de la copropiedad: no guardan <see cref="Tenant"/>, aunque el
-    /// comprador tuviera una copropiedad abierta (pendings/295), y se conservan al purgarla (plan 078).
+    /// Esos pagos son registro de la plataforma y no de la copropiedad: se conservan al purgarla aunque lleven su
+    /// <see cref="Tenant"/>, que sale del <c>X-Tenant</c> de quien compra (plan 078).
     /// </remarks>
     public const string LicensesModule = "Licenses";
 
@@ -127,9 +127,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             Status = PaymentStatus.Initiated
         };
 
-        // Un cobro de licencia es de la plataforma, no de una copropiedad: no se queda con la copropiedad que el comprador
-        // tuviera abierta al pagar (pendings/295), y un tenant vacío no es una copropiedad.
-        if (tenant.HasValue && tenant.Value != Guid.Empty && module != LicensesModule)
+        // Un tenant vacío no es una copropiedad. Qué pagos muestra cada pantalla lo decide quien consulta (pendings/295).
+        if (tenant.HasValue && tenant.Value != Guid.Empty)
             aggregate.Tenant = tenant.Value;
 
         aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, buyer, payer, paymentMethod, description, paymentProvider, aggregate.Tenant, createdBy));

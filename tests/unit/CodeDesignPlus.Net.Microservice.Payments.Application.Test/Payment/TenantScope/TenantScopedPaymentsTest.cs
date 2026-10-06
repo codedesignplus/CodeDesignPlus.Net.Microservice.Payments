@@ -29,8 +29,8 @@ public class TenantScopedPaymentsTest
         {
             Create("Parking", TenantA),
             Create("Parking", TenantB),
-            Create(PaymentAggregate.LicensesModule, TenantA),
-            Create(PaymentAggregate.LicensesModule, Guid.Empty),
+            Create("Invoicing", TenantB),
+            Create("Invoicing", Guid.Empty),
         };
 
         var visible = Apply(TenantScopedCriteria.Scope(TenantA, new C.Criteria()), payments);
@@ -45,7 +45,7 @@ public class TenantScopedPaymentsTest
     {
         var payments = new[] { Create("Parking", TenantA), Create("Parking", TenantB) };
 
-        var criteria = new C.Criteria { Filters = "module=Parking|or|module=Licenses" };
+        var criteria = new C.Criteria { Filters = "module=Parking|or|module=Invoicing" };
         var visible = Apply(TenantScopedCriteria.Scope(TenantA, criteria), payments);
 
         Assert.All(visible, x => Assert.Equal(TenantA, x.Tenant));
@@ -71,16 +71,6 @@ public class TenantScopedPaymentsTest
         Assert.Equal("createdAt", scoped.OrderBy);
         Assert.Equal(20, scoped.Skip);
         Assert.Equal(10, scoped.Limit);
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Create_LicensePaymentNeverKeepsTheBuyersOpenProperty(bool emptyTenant)
-    {
-        var payment = Create(PaymentAggregate.LicensesModule, emptyTenant ? Guid.Empty : TenantA);
-
-        Assert.Null(payment.Tenant);
     }
 
     [Fact]
