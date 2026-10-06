@@ -14,5 +14,6 @@ public class Merchant
   /// <summary>
   /// Password provided by PayU. How to get my API Key.
   /// </summary>
+  [NotLogged]
   public string ApiKey { get; set; } = null!;
 }

@@ -257,6 +257,7 @@ public class PayuCreditCard
   /// <summary>
   /// Security code of the credit card (CVC2, CVV2, CID).
   /// </summary>
+  [NotLogged]
   public string SecurityCode { get; set; } = null!;
 
   /// <summary>

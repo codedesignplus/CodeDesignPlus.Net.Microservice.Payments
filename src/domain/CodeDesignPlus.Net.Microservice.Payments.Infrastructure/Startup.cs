@@ -1,5 +1,6 @@
 ﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Persistence;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Options;
@@ -11,6 +12,8 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure
     {
         public void Initialize(IServiceCollection services, IConfiguration configuration)
         {
+            MongoClassMaps.Register();
+
             var section = configuration.GetSection(PayuOptions.Section);
 
             services

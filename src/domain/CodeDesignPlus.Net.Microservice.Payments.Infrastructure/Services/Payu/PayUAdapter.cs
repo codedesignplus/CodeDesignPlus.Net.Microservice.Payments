@@ -279,7 +279,7 @@ public class PayUAdapter(IHttpClientFactory httpClientFactory, IOptions<PayuOpti
     {
         var json = JsonSerializer.Serialize(request, settings);
 
-        logger.LogWarning("Sending request to Payu: {@Request}", json);
+        logger.LogWarning("Sending request to Payu: {@Request}", PayuLogPayload.Serialize(request));
 
         var responseContent = await softErrorPipeline.ExecuteAsync(async ct =>
         {

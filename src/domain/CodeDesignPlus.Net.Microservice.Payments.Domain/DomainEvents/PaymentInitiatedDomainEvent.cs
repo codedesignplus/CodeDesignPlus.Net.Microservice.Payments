@@ -4,6 +4,14 @@ using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 
+/// <summary>
+/// Se inició un cobro en la pasarela.
+/// </summary>
+/// <remarks>
+/// Lleva el tipo de medio de pago y los cuatro últimos dígitos, no el medio de pago entero: ese objeto trae el código
+/// de seguridad de la tarjeta, y un evento viaja por el bus y lo puede guardar quien lo consuma. PCI DSS (requisito 3.2)
+/// no deja conservarlo después de la autorización (pendings/322).
+/// </remarks>
 [EventKey<PaymentAggregate>(1, "PaymentInitiatedDomainEvent")]
 public class PaymentInitiatedDomainEvent(
     Guid aggregateId,
@@ -13,7 +21,8 @@ public class PaymentInitiatedDomainEvent(
     Money total,
     Net.ValueObjects.User.Buyer buyer,
     Net.ValueObjects.User.Payer payer,
-    PaymentMethod paymentMethod,
+    string paymentMethodType,
+    string? last4Digits,
     string description,
     PaymentProvider paymentProvider,
     Guid? tenant,
@@ -28,7 +37,14 @@ public class PaymentInitiatedDomainEvent(
     public Money Total { get; } = total;
     public Net.ValueObjects.User.Buyer Buyer { get; } = buyer;
     public Net.ValueObjects.User.Payer Payer { get; } = payer;
-    public PaymentMethod PaymentMethod { get; } = paymentMethod;
+    /// <summary>
+    /// El tipo de medio de pago (VISA, PSE…).
+    /// </summary>
+    public string PaymentMethodType { get; } = paymentMethodType;
+    /// <summary>
+    /// Los cuatro últimos dígitos de la tarjeta, o nada si no se pagó con tarjeta.
+    /// </summary>
+    public string? Last4Digits { get; } = last4Digits;
     public string Description { get; } = description;
     public PaymentProvider Provider { get; } = paymentProvider;
     public Guid? Tenant { get; } = tenant;
@@ -56,7 +72,8 @@ public class PaymentInitiatedDomainEvent(
             total,
             buyer,
             payer,
-            paymentMethod,
+            paymentMethod.Type,
+            paymentMethod.CreditCard?.Last4Digits,
             description,
             paymentProvider,
             tenant,
