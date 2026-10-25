@@ -32,4 +32,18 @@ public class SavedCardRepository(IServiceProvider serviceProvider, IOptions<Mong
         return await collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<bool> CreateIfAbsentAsync(SavedCardAggregate savedCard, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await CreateAsync(savedCard, cancellationToken);
+
+            return true;
+        }
+        catch (MongoWriteException exception) when (exception.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            return false;
+        }
+    }
 }
