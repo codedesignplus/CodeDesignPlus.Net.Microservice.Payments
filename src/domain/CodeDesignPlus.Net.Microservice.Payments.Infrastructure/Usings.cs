@@ -1,4 +1,4 @@
-﻿global using CodeDesignPlus.Net.Core.Abstractions;
+global using CodeDesignPlus.Net.Core.Abstractions;
 global using CodeDesignPlus.Net.Mongo.Abstractions.Options;
 global using CodeDesignPlus.Net.Mongo.Repository;
 global using Microsoft.Extensions.Configuration;
@@ -13,4 +13,5 @@ global using CodeDesignPlus.Net.ValueObjects.Common;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.Repositories;
-global using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Payu.Logging;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
+global using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;

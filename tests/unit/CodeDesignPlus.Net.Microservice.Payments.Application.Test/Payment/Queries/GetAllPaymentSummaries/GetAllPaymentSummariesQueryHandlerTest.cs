@@ -68,7 +68,6 @@ public class GetAllPaymentSummariesQueryHandlerTest
         var resumen = Assert.Single(pagina.Data);
 
         Assert.Equal(PaymentId, resumen.Id);
-        Assert.Equal("4242", resumen.Last4Digits);
         Assert.Equal("Ana Restrepo", resumen.BuyerName);
         Assert.Equal(1L, pagina.TotalCount);
     }
@@ -90,8 +89,7 @@ public class GetAllPaymentSummariesQueryHandlerTest
             TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
 
         return PaymentAggregate.Create(
-            PaymentId, "licenses", Referencia, subTotal, tax, subTotal + tax, comprador, null,
-            MetodoDePago.Create("VISA", null, Tarjeta.Create("tok-sonda", "4242", "2030/12", "SONDA TITULAR", "sonda-cvv")),
-            "Compra de licencia", PaymentProvider.Payu, Tenant, Comprador);
+            PaymentId, "licenses", Referencia, subTotal, tax, subTotal + tax, comprador,
+            "Compra de licencia", "Wompi", false, Tenant, Comprador);
     }
 }

@@ -29,6 +29,18 @@
     "291": "L'URL n'est pas valide.",
     "292": "Les quatre derniers chiffres doivent être exactement quatre nombres.",
     "293": "Le délai doit être supérieur à zéro, sinon un paiement à peine commencé serait clôturé.",
-    "294": "Ouvrez d’abord une copropriété pour voir ses paiements."
+    "294": "Ouvrez d’abord une copropriété pour voir ses paiements.",
+    "340": "Le paiement en ligne n'est pas disponible : aucun compte d'encaissement n'est connecté.",
+    "341": "Le compte d'encaissement de la plateforme n'est pas configuré.",
+    "342": "Pour encaisser, il faut l'organisation qui encaisse.",
+    "343": "Aucune passerelle de paiement ne dessert le pays de cette organisation.",
+    "344": "La passerelle a refusé les clés : vérifiez que vous les avez copiées en entier et qu'elles sont du bon commerçant.",
+    "345": "Les clés appartiennent à un autre environnement : utilisez les clés de test en test et celles de production en production.",
+    "346": "La passerelle demandée n'est pas celle du compte d'encaissement.",
+    "347": "Nous n'avons pas trouvé ce paiement à un tiers.",
+    "348": "Le compte d'encaissement n'a pas les paiements à des tiers connectés.",
+    "349": "Pour connecter les paiements à des tiers, saisissez l'utilisateur, la clé et le compte d'origine.",
+    "350": "L'organisation est obligatoire.",
+    "351": "La passerelle du compte ne peut pas payer des tiers."
   }
 }

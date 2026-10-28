@@ -1,6 +1,4 @@
 ﻿using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
-using CodeDesignPlus.Net.gRpc.Clients.Services.Payment;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 
@@ -17,7 +15,9 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
         else
             payment = await repository.FindAsync<PaymentAggregate>(request.Id, cancellationToken);
 
-        payment.SetFinalResponse(request.Status, request.Metadata);
+        ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
+
+        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType);
 
         await repository.UpdateAsync(payment, cancellationToken);
 

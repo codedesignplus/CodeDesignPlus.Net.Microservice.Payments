@@ -1,5 +1,4 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
-using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 
@@ -14,11 +13,13 @@ public class PaymentDto : IDtoBase
     public Net.ValueObjects.Financial.Money Total { get; set; } = null!;
     // Sin Buyer a proposito: el mapeo nunca lo copio (siempre salia null) y nadie lo lee, y copiarlo publicaria el
     // documento del comprador, que MapsterConfig evita exponer (pendings/174).
-    public Net.ValueObjects.User.Payer Payer { get; set; } = null!;
-    public ValueObjects.Payment.PaymentMethod PaymentMethod { get; set; } = null!;
     public string Description { get; set; } = null!;
 
-    public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.None;
+    public string Provider { get; set; } = null!;
+    public bool PlatformAccount { get; set; }
+    public string? ProviderTransactionId { get; set; }
+    public Net.ValueObjects.Financial.Money? CapturedAmount { get; set; }
+    public string? PaymentMethodType { get; set; }
     public Dictionary<string, string?> InitiateResponse { get; set; } = [];
     public Dictionary<string, string?> FinalResponse { get; set; } = [];
 }

@@ -25,7 +25,6 @@ public class SavedCardOwnershipTest
         repository.Setup(x => x.FindAsync<SavedCardAggregate>(card.Id, It.IsAny<CancellationToken>())).ReturnsAsync(card);
     }
 
-    private static CodeDesignPlus.Net.ValueObjects.Payment.PaymentMethod PayWith(string token) => CodeDesignPlus.Net.ValueObjects.Payment.PaymentMethod.Create("VISA", null, CodeDesignPlus.Net.ValueObjects.Payment.CreditCard.Create(token, "0004", "2027/03", "Ana Pérez", "777", 1));
 
     [Fact]
     public async Task GetById_CardOfAnotherUser_ThrowsSavedCardNotFound()
@@ -69,48 +68,5 @@ public class SavedCardOwnershipTest
         // Assert
         Assert.Equal(AppErrors.SavedCardNotFound.GetCode(), exception.Code);
         repository.Verify(x => x.UpdateAsync(It.IsAny<SavedCardAggregate>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ResolveToken_OwnSavedCard_ReplacesTheIdWithTheProviderToken()
-    {
-        // Arrange
-        user.SetupGet(x => x.IdUser).Returns(owner);
-
-        // Act
-        var resolved = await SavedCardToken.ResolveAsync(PayWith(card.Id.ToString()), repository.Object, user.Object, CancellationToken.None);
-
-        // Assert
-        Assert.Equal("payu-token-123", resolved.CreditCard!.Token);
-        Assert.Equal("777", resolved.CreditCard.SecurityCode);
-        Assert.Equal(1, resolved.CreditCard.InstallmentsNumber);
-    }
-
-    [Fact]
-    public async Task ResolveToken_SavedCardOfAnotherUser_ThrowsSavedCardNotFound()
-    {
-        // Arrange
-        user.SetupGet(x => x.IdUser).Returns(stranger);
-
-        // Act
-        var exception = await Assert.ThrowsAsync<CodeDesignPlusException>(() => SavedCardToken.ResolveAsync(PayWith(card.Id.ToString()), repository.Object, user.Object, CancellationToken.None));
-
-        // Assert
-        Assert.Equal(AppErrors.SavedCardNotFound.GetCode(), exception.Code);
-    }
-
-    [Fact]
-    public async Task ResolveToken_FreshProviderToken_LeavesThePaymentMethodAsIs()
-    {
-        // Arrange: PayU tokens are GUIDs too, but they are not the id of a saved card.
-        user.SetupGet(x => x.IdUser).Returns(owner);
-        var freshToken = Guid.NewGuid().ToString();
-        var method = PayWith(freshToken);
-
-        // Act
-        var resolved = await SavedCardToken.ResolveAsync(method, repository.Object, user.Object, CancellationToken.None);
-
-        // Assert
-        Assert.Same(method, resolved);
     }
 }

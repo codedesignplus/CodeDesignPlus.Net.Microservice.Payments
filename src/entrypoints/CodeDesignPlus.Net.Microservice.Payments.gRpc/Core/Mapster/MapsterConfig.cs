@@ -1,7 +1,4 @@
-﻿using CodeDesignPlus.Net.Exceptions.Extensions;
-using CodeDesignPlus.Net.Exceptions.Guards;
-using CodeDesignPlus.Net.Microservice.Payments.Application;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
+﻿using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Core.Mapster;
 
@@ -16,65 +13,22 @@ public static class MapsterConfig
                src.Currency
            ));
 
-        TypeAdapterConfig<Address, ValueObjects.User.Address>
-          .NewConfig()
-          .MapWith(src => ValueObjects.User.Address.Create(
-              src.Street,
-              src.Country,
-              src.State,
-              src.City,
-              src.PostalCode
-          ));
-
+        // The page prefill does not need a shipping address, which the contract no longer carries.
         TypeAdapterConfig<Buyer, ValueObjects.User.Buyer>
             .NewConfig()
-            .MapWith(src => ValueObjects.User.Buyer.Create(
-                Guid.Parse(src.BuyerId),
-                src.Name,
-                src.Phone,
-                src.Email,
-                src.TypeDocument != null ? ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name) : null!,
-                src.Document,
-                src.ShippingAddress != null ? src.ShippingAddress.Adapt<ValueObjects.User.Address>() : null!
-            ));
-
-        TypeAdapterConfig<Payer, ValueObjects.User.Payer>
-            .NewConfig()
-            .MapWith(src => ValueObjects.User.Payer.Create(
-                src.FullName,
-                src.EmailAddress,
-                src.ContactPhone,
-                src.TypeDocument != null ? ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name) : null!,
-                src.DocumentNumber,
-                src.BillingAddress != null ? src.BillingAddress.Adapt<ValueObjects.User.Address>() : null!
-            ));
-
-        TypeAdapterConfig<CreditCard, ValueObjects.Payment.CreditCard>
-            .NewConfig()
-            .MapWith(src => ValueObjects.Payment.CreditCard.Create(
-                src.CreditCardTokenId,
-                src.Last4Digits,
-                src.ExpirationDate,
-                src.CardHolderName,
-                src.SecurityCode,
-                src.InstallmentsNumber
-            ));
-
-        TypeAdapterConfig<Pse, ValueObjects.Payment.Pse>
-            .NewConfig()
-            .MapWith(src => ValueObjects.Payment.Pse.Create(
-                src.PseCode,
-                src.TypePerson,
-                src.PseResponseUrl
-            ));
-
-        TypeAdapterConfig<PaymentMethod, ValueObjects.Payment.PaymentMethod>
-            .NewConfig()
-            .MapWith(src => ValueObjects.Payment.PaymentMethod.Create(
-                src.Type,
-                src.Pse != null ? src.Pse .Adapt<ValueObjects.Payment.Pse>() : null,
-                src.CreditCard != null ? src.CreditCard.Adapt<ValueObjects.Payment.CreditCard>() : null
-            ));
+            .MapWith(src => src.TypeDocument != null && src.HasDocument
+                ? ValueObjects.User.Buyer.CreateWithoutShipping(
+                    Guid.Parse(src.BuyerId),
+                    src.Name,
+                    src.Phone,
+                    src.Email,
+                    ValueObjects.User.TypeDocument.Create(src.TypeDocument.Code, src.TypeDocument.Name),
+                    src.Document)
+                : ValueObjects.User.Buyer.CreateMinimal(
+                    Guid.Parse(src.BuyerId),
+                    src.Name,
+                    src.Phone,
+                    src.Email));
 
         TypeAdapterConfig<InitiatePaymentRequest, InitiatePaymentCommand>
             .NewConfig()
@@ -87,16 +41,16 @@ public static class MapsterConfig
                 src.Total.Adapt<Domain.ValueObjects.Amount>(),
                 src.Description,
                 src.Buyer.Adapt<ValueObjects.User.Buyer>(),
-                src.Payer != null ? src.Payer.Adapt<ValueObjects.User.Payer>() : null,
-                src.PaymentMethod.Adapt<ValueObjects.Payment.PaymentMethod>(),
-                (Domain.Enums.PaymentProvider)src.Provider
+                src.HasProvider && !string.IsNullOrWhiteSpace(src.Provider) ? src.Provider : null,
+                src.HasReturnUrl && !string.IsNullOrWhiteSpace(src.ReturnUrl) ? src.ReturnUrl : null,
+                src.PlatformAccount
             ));
 
         TypeAdapterConfig<InitiatePaymentResponseDto, InitiatePaymentResponse>
             .NewConfig()
             .MapWith(src => new InitiatePaymentResponse
             {
-                NextAction =(NextActionType)src.NextAction,
+                NextAction = (NextActionType)src.NextAction,
                 PaymentId = src.PaymentId.ToString(),
                 RedirectUrl = src.RedirectUrl,
                 Success = src.Success

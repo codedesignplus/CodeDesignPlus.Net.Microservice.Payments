@@ -24,6 +24,9 @@
     "320": "Le téléphone du payeur est obligatoire.",
     "321": "Le prestataire de paiement a refusé la demande.",
     "322": "Le code de moyen de paiement '{0}' n'est pas valide.",
-    "323": "La copropriété à purger ne peut pas être vide."
+    "323": "La copropriété à purger ne peut pas être vide.",
+    "360": "La passerelle de paiement n'a pas répondu ; réessayez dans quelques minutes.",
+    "361": "La clé du compte d'encaissement n'est pas reconnue par la passerelle.",
+    "362": "Le montant ne peut pas être exprimé en centimes de sa devise."
   }
 }

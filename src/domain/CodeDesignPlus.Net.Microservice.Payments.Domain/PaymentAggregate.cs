@@ -1,5 +1,4 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
-using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
@@ -48,21 +47,29 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// </summary>
     public Net.ValueObjects.User.Buyer Buyer { get; private set; } = null!;
     /// <summary>
-    /// Información del pagador.
-    /// </summary>
-    public Net.ValueObjects.User.Payer Payer { get; private set; } = null!;
-    /// <summary>
-    /// Método de pago seleccionado por el pagador.
-    /// </summary>
-    public PaymentMethod PaymentMethod { get; private set; } = null!;
-    /// <summary>
     /// Descripción del pago.
     /// </summary>
     public string Description { get; private set; } = null!;
     /// <summary>
-    /// Proveedor de pagos seleccionado para procesar la transacción.
+    /// Code of the provider that processes the payment (for example "Wompi").
     /// </summary>
-    public PaymentProvider PaymentProvider { get; private set; } = PaymentProvider.None;
+    public string Provider { get; private set; } = null!;
+    /// <summary>
+    /// Whether the payment is charged to the platform's own merchant account instead of the tenant's.
+    /// </summary>
+    public bool PlatformAccount { get; private set; }
+    /// <summary>
+    /// Id of the transaction at the provider, known once the provider reports it.
+    /// </summary>
+    public string? ProviderTransactionId { get; private set; }
+    /// <summary>
+    /// What the provider actually captured. Only set once the payment succeeded.
+    /// </summary>
+    public Money? CapturedAmount { get; private set; }
+    /// <summary>
+    /// Payment method the payer chose on the provider's hosted page (for example "CARD" or "PSE").
+    /// </summary>
+    public string? PaymentMethodType { get; private set; }
     /// <summary>
     /// Almacena la respuesta inmediata del proveedor de pagos al iniciar la transacción.
     /// Puede contener una URL de redirección o datos para un widget.
@@ -83,14 +90,14 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <param name="subTotal">Subtotal del pago.</param>
     /// <param name="tax">Impuestos aplicados al pago.</param>
     /// <param name="total">Total del pago (Subtotal + Impuestos).</param>
-    /// <param name="payer">Información del pagador.</param>
-    /// <param name="paymentMethod">Método de pago seleccionado por el pagador.</param>
+    /// <param name="buyer">Who pays; prefills the provider's hosted page.</param>
     /// <param name="description">Descripción del pago.</param>
-    /// <param name="paymentProvider">Proveedor de pagos seleccionado para procesar la transacción.</param>
+    /// <param name="provider">Code of the provider that processes the payment.</param>
+    /// <param name="platformAccount">Whether the payment goes to the platform's own merchant account.</param>
     /// <param name="tenant">Identificador del tenant al que pertenece el pago.</param>
     /// <param name="createdBy">Identificador del usuario que creó el pago.</param>
     /// <returns>Nueva instancia de PaymentAggregate.</returns>
-    public static PaymentAggregate Create(Guid id, string module, Guid referenceId, Money subTotal, Money tax, Money total, Net.ValueObjects.User.Buyer buyer, Net.ValueObjects.User.Payer? payer, PaymentMethod paymentMethod, string description, PaymentProvider paymentProvider, Guid? tenant, Guid createdBy)
+    public static PaymentAggregate Create(Guid id, string module, Guid referenceId, Money subTotal, Money tax, Money total, Net.ValueObjects.User.Buyer buyer, string description, string provider, bool platformAccount, Guid? tenant, Guid createdBy)
     {
         DomainGuard.GuidIsEmpty(id, Errors.PaymentIdCannotBeEmpty);
         DomainGuard.IsNullOrEmpty(module, Errors.ModuleCannotBeNullOrEmpty);
@@ -99,14 +106,10 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         DomainGuard.IsNull(tax, Errors.TaxCannotBeNull);
         DomainGuard.IsNull(total, Errors.TotalCannotBeNull);
         DomainGuard.IsNull(buyer, Errors.BuyerCannotBeNull);
-        DomainGuard.IsNull(paymentMethod, Errors.PaymentMethodCannotBeNull);
         DomainGuard.IsNullOrEmpty(description, Errors.DescriptionCannotBeNullOrEmpty);
-        DomainGuard.IsTrue(paymentProvider == PaymentProvider.None, Errors.PaymentProviderIsRequired);
+        DomainGuard.IsNullOrEmpty(provider, Errors.PaymentProviderIsRequired);
         
         DomainGuard.IsTrue(total != (subTotal + tax), Errors.TotalMustBeEqualToSubTotalPlusTax);
-
-        if(payer == null)
-            payer = Net.ValueObjects.User.Payer.CreateFromBuyer(buyer);
 
         var aggregate = new PaymentAggregate(id)
         {
@@ -116,10 +119,9 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             Tax = tax,
             Total = total,
             Buyer = buyer,
-            Payer = payer,
-            PaymentMethod = paymentMethod,
             Description = description,
-            PaymentProvider = paymentProvider,
+            Provider = provider,
+            PlatformAccount = platformAccount,
             CreatedBy = createdBy,
             CreatedAt = SystemClock.Instance.GetCurrentInstant(),
             IsActive = true,
@@ -131,7 +133,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         if (tenant.HasValue && tenant.Value != Guid.Empty)
             aggregate.Tenant = tenant.Value;
 
-        aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, buyer, payer, paymentMethod, description, paymentProvider, aggregate.Tenant, createdBy));
+        aggregate.AddEvent(PaymentInitiatedDomainEvent.Create(id, module, subTotal, tax, total, buyer, description, provider, aggregate.Tenant));
 
         return aggregate;
     }
@@ -154,18 +156,16 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook) y cierra el cobro.
     /// </summary>
     /// <remarks>
-    /// <b>Tambien acepta <see cref="PaymentStatus.Expired"/>, y no es un añadido cosmetico.</b> PayU manda
-    /// <c>state_pol=5</c> cuando la sesion caduca, que es precisamente lo que hace una transaccion PSE que el
-    /// comprador no termina. El adaptador ya lo traducia, y aqui se rechazaba: el aviso reventaba, se iba a la
-    /// cola de errores y el cobro se quedaba en curso para siempre. La pasarela nos estaba contando el
-    /// desenlace y lo tirabamos.
-    /// <para>
-    /// Es distinto de <see cref="Expire"/>: alli no hay respuesta porque nadie contesto, y el cierre lo decide
-    /// la plataforma por silencio. Aqui contesto el proveedor y se guarda lo que dijo. Los dos acaban en
-    /// <c>Expired</c> y los dos levantan el mismo evento, pero el registro no miente sobre quien lo decidio.
-    /// </para>
+    /// Accepts <see cref="PaymentStatus.Expired"/> too: a provider may report that the payer let the session lapse,
+    /// and rejecting that outcome would leave the payment in progress forever. It differs from <see cref="Expire"/>,
+    /// where nobody answered and the platform closes the payment by silence.
     /// </remarks>
-    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response)
+    /// <param name="finalStatus">The resolved status reported by the provider.</param>
+    /// <param name="response">What the provider reported, kept as the record of the outcome.</param>
+    /// <param name="providerTransactionId">Id of the transaction at the provider.</param>
+    /// <param name="capturedAmount">What the provider captured; only kept when the payment succeeded.</param>
+    /// <param name="paymentMethodType">Payment method the payer chose on the provider's page.</param>
+    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null)
     {
         DomainGuard.IsTrue(
             finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed && finalStatus != PaymentStatus.Expired,
@@ -181,11 +181,19 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             Status != PaymentStatus.Initiated && Status != finalStatus,
             Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
 
+        // A capture in another currency is not this payment: applying it would settle the debt with a wrong amount.
+        DomainGuard.IsTrue(capturedAmount is not null && capturedAmount.Currency != Total.Currency, Errors.CapturedAmountCurrencyMustMatchTotal);
+
         Status = finalStatus;
         FinalResponse = response;
+        ProviderTransactionId = providerTransactionId;
+        PaymentMethodType = paymentMethodType;
+
+        // Only a succeeded payment captured money; a declined one may still report the amount it tried to charge.
+        CapturedAmount = finalStatus == PaymentStatus.Succeeded ? capturedAmount : null;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider));
     }
 
     /// <summary>
@@ -232,6 +240,6 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             ["reason"] = reason,
         };
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, null, Provider));
     }
 }

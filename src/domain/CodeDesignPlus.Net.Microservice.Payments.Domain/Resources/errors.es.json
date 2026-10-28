@@ -156,6 +156,18 @@
     "252": "La fecha de vencimiento de la tarjeta guardada es obligatoria.",
     "253": "Los últimos 4 dígitos de la tarjeta guardada son obligatorios.",
     "260": "La comisión en puntos básicos debe ser mayor que cero.",
-    "263": "Solo puede expirar un pago que siga en curso."
+    "263": "Solo puede expirar un pago que siga en curso.",
+    "324": "La organización de la cuenta es obligatoria.",
+    "325": "La cuenta de recaudo ya está conectada: reemplaza sus llaves en lugar de conectarla otra vez.",
+    "326": "La cuenta de recaudo no está conectada.",
+    "327": "Los datos de conexión de la cuenta son obligatorios.",
+    "328": "La llave pública es obligatoria.",
+    "329": "La referencia a las llaves guardadas es obligatoria.",
+    "330": "El importe cobrado debe estar en la moneda del pago.",
+    "331": "El identificador del pago a tercero es obligatorio.",
+    "332": "El propósito del pago a tercero es obligatorio.",
+    "333": "El beneficiario del pago a tercero es obligatorio.",
+    "334": "El valor del pago a tercero debe ser mayor que cero.",
+    "335": "El usuario que pide el pago a tercero es obligatorio."
   }
 }

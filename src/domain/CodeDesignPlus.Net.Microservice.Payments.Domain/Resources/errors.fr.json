@@ -156,6 +156,18 @@
     "252": "La date d'expiration de la carte enregistrée est obligatoire.",
     "253": "Les 4 derniers chiffres de la carte enregistrée sont obligatoires.",
     "260": "La commission en points de base doit être supérieure à zéro.",
-    "263": "Seul un paiement encore en cours peut expirer."
+    "263": "Seul un paiement encore en cours peut expirer.",
+    "324": "L'organisation du compte est obligatoire.",
+    "325": "Le compte d'encaissement est déjà connecté : remplacez ses clés au lieu de le connecter à nouveau.",
+    "326": "Le compte d'encaissement n'est pas connecté.",
+    "327": "Les données de connexion du compte sont obligatoires.",
+    "328": "La clé publique est obligatoire.",
+    "329": "La référence aux clés enregistrées est obligatoire.",
+    "330": "Le montant encaissé doit être dans la devise du paiement.",
+    "331": "L'identifiant du paiement à un tiers est obligatoire.",
+    "332": "L'objet du paiement à un tiers est obligatoire.",
+    "333": "Le bénéficiaire du paiement à un tiers est obligatoire.",
+    "334": "Le montant du paiement à un tiers doit être supérieur à zéro.",
+    "335": "L'utilisateur qui demande le paiement à un tiers est obligatoire."
   }
 }

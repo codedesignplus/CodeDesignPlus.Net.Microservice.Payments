@@ -156,6 +156,18 @@
     "252": "A data de validade do cartão salvo é obrigatória.",
     "253": "Os últimos 4 dígitos do cartão salvo são obrigatórios.",
     "260": "A comissão em pontos base deve ser maior que zero.",
-    "263": "Só pode expirar um pagamento que ainda esteja em andamento."
+    "263": "Só pode expirar um pagamento que ainda esteja em andamento.",
+    "324": "A organização da conta é obrigatória.",
+    "325": "A conta de recebimento já está conectada: substitua as chaves em vez de conectá-la de novo.",
+    "326": "A conta de recebimento não está conectada.",
+    "327": "Os dados de conexão da conta são obrigatórios.",
+    "328": "A chave pública é obrigatória.",
+    "329": "A referência às chaves armazenadas é obrigatória.",
+    "330": "O valor capturado deve estar na moeda do pagamento.",
+    "331": "O identificador do pagamento a terceiro é obrigatório.",
+    "332": "O propósito do pagamento a terceiro é obrigatório.",
+    "333": "O beneficiário do pagamento a terceiro é obrigatório.",
+    "334": "O valor do pagamento a terceiro deve ser maior que zero.",
+    "335": "O usuário que solicita o pagamento a terceiro é obrigatório."
   }
 }

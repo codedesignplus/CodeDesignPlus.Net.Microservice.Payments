@@ -1,4 +1,4 @@
-﻿using CodeDesignPlus.Net.gRpc.Clients.Extensions;
+using CodeDesignPlus.Net.gRpc.Clients.Extensions;
 using CodeDesignPlus.Net.Hangfire.Extensions;
 using CodeDesignPlus.Net.Logger.Extensions;
 using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
@@ -40,8 +40,6 @@ builder.Services.AddGrpcClients(builder.Configuration);
 // servicio: hasta ahora solo tenia servicios en segundo plano, que corren en cada replica y no se
 // coordinan entre si.
 builder.Services.AddHangfire<Program>(builder.Configuration);
-builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.BankSyncBackgroundService>();
-builder.Services.AddHostedService<CodeDesignPlus.Net.Microservice.Payments.Infrastructure.BackgroundService.PaymentMethodSeedBackgroundService>();
 
 var app = builder.Build();
 

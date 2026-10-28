@@ -70,4 +70,18 @@ public class Errors: IErrorCodes
 
     /// <summary>Para listar los cobros hace falta la copropiedad en sesión.</summary>
     public static readonly Error TenantIsRequiredToListPayments = new("294");
+
+    // Collection accounts, providers and payouts (pendings/660)
+    public static readonly Error MerchantAccountIsNotActive = new("340");
+    public static readonly Error PlatformAccountIsNotConfigured = new("341");
+    public static readonly Error TenantIsRequiredToCharge = new("342");
+    public static readonly Error NoPaymentProviderForCountry = new("343");
+    public static readonly Error MerchantKeysWereRejected = new("344");
+    public static readonly Error MerchantKeysEnvironmentMismatch = new("345");
+    public static readonly Error PaymentProviderDoesNotMatchAccount = new("346");
+    public static readonly Error PayoutNotFound = new("347");
+    public static readonly Error PayoutsAreNotEnabled = new("348");
+    public static readonly Error PayoutsCredentialsAreIncomplete = new("349");
+    public static readonly Error TenantIsRequired = new("350");
+    public static readonly Error PaymentProviderCannotPayThirdParties = new("351");
 }

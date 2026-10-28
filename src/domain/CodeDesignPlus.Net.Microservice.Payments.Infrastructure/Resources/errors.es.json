@@ -24,6 +24,9 @@
     "320": "El teléfono del pagador es obligatorio.",
     "321": "La pasarela de pago rechazo la solicitud.",
     "322": "El código de medio de pago '{0}' no es válido.",
-    "323": "La copropiedad a purgar no puede estar vacía."
+    "323": "La copropiedad a purgar no puede estar vacía.",
+    "360": "La pasarela de pagos no respondió; intenta de nuevo en unos minutos.",
+    "361": "La llave de la cuenta de recaudo no es una que la pasarela reconozca.",
+    "362": "El importe no se puede expresar en centavos de su moneda."
   }
 }

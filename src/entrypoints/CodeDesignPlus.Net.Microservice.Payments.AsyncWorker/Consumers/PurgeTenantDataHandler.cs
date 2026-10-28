@@ -4,7 +4,8 @@ using Microsoft.Extensions.Logging;
 namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Consumers;
 
 /// <summary>
-/// Al purgarse una copropiedad, borra sus pagos y sus dispersiones.
+/// Al purgarse una copropiedad, borra sus pagos, sus dispersiones, sus pagos a terceros y su cuenta de recaudo con las
+/// llaves que guarda el Vault.
 /// </summary>
 /// <remarks>
 /// Lo publica ms-tenants cuando vence el plazo para restaurar una copropiedad eliminada, y puede llegar más de una
@@ -20,7 +21,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Consumers;
 /// </para>
 /// </remarks>
 [QueueName<PaymentAggregate>("PurgeTenantDataHandler")]
-public class PurgeTenantDataHandler(IPaymentRepository repository, ILogger<PurgeTenantDataHandler> logger) : IEventHandler<TenantPurgedDomainEvent>
+public class PurgeTenantDataHandler(IPaymentRepository repository, IMerchantSecretStore secretStore, ILogger<PurgeTenantDataHandler> logger) : IEventHandler<TenantPurgedDomainEvent>
 {
     public async Task HandleAsync(TenantPurgedDomainEvent data, CancellationToken token)
     {
@@ -30,9 +31,16 @@ public class PurgeTenantDataHandler(IPaymentRepository repository, ILogger<Purge
         var beneficiaries = await repository.DeleteByTenantAsync<BeneficiaryAggregate>(tenant, token);
         var disbursements = await repository.DeleteByTenantAsync<DisbursementAggregate>(tenant, token);
         var rules = await repository.DeleteByTenantAsync<DisbursementRuleAggregate>(tenant, token);
+        var payouts = await repository.DeleteByTenantAsync<PayoutAggregate>(tenant, token);
+
+        // The keys first: if the purge stopped between the two, a redelivery finds the account and deletes again,
+        // while an account deleted before its keys would leave them in the Vault with nothing pointing at them.
+        await secretStore.DeleteAsync(MerchantAccountAggregate.IdFor(tenant), token);
+
+        var accounts = await repository.DeleteByTenantAsync<MerchantAccountAggregate>(tenant, token);
 
         logger.LogInformation(
-            "Tenant {TenantId} purged: {Payments} payments, {Beneficiaries} beneficiaries, {Disbursements} disbursements and {Rules} disbursement rules deleted",
-            tenant, payments, beneficiaries, disbursements, rules);
+            "Tenant {TenantId} purged: {Payments} payments, {Beneficiaries} beneficiaries, {Disbursements} disbursements, {Rules} disbursement rules, {Payouts} payouts and {Accounts} collection accounts with their keys deleted",
+            tenant, payments, beneficiaries, disbursements, rules, payouts, accounts);
     }
 }

@@ -29,6 +29,18 @@
     "291": "A URL não é válida.",
     "292": "Os últimos quatro dígitos devem ser exatamente quatro números.",
     "293": "O prazo deve ser maior que zero; caso contrário, fecharia uma cobrança recém-iniciada.",
-    "294": "Entre em um condomínio para ver os pagamentos."
+    "294": "Entre em um condomínio para ver os pagamentos.",
+    "340": "O pagamento on-line não está disponível: não há uma conta de recebimento conectada.",
+    "341": "A conta de recebimento da plataforma não está configurada.",
+    "342": "Para cobrar é necessária a organização que cobra.",
+    "343": "Nenhum gateway de pagamento atende o país desta organização.",
+    "344": "O gateway recusou as chaves: verifique se você as copiou completas e se são do comerciante correto.",
+    "345": "As chaves são de outro ambiente: use as de teste em um ambiente de teste e as de produção em produção.",
+    "346": "O gateway solicitado não é o da conta de recebimento.",
+    "347": "Não encontramos esse pagamento a terceiro.",
+    "348": "A conta de recebimento não tem os pagamentos a terceiros conectados.",
+    "349": "Para conectar os pagamentos a terceiros, informe o usuário, a chave e a conta de origem.",
+    "350": "A organização é obrigatória.",
+    "351": "O gateway da conta não pode fazer pagamentos a terceiros."
   }
 }

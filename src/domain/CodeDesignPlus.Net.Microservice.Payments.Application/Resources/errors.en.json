@@ -29,6 +29,18 @@
     "291": "The URL is not valid.",
     "292": "The last four digits must be exactly four numbers.",
     "293": "The age must be greater than zero, otherwise a payment that just started would be closed.",
-    "294": "Open a property first to see its payments."
+    "294": "Open a property first to see its payments.",
+    "340": "Online payments are not available: no collection account is connected.",
+    "341": "The platform's collection account is not configured.",
+    "342": "A payment needs the organization that charges it.",
+    "343": "No payment gateway serves the country of this organization.",
+    "344": "The payment gateway rejected the keys: check that you copied them complete and from the right merchant.",
+    "345": "The keys belong to another environment: use the test keys in a test environment and the live keys in production.",
+    "346": "The requested payment gateway is not the one of the collection account.",
+    "347": "Payout not found.",
+    "348": "The collection account does not have payments to third parties connected.",
+    "349": "To connect payments to third parties, enter the user, the key and the source account.",
+    "350": "The organization is required.",
+    "351": "The payment gateway of the account cannot pay third parties."
   }
 }

@@ -156,6 +156,18 @@
     "252": "Saved Card Expiration Date cannot be null or empty",
     "253": "Saved Card Last 4 Digits cannot be null or empty",
     "260": "Commission Basis Points must be positive",
-    "263": "Only a payment still in progress can expire"
+    "263": "Only a payment still in progress can expire",
+    "324": "The tenant of the account is required.",
+    "325": "The collection account is already connected: replace its keys instead.",
+    "326": "The collection account is not connected.",
+    "327": "The connection data of the account is required.",
+    "328": "The public key is required.",
+    "329": "The reference to the stored keys is required.",
+    "330": "The captured amount must be in the currency of the payment.",
+    "331": "The payout id is required.",
+    "332": "The purpose of the payout is required.",
+    "333": "The beneficiary of the payout is required.",
+    "334": "The payout amount must be greater than zero.",
+    "335": "The user who requests the payout is required."
   }
 }

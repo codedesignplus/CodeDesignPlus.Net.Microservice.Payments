@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -39,15 +40,27 @@ public class PurgeTenantDataHandlerTest
         .Where(type => type.GetProperty("Tenant", BindingFlags.Public | BindingFlags.Instance)?.PropertyType is { } property && (property == typeof(Guid) || property == typeof(Guid?)))
         .ToHashSet();
 
+    private static readonly Mock<IMerchantSecretStore> SecretStore = new();
+
     private static async Task<(Mock<IPaymentRepository> Repository, Guid Tenant)> PurgeAsync()
     {
         var repository = new Mock<IPaymentRepository>();
         var tenant = Guid.NewGuid();
-        var handler = new PurgeTenantDataHandler(repository.Object, Mock.Of<ILogger<PurgeTenantDataHandler>>());
+        var handler = new PurgeTenantDataHandler(repository.Object, SecretStore.Object, Mock.Of<ILogger<PurgeTenantDataHandler>>());
 
         await handler.HandleAsync(TenantPurgedDomainEvent.Create(tenant, "Malpelo XXI"), CancellationToken.None);
 
         return (repository, tenant);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TenantPurged_DeletesTheKeysOfItsCollectionAccount()
+    {
+        // Act
+        var (_, tenant) = await PurgeAsync();
+
+        // Assert
+        SecretStore.Verify(x => x.DeleteAsync(MerchantAccountAggregate.IdFor(tenant), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

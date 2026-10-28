@@ -1,11 +1,20 @@
-using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Enums;
 using CodeDesignPlus.Net.ValueObjects.Financial;
-using DnsClient.Internal;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
-public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISavedCardRepository savedCardRepository, IUserContext user, IPubSub pubsub, IPaymentProviderAdapterFactory adapterFactory) 
+/// <summary>
+/// Starts a payment on the collection account that charges it and answers with the provider's hosted page.
+/// </summary>
+/// <remarks>
+/// The provider is the one of the account, not one the caller picks: the tenant's account was routed by its country
+/// when it was created, and the platform's account is configured. A caller that names a provider only confirms it.
+/// </remarks>
+public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, IMerchantCredentialsResolver credentialsResolver, IPaymentProviderFactory providers, IOptions<PaymentProvidersOptions> options)
     : IRequestHandler<InitiatePaymentCommand, InitiatePaymentResponseDto>
 {
     public async Task<InitiatePaymentResponseDto> Handle(InitiatePaymentCommand request, CancellationToken cancellationToken)
@@ -21,7 +30,11 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISaved
 
         ApplicationGuard.IsTrue(exist, Errors.PaymentAlredyExists);
 
-        var paymentMethod = await SavedCardToken.ResolveAsync(request.PaymentMethod, savedCardRepository, user, cancellationToken);
+        var credentials = await credentialsResolver.ForNewPaymentAsync(user.Tenant, request.PlatformAccount, cancellationToken);
+
+        ApplicationGuard.IsTrue(!string.IsNullOrWhiteSpace(request.Provider) && !string.Equals(request.Provider, credentials.Provider, StringComparison.OrdinalIgnoreCase), Errors.PaymentProviderDoesNotMatchAccount);
+
+        var collect = providers.GetCollect(credentials.Provider);
 
         var payment = PaymentAggregate.Create(
             request.Id,
@@ -31,22 +44,22 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISaved
             Money.FromLong(request.Tax.Value, request.Tax.Currency),
             Money.FromLong(request.Total.Value, request.Total.Currency),
             request.Buyer,
-            request.Payer,
-            paymentMethod,
             request.Description,
-            request.PaymentProvider,
+            collect.Code,
+            request.PlatformAccount,
             user.Tenant,
             user.IdUser
         );
 
         await repository.CreateAsync(payment, cancellationToken);
 
-        var adapter = adapterFactory.GetAdapter(request.PaymentProvider);
+        var returnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl) ? options.Value.DefaultReturnUrl : new Uri(request.ReturnUrl);
 
-        var providerResponse = await adapter.InitiatePaymentAsync(payment, cancellationToken);
+        var expiresAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromTimeSpan(options.Value.CheckoutLifetime));
 
-        var responseDictionary = new Dictionary<string, string?> { { "redirectUrl", providerResponse.RedirectUrl } };
-        payment.SetInitiateResponse(responseDictionary);
+        var session = await collect.CreateCheckoutAsync(payment, credentials, returnUrl, expiresAt, cancellationToken);
+
+        payment.SetInitiateResponse(new Dictionary<string, string?> { { "redirectUrl", session.RedirectUrl.ToString() } });
 
         await repository.UpdateAsync(payment, cancellationToken);
 
@@ -55,12 +68,9 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, ISaved
         return new InitiatePaymentResponseDto
         {
             PaymentId = payment.Id,
-            Success = providerResponse.Success ,
-            NextAction = providerResponse.NextAction,
-            WidgetParameters = providerResponse.WidgetParameters,
-            ProviderResponse = providerResponse.ProviderResponse,
-            RedirectUrl = providerResponse.RedirectUrl,
-            ProviderTransactionId = providerResponse.ProviderTransactionId
+            Success = true,
+            NextAction = NextActionType.Redirect,
+            RedirectUrl = session.RedirectUrl.ToString()
         };
     }
 }

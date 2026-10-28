@@ -212,4 +212,18 @@ public class Errors : IErrorCodes
     public static readonly Error CommissionBasisPointsMustBePositive = new("260");
 
     public static readonly Error OnlyPaymentsInProgressCanExpire = new("263");
+
+    // Collection accounts and payouts (pendings/660)
+    public static readonly Error MerchantAccountTenantCannotBeEmpty = new("324");
+    public static readonly Error MerchantAccountIsAlreadyConnected = new("325");
+    public static readonly Error MerchantAccountIsNotConnected = new("326");
+    public static readonly Error MerchantConnectionCannotBeNull = new("327");
+    public static readonly Error MerchantPublicKeyIsRequired = new("328");
+    public static readonly Error MerchantSecretReferenceIsRequired = new("329");
+    public static readonly Error CapturedAmountCurrencyMustMatchTotal = new("330");
+    public static readonly Error PayoutIdCannotBeEmpty = new("331");
+    public static readonly Error PayoutPurposeIsRequired = new("332");
+    public static readonly Error PayoutBeneficiaryIsRequired = new("333");
+    public static readonly Error PayoutAmountMustBePositive = new("334");
+    public static readonly Error PayoutRequestedByCannotBeEmpty = new("335");
 }

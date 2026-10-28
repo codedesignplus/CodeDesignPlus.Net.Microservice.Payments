@@ -182,9 +182,8 @@ public class ExpireStalePaymentsCommandHandlerTest
 
         var payment = PaymentAggregate.Create(
             Guid.NewGuid(), "Invoicing", Document,
-            subTotal, tax, subTotal + tax, buyer, null,
-            GatewayMethod.Create("PSE", null, Card.Create("tok_1", "4242", "2030/12", "Jorge Enrique Montoya", "123")),
-            "Pago documento CC-000003", PaymentProvider.Payu, Tenant, Buyer);
+            subTotal, tax, subTotal + tax, buyer,
+            "Pago documento CC-000003", "Wompi", false, Tenant, Buyer);
 
         payment.GetAndClearEvents();
 

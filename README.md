@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Payments microservice is the platform's payment gateway abstraction layer. It receives payment initiation requests via gRPC from internal microservices, routes them to the configured external provider (PayU or MercadoPago), tracks the full transaction lifecycle, and publishes domain events when payments are confirmed or rejected. The service decouples payment processing from business logic using a Module + ReferenceId routing pattern, allowing any microservice to use the same payment infrastructure without coupling to gateway-specific details. It also maintains a catalog of supported payment methods per provider and a bank directory for PSE (bank transfer) operations.
+The Payments microservice is the platform's payment gateway abstraction layer. It receives payment initiation requests via gRPC from internal microservices, routes them to the provider of the tenant's collection account (Wompi in Colombia; the provider is resolved by country, never chosen by the caller), tracks the full transaction lifecycle, and publishes domain events when payments are confirmed or rejected. The service decouples payment processing from business logic using a Module + ReferenceId routing pattern, allowing any microservice to use the same payment infrastructure without coupling to gateway-specific details. Each tenant connects its own merchant at the provider (its collection account); the merchant's secrets live only in Vault. The payer always finishes on the provider's hosted page, so no card data reaches this service.
 
 ## Business Context
 
@@ -10,7 +10,7 @@ In a microservices architecture, multiple bounded contexts may need to collect p
 
 The Payments microservice solves this by acting as the single integration point with external payment providers. Calling microservices identify themselves through the `Module` field (e.g., "Licenses", "Invoicing") and reference their own entity through `ReferenceId`. When the gateway responds (either synchronously for credit cards or asynchronously via webhook for PSE), Payments publishes the `PaymentResponseAssociatedDomainEvent` carrying the Module and ReferenceId, allowing the originating service to correlate the payment result back to its own domain entity.
 
-For a new developer: think of Payments as the "cashier booth." Any service that needs to collect money sends the cashier the bill details. The cashier talks to the bank (PayU/MercadoPago), and when the bank responds, the cashier announces the result on a loudspeaker (RabbitMQ) so the right service picks up the confirmation.
+For a new developer: think of Payments as the "cashier booth." Any service that needs to collect money sends the cashier the bill details. The cashier sends the payer to the tenant's own counter at the provider (Wompi), and when the bank responds, the cashier announces the result on a loudspeaker (RabbitMQ) so the right service picks up the confirmation.
 
 ## Ubiquitous Language
 
@@ -19,7 +19,7 @@ For a new developer: think of Payments as the "cashier booth." Any service that 
 | Payment | A single monetary transaction processed through an external gateway. Tracks the complete lifecycle from initiation through final resolution (succeeded or failed). |
 | Module | A string identifier that tags a payment with its originating business context (e.g., "Licenses", "Invoicing"). Used for event routing so the correct consumer picks up the result. |
 | ReferenceId | A Guid provided by the calling microservice that links the payment back to the domain entity that triggered it (e.g., an Order ID in ms-licenses). |
-| PaymentProvider | The external gateway that processes the transaction: PayU or MercadoPago. Selected at payment initiation time. |
+| Provider | Code of the external gateway that processes the transaction (for example `Wompi`). Resolved from the tenant's collection account, routed by country (`PaymentProviders:Routing`). |
 | PaymentMethod | A specific instrument within a provider: credit card, debit card, PSE bank transfer, bank reference, mobile payment, or cash. Stored as a catalog aggregate. |
 | PaymentStatus | The lifecycle state of a payment: Unknown, Initiated, Succeeded, Failed, Expired, or Pending. |
 | InitiateResponse | The immediate response from the gateway after initiating a transaction. For credit cards this may contain the approval result; for PSE it contains the bank redirect URL. |
@@ -35,7 +35,7 @@ For a new developer: think of Payments as the "cashier booth." Any service that 
 
 ## Domain Model
 
-The Payments domain is organized around three aggregates. `PaymentAggregate` is the central entity tracking a single payment transaction from initiation to resolution. `PaymentMethodAggregate` represents a supported payment method within a provider (e.g., "VISA" credit card in PayU). `BanksAggregate` represents a bank available for PSE transfers. The `PaymentMethod` value object (from the shared SDK) and `FinancialNetwork` record capture payment instrument details and network responses respectively.
+The Payments domain is organized around three aggregates. `PaymentAggregate` is the central entity tracking a single payment transaction from initiation to resolution. `PaymentMethodAggregate` represents a supported payment method within a provider (e.g., "CARD" in Wompi). `BanksAggregate` represents a bank available for PSE transfers. The `PaymentMethod` value object (from the shared SDK) and `FinancialNetwork` record capture payment instrument details and network responses respectively.
 
 ```mermaid
 classDiagram
@@ -116,10 +116,12 @@ The central aggregate tracking a single payment transaction. Created via gRPC by
 | Tax | Money | Tax amount applied to the payment |
 | Total | Money | Final amount charged: SubTotal + Tax (enforced by domain guard) |
 | Buyer | Buyer | Identity of the person purchasing |
-| Payer | Payer | Identity of the person paying (defaults to Buyer if not provided) |
-| PaymentMethod | PaymentMethod | Instrument details: type, token/card data, bank code for PSE |
 | Description | string | Human-readable description of what is being paid for |
-| PaymentProvider | PaymentProvider | Selected gateway: PayU or MercadoPago (None is rejected) |
+| Provider | string | Code of the gateway of the collection account (for example `Wompi`) |
+| PlatformAccount | bool | Charged to the platform's own merchant (subscriptions) instead of the tenant's |
+| ProviderTransactionId | string? | Transaction id at the provider, once it reports |
+| CapturedAmount | Money? | What the provider captured; only for succeeded payments |
+| PaymentMethodType | string? | Method the payer chose on the hosted page (CARD, PSE, NEQUI…) |
 | InitiateResponse | Dictionary\<string, string?\> | Immediate gateway response (redirect URL, widget params, approval status) |
 | FinalResponse | Dictionary\<string, string?\> | Webhook/final gateway response (transaction result, network codes) |
 | IsActive | bool | Soft-delete flag |
@@ -129,12 +131,12 @@ The central aggregate tracking a single payment transaction. Created via gRPC by
 
 ### PaymentMethodAggregate
 
-Catalog of available payment methods per provider. Seeded at startup by `PaymentMethodSeedBackgroundService`. Used by the frontend to display available payment options.
+Catalog of payment methods per provider. No longer seeded: with the hosted page the payer chooses the method on the provider's side.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | Id | Guid | Unique identifier of the payment method |
-| Provider | PaymentProvider | The gateway this method belongs to (PayU, MercadoPago) |
+| Provider | string | Code of the gateway this method belongs to |
 | Name | string | Display name (e.g., "VISA", "PSE", "MASTERCARD"). Max 64 chars |
 | Code | string | Provider-specific code used in API calls (e.g., "VISA", "PSE"). Max 32 chars |
 | Type | TypePaymentMethod | Category: CreditCard, DebitCard, BankTransfer, BankReference, MobilePaymentService, Cash |
@@ -182,7 +184,9 @@ Captures the raw financial network response codes from the payment provider. Use
 
 **PaymentStatus:** Unknown, Initiated, Succeeded, Failed, Expired, Pending
 
-**PaymentProvider:** None (rejected at creation), Payu, MercadoPago
+**MerchantAccountStatus:** PendingConnection, Active, Invalid, Disabled
+
+**PayoutStatus:** Requested, AwaitingApproval, Processing, Completed, Failed
 
 **TypePaymentMethod:** None, CreditCard, DebitCard, BankReference, BankTransfer, MobilePaymentService, Cash
 
@@ -329,11 +333,9 @@ All REST endpoints return RFC 7807 Problem Details on error.
 
 - **Module + ReferenceId pattern:** Decouples payment processing from business domain knowledge. The Payments service has zero understanding of what "Licenses" or "Invoicing" means; it simply stores the module string and echoes it back in events for correlation.
 
-- **Adapter factory for multiple providers:** `IPaymentProviderAdapterFactory` selects the correct adapter (PayU, MercadoPago) based on the `PaymentProvider` enum. Each adapter translates the generic payment request into provider-specific API calls and normalizes the response.
+- **Capabilities per provider:** `ICollectProvider` (mandatory), `IMerchantCredentialsProvider` and `IPayoutProvider`. `IPaymentProviderFactory` finds the adapter by provider code among the registered ones; adding a provider is writing its adapter.
 
-- **Webhook signature verification:** Every webhook notification is validated against the provider's signature before processing. Invalid signatures result in a 403 response, preventing fraudulent status updates.
-
-- **Payer defaults to Buyer:** If no explicit payer is provided, the system creates one from the buyer's information via `Payer.CreateFromBuyer()`. This simplifies the common case where the purchaser is also the payer.
+- **One webhook for every merchant:** `POST /api/Payment/notify/{provider}`. The event's reference (the payment id) leads to the account and to its secret in Vault; only then is the signature checked and the content trusted. Untrusted events are discarded and logged. A job (`reconcile-payments-job`) asks the provider about payments whose event was lost.
 
 - **Total = SubTotal + Tax invariant:** Enforced at creation time by a domain guard. Prevents accidental inconsistencies in monetary calculations.
 
@@ -342,8 +344,6 @@ All REST endpoints return RFC 7807 Problem Details on error.
 - **All amounts in minor units (long):** Consistent with the platform-wide convention. The shared `Money` value object ensures currency-safe arithmetic.
 
 - **gRPC for initiation, REST for webhooks:** Internal callers use gRPC for type safety and performance. External gateways use REST webhooks because that is what they support natively.
-
-- **Seeded payment method catalog:** The `PaymentMethodSeedBackgroundService` pre-populates available payment methods (VISA, MASTERCARD, PSE, etc.) on startup, ensuring the catalog is always ready.
 
 - **No event consumption:** Payments is a pure "fire and forget" service from the event perspective. It produces events for others but never subscribes to business domain events, keeping it maximally decoupled.
 
@@ -354,5 +354,5 @@ All REST endpoints return RFC 7807 Problem Details on error.
 | Licenses | Inbound (gRPC) / Outbound (event) | Receives `InitiatePayment` for license purchases; publishes `PaymentResponseAssociatedDomainEvent` with Module="Licenses" |
 | Invoicing | Inbound (gRPC) / Outbound (event) | Receives `InitiatePayment` for invoice settlements; publishes `PaymentResponseAssociatedDomainEvent` with Module="Invoicing" |
 | Any future service | Inbound (gRPC) / Outbound (event) | Any microservice can initiate payments by providing its own Module string |
-| PayU | Outbound (HTTP) / Inbound (webhook) | Processes credit card and PSE payments; sends webhook notifications to `/api/Payment/notify/Payu` |
-| MercadoPago | Outbound (HTTP) / Inbound (webhook) | Alternative payment provider; sends webhook notifications to `/api/Payment/notify/MercadoPago` |
+| Wompi | Outbound (HTTP) / Inbound (webhook) | Hosted page (Web Checkout) per tenant merchant; sends `transaction.updated` to `/api/Payment/notify/wompi` |
+| Tenants | Inbound (event) | `TenantCreated` creates the pending collection account; `TenantPurged` deletes it with its keys |

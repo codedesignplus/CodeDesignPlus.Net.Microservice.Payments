@@ -29,6 +29,18 @@
     "291": "La URL no es válida.",
     "292": "Los últimos cuatro dígitos deben ser exactamente cuatro números.",
     "293": "El plazo debe ser mayor que cero; si no, se cerraría un cobro recién iniciado.",
-    "294": "Para ver los cobros hay que entrar a una copropiedad."
+    "294": "Para ver los cobros hay que entrar a una copropiedad.",
+    "340": "El pago en línea no está disponible: no hay una cuenta de recaudo conectada.",
+    "341": "La cuenta de recaudo de la plataforma no está configurada.",
+    "342": "Para cobrar hace falta la organización que cobra.",
+    "343": "Ninguna pasarela de pagos atiende el país de esta organización.",
+    "344": "La pasarela rechazó las llaves: revisa que las copiaste completas y que son del comercio correcto.",
+    "345": "Las llaves son de otro ambiente: usa las de pruebas en un ambiente de pruebas y las de producción en producción.",
+    "346": "La pasarela pedida no es la de la cuenta de recaudo.",
+    "347": "No encontramos ese pago a tercero.",
+    "348": "La cuenta de recaudo no tiene conectados los pagos a terceros.",
+    "349": "Para conectar los pagos a terceros, escribe el usuario, la llave y la cuenta de origen.",
+    "350": "La organización es obligatoria.",
+    "351": "La pasarela de la cuenta no puede hacer pagos a terceros."
   }
 }

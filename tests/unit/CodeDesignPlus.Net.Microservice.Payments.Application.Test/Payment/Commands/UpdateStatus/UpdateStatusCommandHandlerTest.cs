@@ -135,8 +135,7 @@ public class UpdateStatusCommandHandlerTest
 
         return PaymentAggregate.Create(
             PaymentId, "licenses", Guid.Parse("dd000000-0000-4000-8000-000000000004"),
-            subTotal, tax, subTotal + tax, comprador, null,
-            MetodoDePago.Create("CREDIT_CARD", null, Tarjeta.Create("tok_1", "4242", "2030/12", "Ana Restrepo", "123")),
-            "Compra de licencia", PaymentProvider.Payu, Tenant, Comprador);
+            subTotal, tax, subTotal + tax, comprador,
+            "Compra de licencia", "Wompi", false, Tenant, Comprador);
     }
 }

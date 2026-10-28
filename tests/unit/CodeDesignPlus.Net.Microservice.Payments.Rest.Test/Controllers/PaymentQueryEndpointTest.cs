@@ -1,5 +1,4 @@
 using CodeDesignPlus.Net.Core.Abstractions.Models.Pager;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
 
@@ -59,5 +58,5 @@ public class PaymentQueryEndpointTest
         Assert.Same(criteria, enviada!.Criteria);
     }
 
-    private PaymentController BuildController() => new(mediator.Object, Mock.Of<IPaymentProviderAdapterFactory>());
+    private PaymentController BuildController() => new(mediator.Object);
 }

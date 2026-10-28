@@ -1,9 +1,21 @@
-using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
-using CodeDesignPlus.Net.ValueObjects.Payment;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.InitiatePayment;
 
+/// <summary>
+/// Starts a payment: the payer continues on the provider's hosted page, where they choose how to pay.
+/// </summary>
+/// <param name="Id">Id generated once by the calling module.</param>
+/// <param name="Module">Module that charges.</param>
+/// <param name="ReferenceId">Id of what is being charged in the calling module.</param>
+/// <param name="SubTotal">Amount before taxes.</param>
+/// <param name="Tax">Taxes.</param>
+/// <param name="Total">Amount to charge.</param>
+/// <param name="Description">What is being charged.</param>
+/// <param name="Buyer">Who pays; prefills the hosted page.</param>
+/// <param name="Provider">Provider code; empty lets the tenant's collection account decide.</param>
+/// <param name="ReturnUrl">Page the provider returns to; empty falls back to the configured one.</param>
+/// <param name="PlatformAccount">Whether the payment goes to the platform's own account.</param>
 [DtoGenerator]
 public record InitiatePaymentCommand(
     Guid Id,
@@ -14,9 +26,9 @@ public record InitiatePaymentCommand(
     Amount Total,
     string Description,
     ValueObjects.User.Buyer Buyer,
-    ValueObjects.User.Payer? Payer,
-    ValueObjects.Payment.PaymentMethod PaymentMethod,
-    PaymentProvider PaymentProvider
+    string? Provider,
+    string? ReturnUrl,
+    bool PlatformAccount
 ) : IRequest<InitiatePaymentResponseDto>;
 
 public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePaymentCommand>
@@ -27,7 +39,12 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
         RuleFor(x => x.Module).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ReferenceId).NotEmpty();
         RuleFor(x => x.Description).NotEmpty().MaximumLength(255);
-        RuleFor(x => x.PaymentProvider).IsInEnum().NotEqual(Domain.Enums.PaymentProvider.None);
+        RuleFor(x => x.Provider).MaximumLength(50);
+
+        RuleFor(x => x.ReturnUrl)
+            .Must(url => Uri.TryCreate(url, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+            .WithErrorCode(Errors.UrlIsInvalid.Code)
+            .When(x => !string.IsNullOrWhiteSpace(x.ReturnUrl));
 
         RuleFor(x => x.SubTotal)
             .NotNull()
@@ -42,20 +59,6 @@ public class InitiatePaymentCommandValidator : AbstractValidator<InitiatePayment
             .SetValidator(new AmountDtoValidator());
 
         RuleFor(x => x.Buyer).NotNull().SetValidator(new BuyerInfoDtoValidator());
-        RuleFor(x => x.Payer).SetValidator(new PayerInfoDtoValidator()).When(x => x.Payer != null);
-    }
-}
-
-public class PaymentMethodInfoDtoValidator : AbstractValidator<ValueObjects.Payment.PaymentMethod>
-{
-    public PaymentMethodInfoDtoValidator()
-    {
-        RuleFor(x => x.CreditCard).SetValidator(new CreditCardInfoDtoValidator()).When(x => x.CreditCard != null);
-        RuleFor(x => x.Pse).SetValidator(new PseInfoDtoValidator()).When(x => x.Pse != null);
-
-        RuleFor(x => x)
-            .Must(x => (x.CreditCard != null) ^ (x.Pse != null))
-            .WithErrorCode(Errors.PaymentMethodIsAmbiguous.Code);
     }
 }
 
@@ -87,22 +90,6 @@ public class TaxAmountDtoValidator : AbstractValidator<Amount>
     }
 }
 
-public class AddressDtoValidator : AbstractValidator<ValueObjects.User.Address?>
-{
-    public AddressDtoValidator()
-    {
-        When(x => x != null, () =>
-        {
-            RuleFor(x => x!.Street).NotEmpty().MaximumLength(100);
-            RuleFor(x => x!.Country).NotEmpty().Length(2).Matches(@"^[A-Z]{2}$").WithErrorCode(Errors.CountryFormatIsInvalid.Code);
-            RuleFor(x => x!.State).NotEmpty().MaximumLength(40);
-            RuleFor(x => x!.City).NotEmpty().MaximumLength(50);
-            RuleFor(x => x!.PostalCode).NotEmpty().Matches(@"^\d{1,8}$").MaximumLength(8);
-        });
-    }
-}
-
-
 public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
 {
     public BuyerInfoDtoValidator()
@@ -110,45 +97,6 @@ public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
         RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.Document).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.ShippingAddress)
-            .NotNull()
-            .SetValidator(new AddressDtoValidator())
-            .When(x => x.ShippingAddress != null);  
+        RuleFor(x => x.Document).MaximumLength(20);
     }
 }
-
-public class PayerInfoDtoValidator : AbstractValidator<ValueObjects.User.Payer>
-{
-    public PayerInfoDtoValidator()
-    {
-        RuleFor(x => x.FullName).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.EmailAddress).NotEmpty().EmailAddress().MaximumLength(255);
-        RuleFor(x => x.ContactPhone).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.DocumentNumber).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.BillingAddress)
-            .NotNull()
-            .SetValidator(new AddressDtoValidator())
-            .When(x => x.BillingAddress != null);
-    }
-}
-
-public class CreditCardInfoDtoValidator : AbstractValidator<ValueObjects.Payment.CreditCard?>
-{
-    public CreditCardInfoDtoValidator()
-    {
-        RuleFor(x => x!.ExpirationDate).NotEmpty().Length(7).Matches(@"^\d{4}/\d{2}$").WithErrorCode(Errors.ExpirationDateFormatIsInvalid.Code);
-        RuleFor(x => x!.Token).NotEmpty().NotNull();
-    }
-}
-
-public class PseInfoDtoValidator : AbstractValidator<ValueObjects.Payment.Pse?>
-{
-    public PseInfoDtoValidator()
-    {
-        RuleFor(x => x!.PseCode).NotEmpty().MaximumLength(34);
-        RuleFor(x => x!.TypePerson).NotEmpty().MaximumLength(2); // "N" o "J"
-        RuleFor(x => x!.PseResponseUrl).NotEmpty().MaximumLength(255).Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _)).WithErrorCode(Errors.UrlIsInvalid.Code);
-    }
-}
-

@@ -1,10 +1,6 @@
-using CodeDesignPlus.Net.Exceptions.Guards;
-using CodeDesignPlus.Net.Microservice.Payments.Infrastructure;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Common;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
-using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.TokenizeCard;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ProcessProviderEvent;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.RefreshPaymentStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
-using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
@@ -13,10 +9,9 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 /// Controller for handling payment operations.
 /// </summary>
 /// <param name="mediator">Mediator instance for sending commands.</param>
-/// <param name="adapterFactory">Factory for creating payment provider adapters.</param>
 [Route("api/[controller]")]
 [ApiController]
-public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactory adapterFactory) : ControllerBase
+public class PaymentController(IMediator mediator) : ControllerBase
 {
     /// <summary>
     /// Listado paginado de cobros, de solo consulta, para la administracion de la copropiedad.
@@ -50,45 +45,44 @@ public class PaymentController(IMediator mediator, IPaymentProviderAdapterFactor
     }
 
     /// <summary>
-    /// Webhook endpoint to receive payment notifications from the payment provider.
+    /// The single webhook every merchant account posts its events to.
     /// </summary>
-    /// <param name="providerName">The name of the payment provider sending the notification.</param>
+    /// <remarks>
+    /// The body is read raw because the signature is computed over it. Whose secret verifies it is decided by the
+    /// event's reference, so one URL serves every tenant's merchant and the platform's. An event that cannot be
+    /// trusted is discarded and logged, and still answered 200 so the provider stops retrying it.
+    /// </remarks>
+    /// <param name="providerName">Code of the provider that posts the event (for example <c>wompi</c>).</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <response code="200">Returns the payment response details.</response>
-    /// <response code="400">If the request is invalid.</response>
-    /// <response code="403">If the user is forbidden from accessing this resource.</response>
+    /// <response code="200">The event was received; it was applied only if it could be trusted.</response>
+    /// <response code="400">If the provider is not supported.</response>
     [HttpPost("notify/{providerName}")]
     [AllowAnonymous]
     public async Task<IActionResult> Notify(string providerName, CancellationToken cancellationToken)
     {
-        if (!Enum.TryParse(providerName, true, out PaymentProvider provider))
-            return BadRequest("Payment provider not valid.");
+        using var reader = new StreamReader(Request.Body);
 
-        var adapter = adapterFactory.GetAdapter(provider);
+        var body = await reader.ReadToEndAsync(cancellationToken);
 
-        var webhookResponse = await adapter.ProcessWebhookAsync(Request, cancellationToken);
-
-        if (!webhookResponse.IsSignatureValid)
-            return Forbid();
-
-        var command = new UpdateStatusCommand(webhookResponse.PaymentId, webhookResponse.FinalStatus, webhookResponse.RawData);
-
-        await mediator.Send(command, cancellationToken);
+        await mediator.Send(new ProcessProviderEventCommand(providerName, body), cancellationToken);
 
         return Ok();
     }
 
     /// <summary>
-    /// Tokenizes a credit card with the specified payment provider for future use.
+    /// How a payment stands, asking the provider first when it is still in progress.
     /// </summary>
-    /// <param name="command">The tokenization request containing card details and provider.</param>
+    /// <remarks>
+    /// For the page the provider returns to: it never trusts what the provider appends to the URL and asks here.
+    /// </remarks>
+    /// <param name="id">Id of the payment.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <response code="200">Returns the token and masked card data on success.</response>
-    /// <response code="400">If the request data is invalid.</response>
-    [HttpPost("tokenize")]
-    public async Task<IActionResult> TokenizeCard([FromBody] TokenizeCardCommand command, CancellationToken cancellationToken)
+    /// <response code="200">The status of the payment.</response>
+    /// <response code="400">If the payment does not exist.</response>
+    [HttpPost("{id:guid}/refresh")]
+    public async Task<IActionResult> Refresh(Guid id, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
+        var result = await mediator.Send(new RefreshPaymentStatusCommand(id), cancellationToken);
 
         return Ok(result);
     }

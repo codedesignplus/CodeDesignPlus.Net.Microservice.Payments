@@ -91,8 +91,7 @@ public class TenantScopedPaymentsTest
             TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
 
         return PaymentAggregate.Create(
-            Guid.NewGuid(), module, Guid.NewGuid(), subTotal, tax, subTotal + tax, buyer, null,
-            PaymentMethodValue.Create("VISA", null, CreditCardValue.Create("tok", "4242", "2030/12", "HOLDER", "cvv")),
-            "Payment", PaymentProvider.Payu, tenant, buyerId);
+            Guid.NewGuid(), module, Guid.NewGuid(), subTotal, tax, subTotal + tax, buyer,
+            "Payment", "Wompi", false, tenant, buyerId);
     }
 }

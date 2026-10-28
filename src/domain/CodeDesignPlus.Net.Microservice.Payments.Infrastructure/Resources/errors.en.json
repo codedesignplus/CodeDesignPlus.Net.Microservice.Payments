@@ -24,6 +24,9 @@
     "320": "Payer Contact Phone Cannot Be Null Or Empty",
     "321": "The payment gateway rejected the request.",
     "322": "The payment method code '{0}' is not valid.",
-    "323": "The tenant to purge cannot be empty."
+    "323": "The tenant to purge cannot be empty.",
+    "360": "The payment gateway did not answer; try again in a few minutes.",
+    "361": "The key of the collection account is not one the payment gateway recognizes.",
+    "362": "The amount cannot be expressed in cents of its currency."
   }
 }

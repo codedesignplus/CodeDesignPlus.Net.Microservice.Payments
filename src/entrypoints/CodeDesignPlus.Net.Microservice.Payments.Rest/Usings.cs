@@ -1,4 +1,4 @@
-﻿global using CodeDesignPlus.Microservice.Api.Dtos;
+global using CodeDesignPlus.Microservice.Api.Dtos;
 global using CodeDesignPlus.Net.Logger.Extensions;
 global using CodeDesignPlus.Net.Mongo.Extensions;
 global using CodeDesignPlus.Net.Observability.Extensions;
@@ -22,7 +22,6 @@ global using CodeDesignPlus.Net.Microservice.Payments.Application.Banks.Queries.
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.CreatePaymentMethod;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Commands.UpdatePaymentMethod;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.PaymentMethod.Queries.GetPaymentMethodsByProvider;
-global using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.CreateSavedCard;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.DeleteSavedCard;
 global using CodeDesignPlus.Net.Microservice.Payments.Application.SavedCard.Commands.SetDefaultCard;

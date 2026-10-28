@@ -35,7 +35,7 @@ public class Errors : IErrorCodes
 
     /// <summary>La pasarela rechazo la peticion y dijo por que.</summary>
     /// <remarks>
-    /// Quien la lanza le concatena el motivo que reporto PayU, que es dinamico. Asi el codigo se mantiene
+    /// Quien la lanza le concatena el motivo que reporto la pasarela, que es dinamico. Asi el codigo se mantiene
     /// estable para el cliente y el detalle real llega al ProblemDetails, en vez de quedarse en un log.
     /// </remarks>
     public static readonly Error PaymentGatewayRejectedTheRequest = new("321");
@@ -43,4 +43,9 @@ public class Errors : IErrorCodes
     public static readonly Error PaymentMethodCodeIsNotValid = new("322");
 
     public static readonly Error TenantToPurgeIsEmpty = new("323");
+
+    // Wompi and the Vault (pendings/660)
+    public static readonly Error PaymentProviderIsUnavailable = new("360");
+    public static readonly Error PaymentProviderKeyIsNotRecognized = new("361");
+    public static readonly Error AmountCannotBeExpressedInCents = new("362");
 }
