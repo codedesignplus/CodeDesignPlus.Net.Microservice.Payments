@@ -1,6 +1,7 @@
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Exceptions.Extensions;
 using CodeDesignPlus.Net.Exceptions.Guards;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.Vault.Abstractions;
 using CodeDesignPlus.Net.Vault.Abstractions.Options;
@@ -13,14 +14,16 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Vault
 /// </summary>
 /// <remarks>
 /// The context is the one configured in <c>Vault:Transit:SecretContexts:merchant_account</c> joined to the tenant id:
-/// a ciphertext copied from one tenant's account to another's does not decrypt. The secrets of an account are
-/// encrypted in one batch, so they share the Transit key the SDK creates for that batch, whose name the account keeps.
+/// a ciphertext copied from one tenant's account to another's does not decrypt. Every account is encrypted with the same
+/// key, <c>PaymentProviders:SecretsKeyName</c>, which the SDK creates derived on first use and refuses if it exists
+/// without derivation; a key per encryption would leave tens of thousands of keys in the Vault, orphaned at every
+/// rotation. The secrets of an account go in one batch.
 /// <para>
 /// A Vault that does not answer is reported as <see cref="Errors.MerchantSecretsVaultIsUnavailable"/>, which the
 /// entrypoints answer as unavailable so the caller retries; nothing falls back to secrets in clear.
 /// </para>
 /// </remarks>
-public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<VaultOptions> options, ILogger<VaultMerchantSecretCipher> logger) : IMerchantSecretCipher
+public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<VaultOptions> options, IOptions<PaymentProvidersOptions> providersOptions, ILogger<VaultMerchantSecretCipher> logger) : IMerchantSecretCipher
 {
     /// <summary>
     /// Name of the secret context in <c>Vault:Transit:SecretContexts</c>.
@@ -42,9 +45,9 @@ public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<Va
 
         var context = ContextOf(tenant);
 
-        var (keyName, ciphertexts) = await CallVaultAsync(() => transit.EncryptAsync(plain, context), tenant);
+        var ciphertexts = await CallVaultAsync(() => transit.EncryptAsync(providersOptions.Value.SecretsKeyName, plain, context), tenant);
 
-        return new SealedSecrets(keyName, ciphertexts[0], ciphertexts[1], ciphertexts[2], secrets.HasPayouts ? ciphertexts[3] : null, secrets.HasPayouts ? ciphertexts[4] : null);
+        return new SealedSecrets(ciphertexts[0], ciphertexts[1], ciphertexts[2], secrets.HasPayouts ? ciphertexts[3] : null, secrets.HasPayouts ? ciphertexts[4] : null);
     }
 
     /// <inheritdoc/>
@@ -64,7 +67,7 @@ public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<Va
 
         var context = ContextOf(tenant);
 
-        var plain = await CallVaultAsync(() => transit.DecryptAsync(secrets.KeyName, ciphertexts, context), tenant);
+        var plain = await CallVaultAsync(() => transit.DecryptAsync(providersOptions.Value.SecretsKeyName, ciphertexts, context), tenant);
 
         return new MerchantSecrets(plain[0], plain[1], plain[2], hasPayouts ? plain[3] : null, hasPayouts ? plain[4] : null);
     }

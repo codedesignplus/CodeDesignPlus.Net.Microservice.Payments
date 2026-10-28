@@ -101,5 +101,5 @@ public class MerchantAccountAggregateTest
         Assert.True(account.PayoutsEnabled);
     }
 
-    private static MerchantConnection Connection(string? payoutsSourceAccountId = null) => new(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4444");
+    private static MerchantConnection Connection(string? payoutsSourceAccountId = null) => new(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4444");
 }

@@ -138,7 +138,7 @@ public class SecretsNeverInClearTest
         {
             static string Seal(string? value) => value is null ? null! : "vault:v1:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)));
 
-            return Task.FromResult(new SealedSecrets("transit-key", Seal(secrets.PrivateKey), Seal(secrets.EventsSecret), Seal(secrets.IntegritySecret), secrets.PayoutsPrincipalId is null ? null : Seal(secrets.PayoutsPrincipalId), secrets.PayoutsApiKey is null ? null : Seal(secrets.PayoutsApiKey)));
+            return Task.FromResult(new SealedSecrets(Seal(secrets.PrivateKey), Seal(secrets.EventsSecret), Seal(secrets.IntegritySecret), secrets.PayoutsPrincipalId is null ? null : Seal(secrets.PayoutsPrincipalId), secrets.PayoutsApiKey is null ? null : Seal(secrets.PayoutsApiKey)));
         }
 
         public Task<MerchantSecrets> OpenAsync(Guid tenant, SealedSecrets secrets, CancellationToken cancellationToken) => throw new NotSupportedException();

@@ -48,6 +48,13 @@ public class PaymentProvidersOptions : IValidatableObject
     public TimeSpan ReconciliationMinimumAge { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>
+    /// Transit key that encrypts the secrets of every tenant's collection account. It is derived by context: the
+    /// tenant in the context keeps one tenant's ciphertext from decrypting as another's.
+    /// </summary>
+    [Required]
+    public string SecretsKeyName { get; set; } = null!;
+
+    /// <summary>
     /// How long the decrypted secrets of an account stay in this process's memory. Short on purpose: it only absorbs
     /// the peaks, and a rotated key in another process is noticed through the version of the account anyway.
     /// </summary>

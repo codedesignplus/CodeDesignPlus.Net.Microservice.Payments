@@ -24,7 +24,7 @@ public class MerchantAccountConnectorTest
     public MerchantAccountConnectorTest()
     {
         providers.Setup(x => x.GetCredentials("Wompi")).Returns(validator.Object);
-        cipher.Setup(x => x.SealAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null));
+        cipher.Setup(x => x.SealAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new SealedSecrets("vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null));
         Validates(true, MerchantAccountEnvironment.Sandbox);
     }
 

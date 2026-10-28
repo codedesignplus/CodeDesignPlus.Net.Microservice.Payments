@@ -58,7 +58,7 @@ public class MerchantAccountCommandsTest
 
         connector
             .Setup(x => x.ValidateAndStoreAsync(It.IsAny<MerchantAccountAggregate>(), It.IsAny<MerchantKeys>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", null, null));
+            .ReturnsAsync(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", null, null));
     }
 
     [Fact]
