@@ -41,6 +41,7 @@
     "348": "The collection account does not have payments to third parties connected.",
     "349": "To connect payments to third parties, enter the user, the key and the source account.",
     "350": "The organization is required.",
-    "351": "The payment gateway of the account cannot pay third parties."
+    "351": "The payment gateway of the account cannot pay third parties.",
+    "352": "The payment gateway rejected the keys of the collection account."
   }
 }

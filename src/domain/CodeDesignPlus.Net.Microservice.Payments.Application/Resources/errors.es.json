@@ -41,6 +41,7 @@
     "348": "La cuenta de recaudo no tiene conectados los pagos a terceros.",
     "349": "Para conectar los pagos a terceros, escribe el usuario, la llave y la cuenta de origen.",
     "350": "La organización es obligatoria.",
-    "351": "La pasarela de la cuenta no puede hacer pagos a terceros."
+    "351": "La pasarela de la cuenta no puede hacer pagos a terceros.",
+    "352": "La pasarela rechazó las llaves de la cuenta de recaudo."
   }
 }

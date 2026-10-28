@@ -24,6 +24,7 @@ public class ProcessProviderEventCommandHandlerTest
     private readonly Mock<IPaymentProviderFactory> providers = new();
     private readonly Mock<IMerchantCredentialsResolver> resolver = new();
     private readonly Mock<IMediator> mediator = new();
+    private readonly Mock<IMerchantAccountHealth> health = new();
 
     public ProcessProviderEventCommandHandlerTest()
     {
@@ -48,7 +49,7 @@ public class ProcessProviderEventCommandHandlerTest
     [Fact]
     public async Task Handle_SignatureOfAnotherSecret_IsDiscarded()
     {
-        // Arrange
+        // Arrange: a forged event; the provider knows nothing of what it claims.
         collect.Setup(x => x.IsAuthentic(Body, It.IsAny<MerchantCredentials>())).Returns(false);
 
         // Act
@@ -56,6 +57,45 @@ public class ProcessProviderEventCommandHandlerTest
 
         // Assert
         mediator.Verify(x => x.Send(It.IsAny<UpdateStatusCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ForgedEvent_DoesNotCountAgainstTheAccount()
+    {
+        // Arrange: whoever knows a payment id must not be able to invalidate its account by posting bad signatures.
+        collect.Setup(x => x.IsAuthentic(Body, It.IsAny<MerchantCredentials>())).Returns(false);
+        collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(Outcome("tx-other", PaymentStatus.Failed));
+
+        // Act
+        await Handle();
+
+        // Assert
+        health.Verify(x => x.ReportRejectionAsync(It.IsAny<PaymentAggregate>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_GenuineEventWithWrongStoredSecret_AppliesTheProviderAnswerAndCountsARejection()
+    {
+        // Arrange: the provider confirms the same transaction, so the event was genuine and the stored secret is wrong.
+        collect.Setup(x => x.IsAuthentic(Body, It.IsAny<MerchantCredentials>())).Returns(false);
+        collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(Outcome("tx-1", PaymentStatus.Succeeded));
+
+        // Act
+        await Handle();
+
+        // Assert
+        health.Verify(x => x.ReportRejectionAsync(payment, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.Status == PaymentStatus.Succeeded), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_AuthenticEvent_ReportsTheKeysWork()
+    {
+        // Act
+        await Handle();
+
+        // Assert
+        health.Verify(x => x.ReportAcceptanceAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -111,6 +151,8 @@ public class ProcessProviderEventCommandHandlerTest
         mediator.Verify(x => x.Send(It.IsAny<UpdateStatusCommand>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    private static CollectOutcome Outcome(string transactionId, PaymentStatus status) => new(status, transactionId, Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = status.ToString() });
+
     private void Notify(string reference, PaymentStatus status)
     {
         var outcome = new CollectOutcome(status, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = status.ToString() });
@@ -120,7 +162,7 @@ public class ProcessProviderEventCommandHandlerTest
 
     private Task Handle()
     {
-        var handler = new ProcessProviderEventCommandHandler(repository.Object, providers.Object, resolver.Object, mediator.Object, Mock.Of<ILogger<ProcessProviderEventCommandHandler>>());
+        var handler = new ProcessProviderEventCommandHandler(repository.Object, providers.Object, resolver.Object, health.Object, mediator.Object, Mock.Of<ILogger<ProcessProviderEventCommandHandler>>());
 
         return handler.Handle(new ProcessProviderEventCommand("wompi", Body), CancellationToken.None);
     }

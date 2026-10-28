@@ -97,6 +97,17 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     public Instant? LastValidatedAt { get; private set; }
 
     /// <summary>
+    /// How many times in a row the provider rejected the keys since they last worked. One rejection may be transient;
+    /// the account is invalidated only when they repeat.
+    /// </summary>
+    public int ConsecutiveRejections { get; private set; }
+
+    /// <summary>
+    /// Why the provider stopped accepting the keys, while the account is <see cref="MerchantAccountStatus.Invalid"/>.
+    /// </summary>
+    public string? InvalidReason { get; private set; }
+
+    /// <summary>
     /// Whether the account can pay third parties.
     /// </summary>
     public bool PayoutsEnabled => Status == MerchantAccountStatus.Active && !string.IsNullOrEmpty(PayoutsSourceAccountId);
@@ -176,6 +187,8 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         DomainGuard.IsTrue(Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Errors.MerchantAccountIsNotConnected);
 
         Status = MerchantAccountStatus.Disabled;
+        InvalidReason = null;
+        ConsecutiveRejections = 0;
         Environment = null;
         PublicKey = null;
         MerchantName = null;
@@ -189,6 +202,97 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         AddEvent(MerchantAccountDisconnectedDomainEvent.Create(Id, Tenant));
+    }
+
+    /// <summary>
+    /// Counts a rejection of the keys by the provider and invalidates the account when they repeat.
+    /// </summary>
+    /// <param name="reason">What the provider rejected, for the record; never a secret.</param>
+    /// <param name="threshold">How many rejections in a row invalidate the account.</param>
+    /// <returns>Whether the account changed and must be saved.</returns>
+    public bool RegisterRejection(string reason, int threshold)
+    {
+        DomainGuard.IsNullOrEmpty(reason, Errors.FailureReasonIsRequired);
+
+        if (Status != MerchantAccountStatus.Active)
+        {
+            return false;
+        }
+
+        ConsecutiveRejections++;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        if (ConsecutiveRejections >= threshold)
+        {
+            Invalidate(reason, null);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// The provider accepted the keys again: earlier rejections were transient.
+    /// </summary>
+    /// <returns>Whether the account changed and must be saved.</returns>
+    public bool RegisterAcceptance()
+    {
+        if (ConsecutiveRejections == 0)
+        {
+            return false;
+        }
+
+        ConsecutiveRejections = 0;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        return true;
+    }
+
+    /// <summary>
+    /// The provider no longer accepts the keys: the tenant stops charging online until it replaces them.
+    /// </summary>
+    /// <param name="reason">What the provider rejected, for the record; never a secret.</param>
+    /// <param name="updatedBy">Who checked the keys, or null when the platform noticed it by itself.</param>
+    public void Invalidate(string reason, Guid? updatedBy)
+    {
+        DomainGuard.IsNullOrEmpty(reason, Errors.FailureReasonIsRequired);
+        DomainGuard.IsTrue(Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Errors.MerchantAccountIsNotConnected);
+
+        var wasActive = Status == MerchantAccountStatus.Active;
+
+        Status = MerchantAccountStatus.Invalid;
+        InvalidReason = reason;
+        ConsecutiveRejections = 0;
+        UpdatedBy = updatedBy;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        if (wasActive)
+        {
+            AddEvent(MerchantAccountInvalidatedDomainEvent.Create(Id, Tenant, Provider!, reason));
+        }
+    }
+
+    /// <summary>
+    /// The stored keys were checked again against the provider and work.
+    /// </summary>
+    /// <param name="updatedBy">Who checked them.</param>
+    public void ConfirmKeys(Guid updatedBy)
+    {
+        DomainGuard.IsTrue(Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Errors.MerchantAccountIsNotConnected);
+
+        var wasInvalid = Status == MerchantAccountStatus.Invalid;
+        var now = SystemClock.Instance.GetCurrentInstant();
+
+        Status = MerchantAccountStatus.Active;
+        InvalidReason = null;
+        ConsecutiveRejections = 0;
+        LastValidatedAt = now;
+        UpdatedBy = updatedBy;
+        UpdatedAt = now;
+
+        if (wasInvalid)
+        {
+            AddEvent(MerchantAccountRevalidatedDomainEvent.Create(Id, Tenant, Provider!));
+        }
     }
 
     /// <summary>
@@ -213,6 +317,8 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         var now = SystemClock.Instance.GetCurrentInstant();
 
         Status = MerchantAccountStatus.Active;
+        InvalidReason = null;
+        ConsecutiveRejections = 0;
         Environment = connection.Environment;
         PublicKey = connection.PublicKey;
         MerchantName = connection.MerchantName;

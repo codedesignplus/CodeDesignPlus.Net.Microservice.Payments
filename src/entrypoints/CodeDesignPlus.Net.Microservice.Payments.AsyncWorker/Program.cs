@@ -41,6 +41,14 @@ builder.Services.AddGrpcClients(builder.Configuration);
 // coordinan entre si.
 builder.Services.AddHangfire<Program>(builder.Configuration);
 
+// A quien se avisa cuando una cuenta de recaudo deja de funcionar (regla 55): configuracion, porque este micro no
+// conoce los roles del producto que lo usa.
+builder.Services
+    .AddOptions<CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Notifications.MerchantAccountNoticesOptions>()
+    .Bind(builder.Configuration.GetSection(CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Notifications.MerchantAccountNoticesOptions.Section))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 var app = builder.Build();
 
 app.UseHealthChecks();

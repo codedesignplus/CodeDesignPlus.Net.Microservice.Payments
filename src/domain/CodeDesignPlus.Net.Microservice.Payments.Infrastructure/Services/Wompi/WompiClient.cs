@@ -139,6 +139,7 @@ public sealed class WompiClient(IHttpClientFactory httpClientFactory, IOptions<W
         using var response = await SendAsync(request, cancellationToken);
 
         await EnsureAvailableAsync(response, cancellationToken);
+        EnsureKeysAccepted(response);
 
         InfrastructureGuard.IsFalse(response.IsSuccessStatusCode, Errors.PaymentGatewayRejectedTheRequest);
 
@@ -163,6 +164,7 @@ public sealed class WompiClient(IHttpClientFactory httpClientFactory, IOptions<W
         using var response = await SendAsync(message, cancellationToken);
 
         await EnsureAvailableAsync(response, cancellationToken);
+        EnsureKeysAccepted(response);
 
         InfrastructureGuard.IsFalse(response.IsSuccessStatusCode, Errors.PaymentGatewayRejectedTheRequest);
 
@@ -230,6 +232,17 @@ public sealed class WompiClient(IHttpClientFactory httpClientFactory, IOptions<W
 
     // Wompi answers 401 to a key it does not accept and 404 or 422 to a public key it does not know.
     private static bool IsRejection(HttpStatusCode status) => status is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.NotFound or HttpStatusCode.UnprocessableEntity;
+
+    // A rejected key is told apart from any other refusal: repeated, it invalidates the collection account.
+    private static void EnsureKeysAccepted(HttpResponseMessage response)
+    {
+        if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        {
+            var error = Application.Errors.MerchantKeysRejectedByProvider;
+
+            throw new CodeDesignPlusException(Layer.Infrastructure, error.GetCode(), error.GetMessage());
+        }
+    }
 
     private async Task EnsureAvailableAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

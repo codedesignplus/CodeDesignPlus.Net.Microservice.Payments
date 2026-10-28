@@ -84,4 +84,7 @@ public class Errors: IErrorCodes
     public static readonly Error PayoutsCredentialsAreIncomplete = new("349");
     public static readonly Error TenantIsRequired = new("350");
     public static readonly Error PaymentProviderCannotPayThirdParties = new("351");
+
+    // Keys rejected by the provider (pendings/660)
+    public static readonly Error MerchantKeysRejectedByProvider = new("352");
 }

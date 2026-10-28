@@ -44,6 +44,11 @@ public sealed record MerchantSecrets(string PrivateKey, string EventsSecret, str
 public sealed record MerchantCredentials(string Provider, MerchantAccountEnvironment Environment, string PublicKey, MerchantSecrets Secrets, string? PayoutsSourceAccountId)
 {
     /// <summary>
+    /// Rejections of these keys the account has counted since they last worked; 0 for the platform's account.
+    /// </summary>
+    public int PendingRejections { get; init; }
+
+    /// <summary>
     /// Never prints a secret.
     /// </summary>
     /// <returns>A redacted description.</returns>

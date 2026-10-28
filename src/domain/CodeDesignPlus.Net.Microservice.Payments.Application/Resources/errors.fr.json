@@ -41,6 +41,7 @@
     "348": "Le compte d'encaissement n'a pas les paiements à des tiers connectés.",
     "349": "Pour connecter les paiements à des tiers, saisissez l'utilisateur, la clé et le compte d'origine.",
     "350": "L'organisation est obligatoire.",
-    "351": "La passerelle du compte ne peut pas payer des tiers."
+    "351": "La passerelle du compte ne peut pas payer des tiers.",
+    "352": "La passerelle a refusé les clés du compte d'encaissement."
   }
 }

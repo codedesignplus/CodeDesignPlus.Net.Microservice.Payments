@@ -95,6 +95,6 @@ public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repos
             cache.Set(account.Id, account.Version, secrets);
         }
 
-        return new MerchantCredentials(account.Provider, environment, account.PublicKey, secrets, account.PayoutsSourceAccountId);
+        return new MerchantCredentials(account.Provider, environment, account.PublicKey, secrets, account.PayoutsSourceAccountId) { PendingRejections = account.ConsecutiveRejections };
     }
 }

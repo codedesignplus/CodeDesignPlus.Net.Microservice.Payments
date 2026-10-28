@@ -45,5 +45,6 @@ public class Startup : IStartup
         services.AddSingleton<IMerchantSecretsCache, MerchantSecretsCache>();
         services.AddScoped<IMerchantCredentialsResolver, MerchantCredentialsResolver>();
         services.AddScoped<IMerchantAccountConnector, MerchantAccountConnector>();
+        services.AddScoped<IMerchantAccountHealth, MerchantAccountHealth>();
     }
 }

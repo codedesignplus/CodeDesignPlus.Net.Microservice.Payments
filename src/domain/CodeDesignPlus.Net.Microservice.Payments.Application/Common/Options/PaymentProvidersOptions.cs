@@ -39,7 +39,7 @@ public class PaymentProvidersOptions : IValidatableObject
     /// <summary>
     /// How long the provider's hosted page accepts a payment after it is created.
     /// </summary>
-    public TimeSpan CheckoutLifetime { get; set; } = TimeSpan.FromHours(1);
+    public TimeSpan CheckoutLifetime { get; set; } = TimeSpan.FromMinutes(15);
 
     /// <summary>
     /// How old a payment in progress must be before the reconciliation asks the provider about it, so the payer still
@@ -59,6 +59,12 @@ public class PaymentProvidersOptions : IValidatableObject
     /// the peaks, and a rotated key in another process is noticed through the version of the account anyway.
     /// </summary>
     public TimeSpan SecretsCacheLifetime { get; set; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>
+    /// How many rejections of the keys in a row invalidate a collection account. More than one, so a transient failure
+    /// never stops a tenant from charging online.
+    /// </summary>
+    public int InvalidateAfterRejections { get; set; } = 3;
 
     /// <summary>
     /// How many payments the reconciliation asks about in a run.
@@ -103,6 +109,11 @@ public class PaymentProvidersOptions : IValidatableObject
         if (SecretsCacheLifetime <= TimeSpan.Zero)
         {
             yield return new ValidationResult("SecretsCacheLifetime must be greater than zero.", [nameof(SecretsCacheLifetime)]);
+        }
+
+        if (InvalidateAfterRejections <= 0)
+        {
+            yield return new ValidationResult("InvalidateAfterRejections must be greater than zero.", [nameof(InvalidateAfterRejections)]);
         }
 
         if (ReconciliationBatchSize <= 0)

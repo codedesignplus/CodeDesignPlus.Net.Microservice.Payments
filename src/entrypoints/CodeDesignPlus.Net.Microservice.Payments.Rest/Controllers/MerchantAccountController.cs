@@ -1,6 +1,9 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.ConnectMerchantAccount;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.DisconnectMerchantAccount;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.ReplaceMerchantAccountKeys;
+using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.ValidateMerchantAccount;
+using CodeDesignPlus.Net.Exceptions;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Queries.GetMerchantAccount;
 using CodeDesignPlus.Net.Security.Abstractions;
 
@@ -60,6 +63,29 @@ public class MerchantAccountController(IMediator mediator, IUserContext user) : 
         var result = await mediator.Send(command, cancellationToken);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Checks the stored keys against the provider again: the account ends Active when they work and Invalid when the
+    /// provider rejects them.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">The account after the check, without secrets.</response>
+    /// <response code="400">If the account is not connected.</response>
+    /// <response code="503">If the provider or the Vault did not answer; the account is left as it was.</response>
+    [HttpPost("validate")]
+    public async Task<IActionResult> Validate(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await mediator.Send(new ValidateMerchantAccountCommand(), cancellationToken);
+
+            return Ok(result);
+        }
+        catch (CodeDesignPlusException exception) when (TransientFailures.IsTransient(exception))
+        {
+            return Problem(detail: exception.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
     }
 
     /// <summary>

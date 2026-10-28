@@ -41,6 +41,7 @@
     "348": "A conta de recebimento não tem os pagamentos a terceiros conectados.",
     "349": "Para conectar os pagamentos a terceiros, informe o usuário, a chave e a conta de origem.",
     "350": "A organização é obrigatória.",
-    "351": "O gateway da conta não pode fazer pagamentos a terceiros."
+    "351": "O gateway da conta não pode fazer pagamentos a terceiros.",
+    "352": "O gateway recusou as chaves da conta de recebimento."
   }
 }

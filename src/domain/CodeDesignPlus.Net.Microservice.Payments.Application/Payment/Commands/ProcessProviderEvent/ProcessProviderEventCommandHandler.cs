@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
@@ -13,12 +14,18 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// Only its reference is read first: it is the id of the payment, which leads to the account and to that account's
 /// secret. Only once the signature checks out is anything else in the event believed.
 /// <para>
+/// When the signature does not match, the provider is asked about the payment with the private key. If it reports the
+/// same transaction and status, the event was genuine and it is the stored events secret that is wrong: the outcome is
+/// applied from the provider's answer and the account counts a rejection. A forged event does not match the provider's
+/// answer, so it can neither apply anything nor invalidate an account.
+/// </para>
+/// <para>
 /// An event that cannot be trusted is discarded and logged, never applied: an unknown reference (another
 /// environment, or a forged one), an account without keys, or a wrong signature. The webhook still answers 200 so the
 /// provider does not keep retrying something that will never be accepted.
 /// </para>
 /// </remarks>
-public class ProcessProviderEventCommandHandler(IPaymentRepository repository, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMediator mediator, ILogger<ProcessProviderEventCommandHandler> logger) : IRequestHandler<ProcessProviderEventCommand>
+public class ProcessProviderEventCommandHandler(IPaymentRepository repository, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMerchantAccountHealth health, IMediator mediator, ILogger<ProcessProviderEventCommandHandler> logger) : IRequestHandler<ProcessProviderEventCommand>
 {
     public async Task Handle(ProcessProviderEventCommand request, CancellationToken cancellationToken)
     {
@@ -60,14 +67,27 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
             return;
         }
 
+        var outcome = notification.Outcome;
+
         if (!collect.IsAuthentic(request.Body, credentials))
         {
-            logger.LogWarning("Event from {Provider} for payment {PaymentId} of tenant {Tenant} discarded: its signature does not match the account's secret.", collect.Code, paymentId, payment.Tenant);
+            var confirmed = await ConfirmWithProviderAsync(collect, payment, credentials, outcome, cancellationToken);
 
-            return;
+            if (confirmed is null)
+            {
+                logger.LogWarning("Event from {Provider} for payment {PaymentId} of tenant {Tenant} discarded: its signature does not match the account's secret.", collect.Code, paymentId, payment.Tenant);
+
+                return;
+            }
+
+            await health.ReportRejectionAsync(payment, "The events secret does not verify the provider's events.", cancellationToken);
+
+            outcome = confirmed;
         }
-
-        var outcome = notification.Outcome;
+        else
+        {
+            await health.ReportAcceptanceAsync(payment, credentials, cancellationToken);
+        }
 
         if (!outcome.IsFinal)
         {
@@ -77,5 +97,24 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
         }
 
         await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType), cancellationToken);
+    }
+
+    /// <summary>
+    /// What the provider says about the payment, when it matches the unverified event; null otherwise.
+    /// </summary>
+    private async Task<CollectOutcome?> ConfirmWithProviderAsync(ICollectProvider collect, PaymentAggregate payment, MerchantCredentials credentials, CollectOutcome claimed, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var known = await collect.GetOutcomeAsync(payment, credentials, cancellationToken);
+
+            return known is not null && known.TransactionId == claimed.TransactionId && known.Status == claimed.Status ? known : null;
+        }
+        catch (CodeDesignPlusException exception) when (health.IsRejection(exception))
+        {
+            await health.ReportRejectionAsync(payment, "The private key was rejected.", cancellationToken);
+
+            return null;
+        }
     }
 }

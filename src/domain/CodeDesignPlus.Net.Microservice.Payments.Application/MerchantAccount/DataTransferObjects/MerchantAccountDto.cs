@@ -80,6 +80,11 @@ public class MerchantAccountDto
     public Instant? LastValidatedAt { get; set; }
 
     /// <summary>
+    /// Why the provider stopped accepting the keys, while the account is invalid.
+    /// </summary>
+    public string? InvalidReason { get; set; }
+
+    /// <summary>
     /// The webhook URL the tenant must configure on its provider panel; the same for every tenant.
     /// </summary>
     public string? EventsUrl { get; set; }
@@ -106,6 +111,7 @@ public class MerchantAccountDto
         PayoutsSourceAccountId = account.PayoutsSourceAccountId,
         PayoutsApiKeyHint = account.PayoutsApiKeyHint,
         LastValidatedAt = account.LastValidatedAt,
+        InvalidReason = account.InvalidReason,
         EventsUrl = eventsUrl.ToString()
     };
 
