@@ -28,6 +28,7 @@
     "360": "La passerelle de paiement n'a pas répondu ; réessayez dans quelques minutes.",
     "361": "La clé du compte d'encaissement n'est pas reconnue par la passerelle.",
     "362": "Le montant ne peut pas être exprimé en centimes de sa devise.",
-    "363": "Le contexte du Vault qui chiffre les clés des comptes d'encaissement n'est pas configuré."
+    "363": "Le contexte du Vault qui chiffre les clés des comptes d'encaissement n'est pas configuré.",
+    "364": "Nous n'avons pas pu lire les clés du compte d'encaissement pour le moment ; réessayez dans quelques minutes."
   }
 }

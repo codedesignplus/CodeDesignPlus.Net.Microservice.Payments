@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.DisconnectMerchantAccount;
 
 /// <summary>
@@ -8,7 +10,7 @@ public record DisconnectMerchantAccountCommand : IRequest;
 /// <summary>
 /// Disconnecting forgets the ciphertext of the keys: without it the Vault has nothing to decrypt.
 /// </summary>
-public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IUserContext user, IPubSub pubsub) : IRequestHandler<DisconnectMerchantAccountCommand>
+public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IMerchantSecretsCache cache, IUserContext user, IPubSub pubsub) : IRequestHandler<DisconnectMerchantAccountCommand>
 {
     public async Task Handle(DisconnectMerchantAccountCommand request, CancellationToken cancellationToken)
     {
@@ -36,6 +38,8 @@ public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository 
 
             return true;
         }, cancellationToken);
+
+        cache.Forget(current!.Id);
 
         if (written)
         {

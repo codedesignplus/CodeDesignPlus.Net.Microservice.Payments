@@ -28,9 +28,9 @@ public interface IMerchantCredentialsResolver
 
 /// <summary>
 /// Resolves the merchant account of an operation: the platform's, from the configuration, or the tenant's, whose
-/// secrets are decrypted by the Vault for this operation only.
+/// secrets are decrypted by the Vault in one batch and kept in this process's memory for a short while.
 /// </summary>
-public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repository, IMerchantSecretCipher cipher, IPlatformMerchantAccount platformAccount) : IMerchantCredentialsResolver
+public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repository, IMerchantSecretCipher cipher, IMerchantSecretsCache cache, IPlatformMerchantAccount platformAccount) : IMerchantCredentialsResolver
 {
     /// <inheritdoc/>
     public async Task<MerchantCredentials> ForNewPaymentAsync(Guid tenant, bool platformAccount, CancellationToken cancellationToken)
@@ -86,7 +86,14 @@ public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repos
             return null;
         }
 
-        var secrets = await cipher.OpenAsync(account.Tenant, account.Secrets, cancellationToken);
+        var secrets = cache.Get(account.Id, account.Version);
+
+        if (secrets is null)
+        {
+            secrets = await cipher.OpenAsync(account.Tenant, account.Secrets, cancellationToken);
+
+            cache.Set(account.Id, account.Version, secrets);
+        }
 
         return new MerchantCredentials(account.Provider, environment, account.PublicKey, secrets, account.PayoutsSourceAccountId);
     }

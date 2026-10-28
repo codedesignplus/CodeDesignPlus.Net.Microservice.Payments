@@ -40,7 +40,9 @@ public class Startup : IStartup
         services.AddSingleton<IPlatformMerchantAccount, WompiPlatformAccount>();
 
         services.AddSingleton<IPaymentProviderFactory, PaymentProviderFactory>();
+        services.AddMemoryCache();
         services.AddSingleton<IMerchantSecretCipher, VaultMerchantSecretCipher>();
+        services.AddSingleton<IMerchantSecretsCache, MerchantSecretsCache>();
         services.AddScoped<IMerchantCredentialsResolver, MerchantCredentialsResolver>();
         services.AddScoped<IMerchantAccountConnector, MerchantAccountConnector>();
     }

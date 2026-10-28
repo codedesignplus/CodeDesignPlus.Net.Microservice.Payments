@@ -51,4 +51,7 @@ public class Errors : IErrorCodes
 
     // Transit context of the collection accounts (pendings/660)
     public static readonly Error MerchantSecretContextIsNotConfigured = new("363");
+
+    // Vault unavailable (pendings/660)
+    public static readonly Error MerchantSecretsVaultIsUnavailable = new("364");
 }

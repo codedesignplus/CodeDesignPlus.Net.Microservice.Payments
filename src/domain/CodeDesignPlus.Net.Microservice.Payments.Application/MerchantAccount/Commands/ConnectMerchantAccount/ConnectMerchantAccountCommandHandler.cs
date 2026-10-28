@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.DataTransferObjects;
 using Microsoft.Extensions.Options;
@@ -11,7 +12,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.C
 /// A tenant created before collection accounts existed has none: it is created here, routed by the country of the
 /// tenant in session, exactly as the consumer of the tenant's creation would have done.
 /// </remarks>
-public class ConnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IMerchantAccountConnector connector, IUserContext user, Security.Abstractions.ITenant tenantContext, IPubSub pubsub, IOptions<PaymentProvidersOptions> options) : IRequestHandler<ConnectMerchantAccountCommand, MerchantAccountDto>
+public class ConnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IMerchantAccountConnector connector, IUserContext user, Security.Abstractions.ITenant tenantContext, IPubSub pubsub, IMerchantSecretsCache cache, IOptions<PaymentProvidersOptions> options) : IRequestHandler<ConnectMerchantAccountCommand, MerchantAccountDto>
 {
     public async Task<MerchantAccountDto> Handle(ConnectMerchantAccountCommand request, CancellationToken cancellationToken)
     {
@@ -37,6 +38,8 @@ public class ConnectMerchantAccountCommandHandler(IMerchantAccountRepository rep
 
             return true;
         }, cancellationToken);
+
+        cache.Forget(saved.Id);
 
         await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 

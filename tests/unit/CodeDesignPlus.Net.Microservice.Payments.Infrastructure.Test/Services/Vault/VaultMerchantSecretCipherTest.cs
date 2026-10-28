@@ -65,11 +65,24 @@ public class VaultMerchantSecretCipherTest
         Assert.Equal(Errors.MerchantSecretContextIsNotConfigured.Code, exception.Code);
     }
 
+    [Fact]
+    public async Task OpenAsync_VaultDoesNotAnswer_ThrowsTheRetryableError()
+    {
+        // Arrange
+        transit.Setup(x => x.DecryptAsync(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<string>())).ThrowsAsync(new HttpRequestException("connection refused"));
+
+        // Act
+        var exception = await Assert.ThrowsAsync<CodeDesignPlusException>(() => Cipher().OpenAsync(Tenant, new SealedSecrets("transit-key", "c1", "c2", "c3", null, null), CancellationToken.None));
+
+        // Assert
+        Assert.Equal((Errors.MerchantSecretsVaultIsUnavailable.Code, true), (exception.Code, CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.TransientFailures.IsTransient(exception)));
+    }
+
     private VaultMerchantSecretCipher Cipher(Dictionary<string, string>? contexts = null)
     {
         var options = new VaultOptions();
         options.Transit.SecretContexts = contexts ?? new Dictionary<string, string> { [VaultMerchantSecretCipher.SecretContextName] = "payments-merchant" };
 
-        return new VaultMerchantSecretCipher(transit.Object, Options.Create(options));
+        return new VaultMerchantSecretCipher(transit.Object, Options.Create(options), Mock.Of<ILogger<VaultMerchantSecretCipher>>());
     }
 }

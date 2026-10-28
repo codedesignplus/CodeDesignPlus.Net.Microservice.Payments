@@ -12,6 +12,7 @@ public class MerchantCredentialsResolverTest
 {
     private readonly Mock<IMerchantAccountRepository> repository = new();
     private readonly Mock<IMerchantSecretCipher> cipher = new();
+    private readonly Mock<IMerchantSecretsCache> cache = new();
     private readonly Mock<IPlatformMerchantAccount> platform = new();
 
     [Fact]
@@ -110,5 +111,35 @@ public class MerchantCredentialsResolverTest
         Assert.Null(credentials);
     }
 
-    private MerchantCredentialsResolver Resolver() => new(repository.Object, cipher.Object, platform.Object);
+    [Fact]
+    public async Task ForNewPaymentAsync_SecretsCachedForThisVersion_DoesNotCallTheVault()
+    {
+        // Arrange
+        var account = TestData.ActiveAccount();
+        repository.Setup(x => x.GetByTenantAsync(TestData.Tenant, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        cache.Setup(x => x.Get(account.Id, account.Version)).Returns(TestData.Secrets());
+
+        // Act
+        await Resolver().ForNewPaymentAsync(TestData.Tenant, false, CancellationToken.None);
+
+        // Assert
+        cipher.Verify(x => x.OpenAsync(It.IsAny<Guid>(), It.IsAny<CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects.SealedSecrets>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ForNewPaymentAsync_SecretsNotCached_DecryptsOnceAndCachesThem()
+    {
+        // Arrange
+        var account = TestData.ActiveAccount();
+        repository.Setup(x => x.GetByTenantAsync(TestData.Tenant, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        cipher.Setup(x => x.OpenAsync(TestData.Tenant, account.Secrets!, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Secrets());
+
+        // Act
+        await Resolver().ForNewPaymentAsync(TestData.Tenant, false, CancellationToken.None);
+
+        // Assert
+        cache.Verify(x => x.Set(account.Id, account.Version, It.IsAny<MerchantSecrets>()), Times.Once);
+    }
+
+    private MerchantCredentialsResolver Resolver() => new(repository.Object, cipher.Object, cache.Object, platform.Object);
 }

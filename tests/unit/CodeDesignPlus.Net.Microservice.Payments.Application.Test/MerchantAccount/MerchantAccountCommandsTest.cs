@@ -31,6 +31,7 @@ public class MerchantAccountCommandsTest
     private readonly Mock<IMerchantAccountConnector> connector = new();
     private readonly Mock<IUserContext> user = new();
     private readonly Mock<IPubSub> pubsub = new();
+    private readonly Mock<IMerchantSecretsCache> cache = new();
     private MerchantAccountAggregate? stored;
 
     public MerchantAccountCommandsTest()
@@ -106,9 +107,10 @@ public class MerchantAccountCommandsTest
         stored = TestData.ActiveAccount();
 
         // Act
-        await new DisconnectMerchantAccountCommandHandler(repository.Object, user.Object, pubsub.Object).Handle(new DisconnectMerchantAccountCommand(), CancellationToken.None);
+        await new DisconnectMerchantAccountCommandHandler(repository.Object, cache.Object, user.Object, pubsub.Object).Handle(new DisconnectMerchantAccountCommand(), CancellationToken.None);
 
         // Assert
+        cache.Verify(x => x.Forget(stored!.Id), Times.Once);
         Assert.Equal((MerchantAccountStatus.Disabled, (SealedSecrets?)null, (string?)null), (stored!.Status, stored.Secrets, stored.PrivateKeyHint));
     }
 
@@ -143,7 +145,7 @@ public class MerchantAccountCommandsTest
         var tenant = new Mock<Security.Abstractions.ITenant>();
         tenant.SetupGet(x => x.Country).Returns(Country.Create(Guid.NewGuid(), "Colombia", "CO", "COL", 170, "+57", "America/Bogota", CodeDesignPlus.Net.ValueObjects.Financial.Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", 2, 170)));
 
-        return new ConnectMerchantAccountCommandHandler(repository.Object, connector.Object, user.Object, tenant.Object, pubsub.Object, Options());
+        return new ConnectMerchantAccountCommandHandler(repository.Object, connector.Object, user.Object, tenant.Object, pubsub.Object, cache.Object, Options());
     }
 
     private static ConnectMerchantAccountCommand ConnectCommand() => new("pub_test_tenant", "prv_test_1111", "events_2222", "integrity_3333", null, null, null);

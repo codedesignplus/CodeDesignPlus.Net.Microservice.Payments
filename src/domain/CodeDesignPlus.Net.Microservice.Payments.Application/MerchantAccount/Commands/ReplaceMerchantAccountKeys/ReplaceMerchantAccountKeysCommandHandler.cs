@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.DataTransferObjects;
 using Microsoft.Extensions.Options;
@@ -11,7 +12,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.C
 /// The new keys are validated before they replace the old ones in the Vault, so wrong keys leave the working ones in
 /// place.
 /// </remarks>
-public class ReplaceMerchantAccountKeysCommandHandler(IMerchantAccountRepository repository, IMerchantAccountConnector connector, IUserContext user, IPubSub pubsub, IOptions<PaymentProvidersOptions> options) : IRequestHandler<ReplaceMerchantAccountKeysCommand, MerchantAccountDto>
+public class ReplaceMerchantAccountKeysCommandHandler(IMerchantAccountRepository repository, IMerchantAccountConnector connector, IUserContext user, IPubSub pubsub, IMerchantSecretsCache cache, IOptions<PaymentProvidersOptions> options) : IRequestHandler<ReplaceMerchantAccountKeysCommand, MerchantAccountDto>
 {
     public async Task<MerchantAccountDto> Handle(ReplaceMerchantAccountKeysCommand request, CancellationToken cancellationToken)
     {
@@ -36,6 +37,8 @@ public class ReplaceMerchantAccountKeysCommandHandler(IMerchantAccountRepository
 
             return true;
         }, cancellationToken);
+
+        cache.Forget(saved.Id);
 
         await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 

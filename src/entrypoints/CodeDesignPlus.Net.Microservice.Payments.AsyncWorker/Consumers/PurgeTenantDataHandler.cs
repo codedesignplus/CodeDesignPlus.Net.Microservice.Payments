@@ -21,7 +21,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Consumers;
 /// </para>
 /// </remarks>
 [QueueName<PaymentAggregate>("PurgeTenantDataHandler")]
-public class PurgeTenantDataHandler(IPaymentRepository repository, ILogger<PurgeTenantDataHandler> logger) : IEventHandler<TenantPurgedDomainEvent>
+public class PurgeTenantDataHandler(IPaymentRepository repository, IMerchantSecretsCache cache, ILogger<PurgeTenantDataHandler> logger) : IEventHandler<TenantPurgedDomainEvent>
 {
     public async Task HandleAsync(TenantPurgedDomainEvent data, CancellationToken token)
     {
@@ -34,6 +34,8 @@ public class PurgeTenantDataHandler(IPaymentRepository repository, ILogger<Purge
         var payouts = await repository.DeleteByTenantAsync<PayoutAggregate>(tenant, token);
 
         var accounts = await repository.DeleteByTenantAsync<MerchantAccountAggregate>(tenant, token);
+
+        cache.Forget(MerchantAccountAggregate.IdFor(tenant));
 
         logger.LogInformation(
             "Tenant {TenantId} purged: {Payments} payments, {Beneficiaries} beneficiaries, {Disbursements} disbursements, {Rules} disbursement rules, {Payouts} payouts and {Accounts} collection accounts with their keys deleted",

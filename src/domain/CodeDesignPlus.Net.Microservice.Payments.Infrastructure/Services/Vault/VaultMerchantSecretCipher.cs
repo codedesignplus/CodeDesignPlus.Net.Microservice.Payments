@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Exceptions;
+using CodeDesignPlus.Net.Exceptions.Extensions;
 using CodeDesignPlus.Net.Exceptions.Guards;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.Vault.Abstractions;
@@ -13,8 +15,12 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Vault
 /// The context is the one configured in <c>Vault:Transit:SecretContexts:merchant_account</c> joined to the tenant id:
 /// a ciphertext copied from one tenant's account to another's does not decrypt. The secrets of an account are
 /// encrypted in one batch, so they share the Transit key the SDK creates for that batch, whose name the account keeps.
+/// <para>
+/// A Vault that does not answer is reported as <see cref="Errors.MerchantSecretsVaultIsUnavailable"/>, which the
+/// entrypoints answer as unavailable so the caller retries; nothing falls back to secrets in clear.
+/// </para>
 /// </remarks>
-public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<VaultOptions> options) : IMerchantSecretCipher
+public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<VaultOptions> options, ILogger<VaultMerchantSecretCipher> logger) : IMerchantSecretCipher
 {
     /// <summary>
     /// Name of the secret context in <c>Vault:Transit:SecretContexts</c>.
@@ -34,7 +40,9 @@ public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<Va
             plain.Add(secrets.PayoutsApiKey!);
         }
 
-        var (keyName, ciphertexts) = await transit.EncryptAsync(plain, ContextOf(tenant));
+        var context = ContextOf(tenant);
+
+        var (keyName, ciphertexts) = await CallVaultAsync(() => transit.EncryptAsync(plain, context), tenant);
 
         return new SealedSecrets(keyName, ciphertexts[0], ciphertexts[1], ciphertexts[2], secrets.HasPayouts ? ciphertexts[3] : null, secrets.HasPayouts ? ciphertexts[4] : null);
     }
@@ -54,9 +62,26 @@ public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<Va
             ciphertexts.Add(secrets.PayoutsApiKey!);
         }
 
-        var plain = await transit.DecryptAsync(secrets.KeyName, ciphertexts, ContextOf(tenant));
+        var context = ContextOf(tenant);
+
+        var plain = await CallVaultAsync(() => transit.DecryptAsync(secrets.KeyName, ciphertexts, context), tenant);
 
         return new MerchantSecrets(plain[0], plain[1], plain[2], hasPayouts ? plain[3] : null, hasPayouts ? plain[4] : null);
+    }
+
+    private async Task<T> CallVaultAsync<T>(Func<Task<T>> call, Guid tenant)
+    {
+        try
+        {
+            return await call();
+        }
+        catch (Exception exception) when (exception is not CodeDesignPlusException)
+        {
+            // Only the type and the tenant: the message of a Vault error may echo what it was given.
+            logger.LogWarning("The Vault did not encrypt or decrypt the keys of the collection account of tenant {Tenant}: {Error}", tenant, exception.GetType().Name);
+
+            throw new CodeDesignPlusException(Layer.Infrastructure, Errors.MerchantSecretsVaultIsUnavailable.GetCode(), Errors.MerchantSecretsVaultIsUnavailable.GetMessage());
+        }
     }
 
     private string ContextOf(Guid tenant)

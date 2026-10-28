@@ -1,6 +1,8 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ProcessProviderEvent;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.RefreshPaymentStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
+using CodeDesignPlus.Net.Exceptions;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
@@ -50,12 +52,15 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <remarks>
     /// The body is read raw because the signature is computed over it. Whose secret verifies it is decided by the
     /// event's reference, so one URL serves every tenant's merchant and the platform's. An event that cannot be
-    /// trusted is discarded and logged, and still answered 200 so the provider stops retrying it.
+    /// trusted is discarded and logged, and still answered 200 so the provider stops retrying it. When the Vault or
+    /// the provider does not answer, it is answered 503 so the provider retries; the reconciliation job recovers what
+    /// is left.
     /// </remarks>
     /// <param name="providerName">Code of the provider that posts the event (for example <c>wompi</c>).</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <response code="200">The event was received; it was applied only if it could be trusted.</response>
     /// <response code="400">If the provider is not supported.</response>
+    /// <response code="503">If the Vault or the provider did not answer; the provider should retry.</response>
     [HttpPost("notify/{providerName}")]
     [AllowAnonymous]
     public async Task<IActionResult> Notify(string providerName, CancellationToken cancellationToken)
@@ -64,7 +69,14 @@ public class PaymentController(IMediator mediator) : ControllerBase
 
         var body = await reader.ReadToEndAsync(cancellationToken);
 
-        await mediator.Send(new ProcessProviderEventCommand(providerName, body), cancellationToken);
+        try
+        {
+            await mediator.Send(new ProcessProviderEventCommand(providerName, body), cancellationToken);
+        }
+        catch (CodeDesignPlusException exception) when (TransientFailures.IsTransient(exception))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
 
         return Ok();
     }

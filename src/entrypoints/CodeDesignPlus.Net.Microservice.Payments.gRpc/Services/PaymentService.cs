@@ -6,6 +6,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Payout.Commands.Reque
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payout.DataTransferObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payout.Queries.GetPayout;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure;
+using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Authorization;
@@ -29,9 +30,17 @@ public class PaymentService(IMediator mediator, IMapper mapper) : Payment.Paymen
 
         var command = mapper.Map<InitiatePaymentCommand>(request);
 
-        var response = await mediator.Send(command, context.CancellationToken);
+        try
+        {
+            var response = await mediator.Send(command, context.CancellationToken);
 
-        return mapper.Map<InitiatePaymentResponse>(response);
+            return mapper.Map<InitiatePaymentResponse>(response);
+        }
+        catch (CodeDesignPlusException exception) when (TransientFailures.IsTransient(exception))
+        {
+            // Unavailable, not FailedPrecondition: the module can offer the payment again in a moment.
+            throw new RpcException(new Status(StatusCode.Unavailable, $"{exception.Code}: {exception.Message}"));
+        }
     }
 
     public override async Task<GetPaymentStatusResponse> GetPaymentStatus(GetPaymentStatusRequest request, ServerCallContext context)

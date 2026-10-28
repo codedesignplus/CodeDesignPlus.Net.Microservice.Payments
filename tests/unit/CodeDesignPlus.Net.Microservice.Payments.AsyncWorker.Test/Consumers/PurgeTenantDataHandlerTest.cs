@@ -43,7 +43,7 @@ public class PurgeTenantDataHandlerTest
     {
         var repository = new Mock<IPaymentRepository>();
         var tenant = Guid.NewGuid();
-        var handler = new PurgeTenantDataHandler(repository.Object, Mock.Of<ILogger<PurgeTenantDataHandler>>());
+        var handler = new PurgeTenantDataHandler(repository.Object, Mock.Of<CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts.IMerchantSecretsCache>(), Mock.Of<ILogger<PurgeTenantDataHandler>>());
 
         await handler.HandleAsync(TenantPurgedDomainEvent.Create(tenant, "Malpelo XXI"), CancellationToken.None);
 

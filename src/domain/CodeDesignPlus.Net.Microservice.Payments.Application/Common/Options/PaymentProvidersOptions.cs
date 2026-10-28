@@ -48,6 +48,12 @@ public class PaymentProvidersOptions : IValidatableObject
     public TimeSpan ReconciliationMinimumAge { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>
+    /// How long the decrypted secrets of an account stay in this process's memory. Short on purpose: it only absorbs
+    /// the peaks, and a rotated key in another process is noticed through the version of the account anyway.
+    /// </summary>
+    public TimeSpan SecretsCacheLifetime { get; set; } = TimeSpan.FromMinutes(10);
+
+    /// <summary>
     /// How many payments the reconciliation asks about in a run.
     /// </summary>
     public int ReconciliationBatchSize { get; set; } = 200;
@@ -85,6 +91,11 @@ public class PaymentProvidersOptions : IValidatableObject
         if (ReconciliationMinimumAge <= TimeSpan.Zero)
         {
             yield return new ValidationResult("ReconciliationMinimumAge must be greater than zero.", [nameof(ReconciliationMinimumAge)]);
+        }
+
+        if (SecretsCacheLifetime <= TimeSpan.Zero)
+        {
+            yield return new ValidationResult("SecretsCacheLifetime must be greater than zero.", [nameof(SecretsCacheLifetime)]);
         }
 
         if (ReconciliationBatchSize <= 0)
