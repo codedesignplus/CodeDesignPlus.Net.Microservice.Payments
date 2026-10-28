@@ -28,9 +28,9 @@ public interface IMerchantCredentialsResolver
 
 /// <summary>
 /// Resolves the merchant account of an operation: the platform's, from the configuration, or the tenant's, whose
-/// secrets are read from the Vault.
+/// secrets are decrypted by the Vault for this operation only.
 /// </summary>
-public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repository, IMerchantSecretStore secretStore, IPlatformMerchantAccount platformAccount) : IMerchantCredentialsResolver
+public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repository, IMerchantSecretCipher cipher, IPlatformMerchantAccount platformAccount) : IMerchantCredentialsResolver
 {
     /// <inheritdoc/>
     public async Task<MerchantCredentials> ForNewPaymentAsync(Guid tenant, bool platformAccount, CancellationToken cancellationToken)
@@ -81,13 +81,13 @@ public sealed class MerchantCredentialsResolver(IMerchantAccountRepository repos
 
     private async Task<MerchantCredentials?> ReadAsync(MerchantAccountAggregate account, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(account.SecretReference) || account.Environment is not { } environment || string.IsNullOrEmpty(account.Provider) || string.IsNullOrEmpty(account.PublicKey))
+        if (account.Secrets is null || account.Environment is not { } environment || string.IsNullOrEmpty(account.Provider) || string.IsNullOrEmpty(account.PublicKey))
         {
             return null;
         }
 
-        var secrets = await secretStore.GetAsync(account.SecretReference, cancellationToken);
+        var secrets = await cipher.OpenAsync(account.Tenant, account.Secrets, cancellationToken);
 
-        return secrets is null ? null : new MerchantCredentials(account.Provider, environment, account.PublicKey, secrets, account.PayoutsSourceAccountId);
+        return new MerchantCredentials(account.Provider, environment, account.PublicKey, secrets, account.PayoutsSourceAccountId);
     }
 }

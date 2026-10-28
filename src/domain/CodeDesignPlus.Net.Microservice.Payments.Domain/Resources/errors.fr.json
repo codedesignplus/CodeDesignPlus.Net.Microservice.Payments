@@ -162,7 +162,7 @@
     "326": "Le compte d'encaissement n'est pas connecté.",
     "327": "Les données de connexion du compte sont obligatoires.",
     "328": "La clé publique est obligatoire.",
-    "329": "La référence aux clés enregistrées est obligatoire.",
+    "329": "Les clés chiffrées du compte sont obligatoires.",
     "330": "Le montant encaissé doit être dans la devise du paiement.",
     "331": "L'identifiant du paiement à un tiers est obligatoire.",
     "332": "L'objet du paiement à un tiers est obligatoire.",

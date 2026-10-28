@@ -162,7 +162,7 @@
     "326": "A conta de recebimento não está conectada.",
     "327": "Os dados de conexão da conta são obrigatórios.",
     "328": "A chave pública é obrigatória.",
-    "329": "A referência às chaves armazenadas é obrigatória.",
+    "329": "As chaves criptografadas da conta são obrigatórias.",
     "330": "O valor capturado deve estar na moeda do pagamento.",
     "331": "O identificador do pagamento a terceiro é obrigatório.",
     "332": "O propósito do pagamento a terceiro é obrigatório.",

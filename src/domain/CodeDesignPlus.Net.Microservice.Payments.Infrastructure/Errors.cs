@@ -48,4 +48,7 @@ public class Errors : IErrorCodes
     public static readonly Error PaymentProviderIsUnavailable = new("360");
     public static readonly Error PaymentProviderKeyIsNotRecognized = new("361");
     public static readonly Error AmountCannotBeExpressedInCents = new("362");
+
+    // Transit context of the collection accounts (pendings/660)
+    public static readonly Error MerchantSecretContextIsNotConfigured = new("363");
 }

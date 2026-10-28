@@ -27,6 +27,7 @@
     "323": "La copropiedad a purgar no puede estar vacía.",
     "360": "La pasarela de pagos no respondió; intenta de nuevo en unos minutos.",
     "361": "La llave de la cuenta de recaudo no es una que la pasarela reconozca.",
-    "362": "El importe no se puede expresar en centavos de su moneda."
+    "362": "El importe no se puede expresar en centavos de su moneda.",
+    "363": "No está configurado el contexto del Vault que cifra las llaves de las cuentas de recaudo."
   }
 }

@@ -27,12 +27,12 @@ public sealed record MerchantKeys(string PublicKey, string PrivateKey, string Ev
 }
 
 /// <summary>
-/// Validates the keys a tenant pastes and stores their secrets in the Vault.
+/// Validates the keys a tenant pastes and encrypts their secrets with the Vault.
 /// </summary>
 public interface IMerchantAccountConnector
 {
     /// <summary>
-    /// Validates the keys against the provider of the account and stores their secrets.
+    /// Validates the keys against the provider of the account and encrypts their secrets, bound to its tenant.
     /// </summary>
     /// <param name="account">The account the keys are for; it must already have its provider.</param>
     /// <param name="keys">The keys the tenant pasted.</param>
@@ -45,7 +45,7 @@ public interface IMerchantAccountConnector
 /// <summary>
 /// Validates the keys before anything is stored: a tenant that pastes the wrong ones keeps the ones that worked.
 /// </summary>
-public sealed class MerchantAccountConnector(IPaymentProviderFactory providers, IMerchantSecretStore secretStore, IOptions<PaymentProvidersOptions> options, ILogger<MerchantAccountConnector> logger) : IMerchantAccountConnector
+public sealed class MerchantAccountConnector(IPaymentProviderFactory providers, IMerchantSecretCipher cipher, IOptions<PaymentProvidersOptions> options, ILogger<MerchantAccountConnector> logger) : IMerchantAccountConnector
 {
     /// <inheritdoc/>
     public async Task<MerchantConnection> ValidateAndStoreAsync(MerchantAccountAggregate account, MerchantKeys keys, CancellationToken cancellationToken)
@@ -79,13 +79,13 @@ public sealed class MerchantAccountConnector(IPaymentProviderFactory providers, 
         ApplicationGuard.IsFalse(validation.IsValid, Errors.MerchantKeysWereRejected);
         ApplicationGuard.IsTrue(validation.Environment != options.Value.Environment, Errors.MerchantKeysEnvironmentMismatch);
 
-        var reference = await secretStore.SaveAsync(account.Id, secrets, cancellationToken);
+        var sealedSecrets = await cipher.SealAsync(account.Tenant, secrets, cancellationToken);
 
         return new MerchantConnection(
             validation.Environment!.Value,
             publicKey,
             validation.MerchantName,
-            reference,
+            sealedSecrets,
             MerchantSecrets.HintOf(secrets.PrivateKey),
             MerchantSecrets.HintOf(secrets.EventsSecret),
             MerchantSecrets.HintOf(secrets.IntegritySecret),

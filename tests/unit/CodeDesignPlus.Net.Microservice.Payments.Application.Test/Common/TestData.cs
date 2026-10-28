@@ -33,7 +33,7 @@ internal static class TestData
     {
         var account = PendingAccount();
 
-        account.Connect(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", "ms-payments/merchant-accounts/x", "nant", "cret", "cret", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4321"), User);
+        account.Connect(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "nant", "cret", "cret", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4321"), User);
         account.GetAndClearEvents();
 
         return account;

@@ -67,7 +67,7 @@ public class MerchantAccountRepositoryTest
         // Arrange
         var tenant = Guid.NewGuid();
         var account = MerchantAccountAggregate.CreatePending(tenant, "CO", "Wompi", Guid.NewGuid());
-        account.Connect(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", "ms-payments/merchant-accounts/x", "1111", "2222", "3333", "wompi-account-1", "4444"), Guid.NewGuid());
+        account.Connect(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", "vault:v1:pid", "vault:v1:api"), "1111", "2222", "3333", "wompi-account-1", "4444"), Guid.NewGuid());
 
         await repository.UpdateWithRetryAsync(() => Task.FromResult(account), _ => true, CancellationToken.None);
 
@@ -75,6 +75,6 @@ public class MerchantAccountRepositoryTest
         var stored = await repository.GetByTenantAsync(tenant, CancellationToken.None);
 
         // Assert
-        Assert.Equal((MerchantAccountStatus.Active, (MerchantAccountEnvironment?)MerchantAccountEnvironment.Sandbox, "1111", true, 1L), (stored!.Status, stored.Environment, stored.PrivateKeyHint, stored.PayoutsEnabled, stored.Version));
+        Assert.Equal((MerchantAccountStatus.Active, (MerchantAccountEnvironment?)MerchantAccountEnvironment.Sandbox, "1111", true, 1L, "vault:v1:api"), (stored!.Status, stored.Environment, stored.PrivateKeyHint, stored.PayoutsEnabled, stored.Version, stored.Secrets!.PayoutsApiKey));
     }
 }

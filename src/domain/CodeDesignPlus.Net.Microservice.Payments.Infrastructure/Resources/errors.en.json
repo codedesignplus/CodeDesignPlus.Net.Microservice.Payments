@@ -27,6 +27,7 @@
     "323": "The tenant to purge cannot be empty.",
     "360": "The payment gateway did not answer; try again in a few minutes.",
     "361": "The key of the collection account is not one the payment gateway recognizes.",
-    "362": "The amount cannot be expressed in cents of its currency."
+    "362": "The amount cannot be expressed in cents of its currency.",
+    "363": "The Vault context that encrypts the keys of the collection accounts is not configured."
   }
 }

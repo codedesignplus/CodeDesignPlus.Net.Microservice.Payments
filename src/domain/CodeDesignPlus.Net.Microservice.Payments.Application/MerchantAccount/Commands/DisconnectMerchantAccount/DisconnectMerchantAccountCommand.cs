@@ -1,5 +1,3 @@
-using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
-
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.DisconnectMerchantAccount;
 
 /// <summary>
@@ -8,10 +6,9 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.C
 public record DisconnectMerchantAccountCommand : IRequest;
 
 /// <summary>
-/// Deletes the keys from the Vault before the account says it has none, so no account ever claims to be disconnected
-/// while its keys are still readable.
+/// Disconnecting forgets the ciphertext of the keys: without it the Vault has nothing to decrypt.
 /// </summary>
-public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IMerchantSecretStore secretStore, IUserContext user, IPubSub pubsub) : IRequestHandler<DisconnectMerchantAccountCommand>
+public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository repository, IUserContext user, IPubSub pubsub) : IRequestHandler<DisconnectMerchantAccountCommand>
 {
     public async Task Handle(DisconnectMerchantAccountCommand request, CancellationToken cancellationToken)
     {
@@ -23,8 +20,6 @@ public class DisconnectMerchantAccountCommandHandler(IMerchantAccountRepository 
         var current = await repository.GetByTenantAsync(tenant, cancellationToken);
 
         ApplicationGuard.IsTrue(current is null || current.Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Domain.Errors.MerchantAccountIsNotConnected);
-
-        await secretStore.DeleteAsync(current!.Id, cancellationToken);
 
         MerchantAccountAggregate saved = null!;
 

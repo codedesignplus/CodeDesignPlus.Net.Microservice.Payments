@@ -27,6 +27,7 @@
     "323": "O condomínio a apagar não pode estar vazio.",
     "360": "O gateway de pagamento não respondeu; tente novamente em alguns minutos.",
     "361": "A chave da conta de recebimento não é reconhecida pelo gateway.",
-    "362": "O valor não pode ser expresso em centavos da sua moeda."
+    "362": "O valor não pode ser expresso em centavos da sua moeda.",
+    "363": "O contexto do Vault que criptografa as chaves das contas de recebimento não está configurado."
   }
 }

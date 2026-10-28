@@ -219,7 +219,7 @@ public class Errors : IErrorCodes
     public static readonly Error MerchantAccountIsNotConnected = new("326");
     public static readonly Error MerchantConnectionCannotBeNull = new("327");
     public static readonly Error MerchantPublicKeyIsRequired = new("328");
-    public static readonly Error MerchantSecretReferenceIsRequired = new("329");
+    public static readonly Error MerchantSecretsAreRequired = new("329");
     public static readonly Error CapturedAmountCurrencyMustMatchTotal = new("330");
     public static readonly Error PayoutIdCannotBeEmpty = new("331");
     public static readonly Error PayoutPurposeIsRequired = new("332");

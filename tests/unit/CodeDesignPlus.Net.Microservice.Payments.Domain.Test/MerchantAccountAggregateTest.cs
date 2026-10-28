@@ -85,7 +85,7 @@ public class MerchantAccountAggregateTest
         account.Disconnect(User);
 
         // Assert
-        Assert.Equal((MerchantAccountStatus.Disabled, (string?)null, (string?)null, (string?)null, false), (account.Status, account.SecretReference, account.PublicKey, account.PayoutsApiKeyHint, account.PayoutsEnabled));
+        Assert.Equal((MerchantAccountStatus.Disabled, (SealedSecrets?)null, (string?)null, (string?)null, false), (account.Status, account.Secrets, account.PublicKey, account.PayoutsApiKeyHint, account.PayoutsEnabled));
     }
 
     [Fact]
@@ -101,5 +101,5 @@ public class MerchantAccountAggregateTest
         Assert.True(account.PayoutsEnabled);
     }
 
-    private static MerchantConnection Connection(string? payoutsSourceAccountId = null) => new(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", "ms-payments/merchant-accounts/x", "1111", "2222", "3333", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4444");
+    private static MerchantConnection Connection(string? payoutsSourceAccountId = null) => new(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", payoutsSourceAccountId, payoutsSourceAccountId is null ? null : "4444");
 }

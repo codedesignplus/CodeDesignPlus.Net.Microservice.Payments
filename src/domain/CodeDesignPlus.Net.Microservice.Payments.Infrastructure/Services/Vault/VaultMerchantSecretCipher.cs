@@ -1,0 +1,70 @@
+using CodeDesignPlus.Net.Exceptions.Guards;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
+using CodeDesignPlus.Net.Vault.Abstractions;
+using CodeDesignPlus.Net.Vault.Abstractions.Options;
+
+namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Vault;
+
+/// <summary>
+/// Encrypts the secrets of the merchant accounts with the Vault's Transit engine, the way ms-microsoftgraph keeps the
+/// temporary passwords.
+/// </summary>
+/// <remarks>
+/// The context is the one configured in <c>Vault:Transit:SecretContexts:merchant_account</c> joined to the tenant id:
+/// a ciphertext copied from one tenant's account to another's does not decrypt. The secrets of an account are
+/// encrypted in one batch, so they share the Transit key the SDK creates for that batch, whose name the account keeps.
+/// </remarks>
+public sealed class VaultMerchantSecretCipher(IVaultTransit transit, IOptions<VaultOptions> options) : IMerchantSecretCipher
+{
+    /// <summary>
+    /// Name of the secret context in <c>Vault:Transit:SecretContexts</c>.
+    /// </summary>
+    public const string SecretContextName = "merchant_account";
+
+    /// <inheritdoc/>
+    public async Task<SealedSecrets> SealAsync(Guid tenant, MerchantSecrets secrets, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(secrets);
+
+        var plain = new List<string> { secrets.PrivateKey, secrets.EventsSecret, secrets.IntegritySecret };
+
+        if (secrets.HasPayouts)
+        {
+            plain.Add(secrets.PayoutsPrincipalId!);
+            plain.Add(secrets.PayoutsApiKey!);
+        }
+
+        var (keyName, ciphertexts) = await transit.EncryptAsync(plain, ContextOf(tenant));
+
+        return new SealedSecrets(keyName, ciphertexts[0], ciphertexts[1], ciphertexts[2], secrets.HasPayouts ? ciphertexts[3] : null, secrets.HasPayouts ? ciphertexts[4] : null);
+    }
+
+    /// <inheritdoc/>
+    public async Task<MerchantSecrets> OpenAsync(Guid tenant, SealedSecrets secrets, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(secrets);
+
+        var hasPayouts = secrets.PayoutsPrincipalId is not null && secrets.PayoutsApiKey is not null;
+
+        var ciphertexts = new List<string> { secrets.PrivateKey, secrets.EventsSecret, secrets.IntegritySecret };
+
+        if (hasPayouts)
+        {
+            ciphertexts.Add(secrets.PayoutsPrincipalId!);
+            ciphertexts.Add(secrets.PayoutsApiKey!);
+        }
+
+        var plain = await transit.DecryptAsync(secrets.KeyName, ciphertexts, ContextOf(tenant));
+
+        return new MerchantSecrets(plain[0], plain[1], plain[2], hasPayouts ? plain[3] : null, hasPayouts ? plain[4] : null);
+    }
+
+    private string ContextOf(Guid tenant)
+    {
+        var found = options.Value.Transit.SecretContexts.TryGetValue(SecretContextName, out var context);
+
+        InfrastructureGuard.IsFalse(found && !string.IsNullOrWhiteSpace(context), Errors.MerchantSecretContextIsNotConfigured);
+
+        return $"{context}:{tenant}";
+    }
+}

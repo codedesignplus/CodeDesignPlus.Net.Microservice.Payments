@@ -48,23 +48,29 @@ public class InitiatePaymentCommandHandlerTest
     }
 
     [Fact]
-    public async Task Handle_WithoutReturnUrl_UsesTheConfiguredOne()
+    public async Task Handle_WithoutReturnUrl_UsesTheConfiguredOneWithThePaymentId()
     {
+        // Arrange
+        var command = Command();
+
         // Act
-        await Handler().Handle(Command(), CancellationToken.None);
+        await Handler().Handle(command, CancellationToken.None);
 
         // Assert
-        collect.Verify(x => x.CreateCheckoutAsync(It.IsAny<PaymentAggregate>(), It.IsAny<MerchantCredentials>(), DefaultReturnUrl, It.IsAny<Instant>(), It.IsAny<CancellationToken>()), Times.Once);
+        collect.Verify(x => x.CreateCheckoutAsync(It.IsAny<PaymentAggregate>(), It.IsAny<MerchantCredentials>(), new Uri($"{DefaultReturnUrl}?paymentId={command.Id}"), It.IsAny<Instant>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_WithReturnUrl_UsesTheCallerOne()
+    public async Task Handle_WithReturnUrl_UsesTheCallerOneWithThePaymentId()
     {
+        // Arrange
+        var command = Command(returnUrl: "https://www.example.com/booking/return");
+
         // Act
-        await Handler().Handle(Command(returnUrl: "https://www.example.com/booking/return"), CancellationToken.None);
+        await Handler().Handle(command, CancellationToken.None);
 
         // Assert
-        collect.Verify(x => x.CreateCheckoutAsync(It.IsAny<PaymentAggregate>(), It.IsAny<MerchantCredentials>(), new Uri("https://www.example.com/booking/return"), It.IsAny<Instant>(), It.IsAny<CancellationToken>()), Times.Once);
+        collect.Verify(x => x.CreateCheckoutAsync(It.IsAny<PaymentAggregate>(), It.IsAny<MerchantCredentials>(), new Uri($"https://www.example.com/booking/return?paymentId={command.Id}"), It.IsAny<Instant>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

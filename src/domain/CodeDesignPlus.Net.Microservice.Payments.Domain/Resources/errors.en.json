@@ -162,7 +162,7 @@
     "326": "The collection account is not connected.",
     "327": "The connection data of the account is required.",
     "328": "The public key is required.",
-    "329": "The reference to the stored keys is required.",
+    "329": "The encrypted keys of the account are required.",
     "330": "The captured amount must be in the currency of the payment.",
     "331": "The payout id is required.",
     "332": "The purpose of the payout is required.",

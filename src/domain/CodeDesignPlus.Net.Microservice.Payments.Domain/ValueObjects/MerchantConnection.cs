@@ -6,7 +6,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 /// <param name="Environment">Provider environment the keys belong to.</param>
 /// <param name="PublicKey">The merchant's public key; it is public by design and goes into the hosted page URL.</param>
 /// <param name="MerchantName">Name the provider has for the merchant, shown so the tenant recognizes its account.</param>
-/// <param name="SecretReference">Where the secrets live in the Vault.</param>
+/// <param name="Secrets">The secrets, encrypted by the Vault.</param>
 /// <param name="PrivateKeyHint">Last four characters of the private key.</param>
 /// <param name="EventsSecretHint">Last four characters of the events secret.</param>
 /// <param name="IntegritySecretHint">Last four characters of the integrity secret.</param>
@@ -16,7 +16,7 @@ public sealed record MerchantConnection(
     MerchantAccountEnvironment Environment,
     string PublicKey,
     string? MerchantName,
-    string SecretReference,
+    SealedSecrets Secrets,
     string PrivateKeyHint,
     string EventsSecretHint,
     string IntegritySecretHint,

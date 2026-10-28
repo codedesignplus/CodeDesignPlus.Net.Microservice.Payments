@@ -162,7 +162,7 @@
     "326": "La cuenta de recaudo no está conectada.",
     "327": "Los datos de conexión de la cuenta son obligatorios.",
     "328": "La llave pública es obligatoria.",
-    "329": "La referencia a las llaves guardadas es obligatoria.",
+    "329": "Las llaves cifradas de la cuenta son obligatorias.",
     "330": "El importe cobrado debe estar en la moneda del pago.",
     "331": "El identificador del pago a tercero es obligatorio.",
     "332": "El propósito del pago a tercero es obligatorio.",

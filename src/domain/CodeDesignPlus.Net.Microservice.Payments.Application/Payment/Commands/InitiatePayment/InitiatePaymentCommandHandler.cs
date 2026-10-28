@@ -53,7 +53,7 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
 
         await repository.CreateAsync(payment, cancellationToken);
 
-        var returnUrl = string.IsNullOrWhiteSpace(request.ReturnUrl) ? options.Value.DefaultReturnUrl : new Uri(request.ReturnUrl);
+        var returnUrl = ReturnUrlOf(request, payment.Id);
 
         var expiresAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromTimeSpan(options.Value.CheckoutLifetime));
 
@@ -72,5 +72,19 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
             NextAction = NextActionType.Redirect,
             RedirectUrl = session.RedirectUrl.ToString()
         };
+    }
+
+    /// <summary>
+    /// The page the provider returns to, with the id of the payment in this service.
+    /// </summary>
+    /// <remarks>
+    /// The return page asks this service for the status by that id and never reads what the provider appends (Wompi
+    /// adds its transaction id): those parameters are not signed, so they cannot be trusted.
+    /// </remarks>
+    private Uri ReturnUrlOf(InitiatePaymentCommand request, Guid paymentId)
+    {
+        var url = string.IsNullOrWhiteSpace(request.ReturnUrl) ? options.Value.DefaultReturnUrl.ToString() : request.ReturnUrl;
+
+        return new Uri(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(url, "paymentId", paymentId.ToString()));
     }
 }

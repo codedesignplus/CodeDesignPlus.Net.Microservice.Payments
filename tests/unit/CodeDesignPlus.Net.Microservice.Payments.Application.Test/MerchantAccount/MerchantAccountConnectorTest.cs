@@ -4,6 +4,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Test.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -12,19 +13,18 @@ using AppErrors = CodeDesignPlus.Net.Microservice.Payments.Application.Errors;
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.MerchantAccount;
 
 /// <summary>
-/// Keys are validated before anything is stored, and only the last four characters of each secret stay outside the
-/// Vault.
+/// Keys are validated before anything is encrypted, and only the last four characters of each secret are kept in clear.
 /// </summary>
 public class MerchantAccountConnectorTest
 {
     private readonly Mock<IPaymentProviderFactory> providers = new();
     private readonly Mock<IMerchantCredentialsProvider> validator = new();
-    private readonly Mock<IMerchantSecretStore> secretStore = new();
+    private readonly Mock<IMerchantSecretCipher> cipher = new();
 
     public MerchantAccountConnectorTest()
     {
         providers.Setup(x => x.GetCredentials("Wompi")).Returns(validator.Object);
-        secretStore.Setup(x => x.SaveAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync("ms-payments/merchant-accounts/x");
+        cipher.Setup(x => x.SealAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null));
         Validates(true, MerchantAccountEnvironment.Sandbox);
     }
 
@@ -35,11 +35,11 @@ public class MerchantAccountConnectorTest
         var connection = await Connector().ValidateAndStoreAsync(TestData.PendingAccount(), Keys(), CancellationToken.None);
 
         // Assert
-        Assert.Equal(("pub_test_tenant", "1111", "2222", "3333", "ms-payments/merchant-accounts/x"), (connection.PublicKey, connection.PrivateKeyHint, connection.EventsSecretHint, connection.IntegritySecretHint, connection.SecretReference));
+        Assert.Equal(("pub_test_tenant", "1111", "2222", "3333", "vault:v1:prv"), (connection.PublicKey, connection.PrivateKeyHint, connection.EventsSecretHint, connection.IntegritySecretHint, connection.Secrets.PrivateKey));
     }
 
     [Fact]
-    public async Task ValidateAndStoreAsync_RejectedKeys_StoresNothing()
+    public async Task ValidateAndStoreAsync_RejectedKeys_EncryptsNothing()
     {
         // Arrange
         Validates(false, MerchantAccountEnvironment.Sandbox);
@@ -49,11 +49,11 @@ public class MerchantAccountConnectorTest
 
         // Assert
         Assert.Equal(AppErrors.MerchantKeysWereRejected.GetCode(), exception.Code);
-        secretStore.Verify(x => x.SaveAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>()), Times.Never);
+        cipher.Verify(x => x.SealAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ValidateAndStoreAsync_LiveKeysInATestDeployment_StoresNothing()
+    public async Task ValidateAndStoreAsync_LiveKeysInATestDeployment_EncryptsNothing()
     {
         // Arrange
         Validates(true, MerchantAccountEnvironment.Production);
@@ -63,7 +63,7 @@ public class MerchantAccountConnectorTest
 
         // Assert
         Assert.Equal(AppErrors.MerchantKeysEnvironmentMismatch.GetCode(), exception.Code);
-        secretStore.Verify(x => x.SaveAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>()), Times.Never);
+        cipher.Verify(x => x.SealAsync(It.IsAny<Guid>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class MerchantAccountConnectorTest
     {
         var options = Options.Create(new PaymentProvidersOptions { Environment = MerchantAccountEnvironment.Sandbox, DefaultReturnUrl = new Uri("https://www.example.com/return"), EventsUrl = new Uri("https://www.example.com/notify/wompi") });
 
-        return new MerchantAccountConnector(providers.Object, secretStore.Object, options, Mock.Of<ILogger<MerchantAccountConnector>>());
+        return new MerchantAccountConnector(providers.Object, cipher.Object, options, Mock.Of<ILogger<MerchantAccountConnector>>());
     }
 
     private static MerchantKeys Keys() => new("pub_test_tenant", "prv_test_1111", "events_2222", "integrity_3333", null, null, null);

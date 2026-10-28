@@ -7,9 +7,9 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
 /// and this service only keeps what it needs to charge and pay on its behalf.
 /// </summary>
 /// <remarks>
-/// The secrets (private key, events and integrity secrets, payouts credentials) never live here: they are in the Vault
-/// and the aggregate only keeps the reference and the last four characters of each, so the tenant can tell which keys
-/// are connected without the platform ever showing them again.
+/// The secrets (private key, events and integrity secrets, payouts credentials) are never stored in clear: the aggregate
+/// keeps only their ciphertext from the Vault's Transit engine, bound to the tenant, and the last four characters of
+/// each, so the tenant can tell which keys are connected without the platform ever showing them again.
 /// <para>
 /// It is born <see cref="MerchantAccountStatus.PendingConnection"/> when the tenant is created, with an id derived from
 /// the tenant, so a redelivered event or a concurrent connection find the same document. The consumer that creates it
@@ -62,9 +62,9 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     public string? MerchantName { get; private set; }
 
     /// <summary>
-    /// Where the secrets live in the Vault.
+    /// The secrets, encrypted by the Vault; null while the account has no keys.
     /// </summary>
-    public string? SecretReference { get; private set; }
+    public SealedSecrets? Secrets { get; private set; }
 
     /// <summary>
     /// Last four characters of the private key.
@@ -168,7 +168,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     }
 
     /// <summary>
-    /// Disconnects the account. Its secrets must already be deleted from the Vault.
+    /// Disconnects the account and forgets the ciphertext of its secrets.
     /// </summary>
     /// <param name="updatedBy">Who disconnected the account.</param>
     public void Disconnect(Guid updatedBy)
@@ -179,7 +179,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         Environment = null;
         PublicKey = null;
         MerchantName = null;
-        SecretReference = null;
+        Secrets = null;
         PrivateKeyHint = null;
         EventsSecretHint = null;
         IntegritySecretHint = null;
@@ -208,7 +208,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         DomainGuard.IsNull(connection, Errors.MerchantConnectionCannotBeNull);
         DomainGuard.IsNullOrEmpty(Provider, Errors.PaymentProviderIsRequired);
         DomainGuard.IsNullOrEmpty(connection.PublicKey, Errors.MerchantPublicKeyIsRequired);
-        DomainGuard.IsNullOrEmpty(connection.SecretReference, Errors.MerchantSecretReferenceIsRequired);
+        DomainGuard.IsNull(connection.Secrets, Errors.MerchantSecretsAreRequired);
 
         var now = SystemClock.Instance.GetCurrentInstant();
 
@@ -216,7 +216,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         Environment = connection.Environment;
         PublicKey = connection.PublicKey;
         MerchantName = connection.MerchantName;
-        SecretReference = connection.SecretReference;
+        Secrets = connection.Secrets;
         PrivateKeyHint = connection.PrivateKeyHint;
         EventsSecretHint = connection.EventsSecretHint;
         IntegritySecretHint = connection.IntegritySecretHint;

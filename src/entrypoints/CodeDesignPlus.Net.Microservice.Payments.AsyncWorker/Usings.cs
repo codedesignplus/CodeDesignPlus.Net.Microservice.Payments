@@ -9,4 +9,3 @@ global using CodeDesignPlus.Net.Microservice.Payments.Domain;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 global using CodeDesignPlus.Net.Microservice.Payments.Domain.Repositories;
 global using MediatR;
-global using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;

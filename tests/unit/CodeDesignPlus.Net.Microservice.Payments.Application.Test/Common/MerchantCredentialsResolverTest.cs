@@ -11,7 +11,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.Common;
 public class MerchantCredentialsResolverTest
 {
     private readonly Mock<IMerchantAccountRepository> repository = new();
-    private readonly Mock<IMerchantSecretStore> secretStore = new();
+    private readonly Mock<IMerchantSecretCipher> cipher = new();
     private readonly Mock<IPlatformMerchantAccount> platform = new();
 
     [Fact]
@@ -41,12 +41,12 @@ public class MerchantCredentialsResolverTest
     }
 
     [Fact]
-    public async Task ForNewPaymentAsync_ActiveAccount_ReadsItsSecretsFromTheStore()
+    public async Task ForNewPaymentAsync_ActiveAccount_DecryptsItsSecretsBoundToItsTenant()
     {
         // Arrange
         var account = TestData.ActiveAccount();
         repository.Setup(x => x.GetByTenantAsync(TestData.Tenant, It.IsAny<CancellationToken>())).ReturnsAsync(account);
-        secretStore.Setup(x => x.GetAsync(account.SecretReference!, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Secrets());
+        cipher.Setup(x => x.OpenAsync(TestData.Tenant, account.Secrets!, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Secrets());
 
         // Act
         var credentials = await Resolver().ForNewPaymentAsync(TestData.Tenant, false, CancellationToken.None);
@@ -110,5 +110,5 @@ public class MerchantCredentialsResolverTest
         Assert.Null(credentials);
     }
 
-    private MerchantCredentialsResolver Resolver() => new(repository.Object, secretStore.Object, platform.Object);
+    private MerchantCredentialsResolver Resolver() => new(repository.Object, cipher.Object, platform.Object);
 }

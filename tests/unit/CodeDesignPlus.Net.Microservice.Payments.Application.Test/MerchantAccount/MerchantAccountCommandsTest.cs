@@ -29,7 +29,6 @@ public class MerchantAccountCommandsTest
 
     private readonly Mock<IMerchantAccountRepository> repository = new();
     private readonly Mock<IMerchantAccountConnector> connector = new();
-    private readonly Mock<IMerchantSecretStore> secretStore = new();
     private readonly Mock<IUserContext> user = new();
     private readonly Mock<IPubSub> pubsub = new();
     private MerchantAccountAggregate? stored;
@@ -58,7 +57,7 @@ public class MerchantAccountCommandsTest
 
         connector
             .Setup(x => x.ValidateAndStoreAsync(It.IsAny<MerchantAccountAggregate>(), It.IsAny<MerchantKeys>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", "ms-payments/merchant-accounts/x", "1111", "2222", "3333", null, null));
+            .ReturnsAsync(new MerchantConnection(MerchantAccountEnvironment.Sandbox, "pub_test_tenant", "Comercio SAS", new SealedSecrets("transit-key", "vault:v1:prv", "vault:v1:evt", "vault:v1:int", null, null), "1111", "2222", "3333", null, null));
     }
 
     [Fact]
@@ -101,17 +100,16 @@ public class MerchantAccountCommandsTest
     }
 
     [Fact]
-    public async Task Disconnect_ConnectedAccount_DeletesTheKeysAndClearsTheHints()
+    public async Task Disconnect_ConnectedAccount_ForgetsTheCiphertextAndTheHints()
     {
         // Arrange
         stored = TestData.ActiveAccount();
 
         // Act
-        await new DisconnectMerchantAccountCommandHandler(repository.Object, secretStore.Object, user.Object, pubsub.Object).Handle(new DisconnectMerchantAccountCommand(), CancellationToken.None);
+        await new DisconnectMerchantAccountCommandHandler(repository.Object, user.Object, pubsub.Object).Handle(new DisconnectMerchantAccountCommand(), CancellationToken.None);
 
         // Assert
-        secretStore.Verify(x => x.DeleteAsync(stored.Id, It.IsAny<CancellationToken>()), Times.Once);
-        Assert.Equal((MerchantAccountStatus.Disabled, (string?)null, (string?)null), (stored.Status, stored.SecretReference, stored.PrivateKeyHint));
+        Assert.Equal((MerchantAccountStatus.Disabled, (SealedSecrets?)null, (string?)null), (stored!.Status, stored.Secrets, stored.PrivateKeyHint));
     }
 
     [Fact]
