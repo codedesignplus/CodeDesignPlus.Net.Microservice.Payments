@@ -121,10 +121,53 @@ public class MerchantAccountCommandsTest
         stored = null;
 
         // Act
-        var dto = await new GetMerchantAccountQueryHandler(repository.Object, Options()).Handle(new GetMerchantAccountQuery(TestData.Tenant), CancellationToken.None);
+        var dto = await QueryHandler(TenantIn("CO")).Handle(new GetMerchantAccountQuery(TestData.Tenant), CancellationToken.None);
 
         // Assert
         Assert.Equal((MerchantAccountStatus.PendingConnection, false), (dto.Status, dto.PayoutsEnabled));
+    }
+
+    [Fact]
+    public async Task GetMerchantAccount_TenantWithoutAccountInARoutedCountry_AnswersItsProvider()
+    {
+        // Arrange: a tenant created before collection accounts existed, in a country that has a provider.
+        stored = null;
+
+        // Act
+        var dto = await QueryHandler(TenantIn("CO")).Handle(new GetMerchantAccountQuery(TestData.Tenant), CancellationToken.None);
+
+        // Assert
+        Assert.Equal("Wompi", dto.Provider);
+    }
+
+    [Fact]
+    public async Task GetMerchantAccount_TenantWithoutAccountInACountryWithoutProvider_AnswersNoProvider()
+    {
+        // Arrange
+        stored = null;
+
+        // Act
+        var dto = await QueryHandler(TenantIn("PE")).Handle(new GetMerchantAccountQuery(TestData.Tenant), CancellationToken.None);
+
+        // Assert
+        Assert.Null(dto.Provider);
+    }
+
+    [Fact]
+    public async Task GetMerchantAccount_CallWithoutTheTenantInContext_LoadsItsCountry()
+    {
+        // Arrange: a worker over gRPC sends the tenant only in the request.
+        stored = null;
+        var tenant = TenantIn("CO");
+        tenant.SetupGet(x => x.IsLoaded).Returns(false);
+        tenant.Setup(x => x.SetAsync(TestData.Tenant, It.IsAny<CancellationToken>())).Callback(() => tenant.SetupGet(x => x.IsLoaded).Returns(true)).Returns(Task.CompletedTask);
+
+        // Act
+        var dto = await QueryHandler(tenant).Handle(new GetMerchantAccountQuery(TestData.Tenant), CancellationToken.None);
+
+        // Assert
+        Assert.Equal("Wompi", dto.Provider);
+        tenant.Verify(x => x.SetAsync(TestData.Tenant, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -146,6 +189,17 @@ public class MerchantAccountCommandsTest
         tenant.SetupGet(x => x.Country).Returns(Country.Create(Guid.NewGuid(), "Colombia", "CO", "COL", 170, "+57", "America/Bogota", CodeDesignPlus.Net.ValueObjects.Financial.Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", 2, 170)));
 
         return new ConnectMerchantAccountCommandHandler(repository.Object, connector.Object, user.Object, tenant.Object, pubsub.Object, cache.Object, Options());
+    }
+
+    private GetMerchantAccountQueryHandler QueryHandler(Mock<Security.Abstractions.ITenant> tenant) => new(repository.Object, user.Object, tenant.Object, Options());
+
+    private static Mock<Security.Abstractions.ITenant> TenantIn(string alpha2)
+    {
+        var tenant = new Mock<Security.Abstractions.ITenant>();
+        tenant.SetupGet(x => x.IsLoaded).Returns(true);
+        tenant.SetupGet(x => x.Country).Returns(Country.Create(Guid.NewGuid(), alpha2, alpha2, alpha2 + "X", 170, "+57", "America/Bogota", CodeDesignPlus.Net.ValueObjects.Financial.Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", 2, 170)));
+
+        return tenant;
     }
 
     private static ConnectMerchantAccountCommand ConnectCommand() => new("pub_test_tenant", "prv_test_1111", "events_2222", "integrity_3333", null, null, null);
