@@ -9,6 +9,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
+using AppErrors = CodeDesignPlus.Net.Microservice.Payments.Application.Errors;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.MerchantAccount;
 
@@ -87,7 +88,7 @@ public class MerchantAccountHealthTest
     public async Task ReportRejection_PlatformPayment_TouchesNoTenantAccount()
     {
         // Act
-        await Health().ReportRejectionAsync(TestData.Payment(platformAccount: true), "The private key was rejected.", CancellationToken.None);
+        await Health().ReportRejectionAsync(TestData.Payment(platformAccount: true), Errors.MerchantPrivateKeyWasRejected, CancellationToken.None);
 
         // Assert
         repository.Verify(x => x.GetByTenantAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -97,24 +98,47 @@ public class MerchantAccountHealthTest
     public async Task Validate_StoredKeysRejected_InvalidatesTheAccount()
     {
         // Act
-        var dto = await Validate(new MerchantValidation(false, MerchantAccountEnvironment.Sandbox, null, "Wompi does not accept the private key."));
+        var dto = await Validate(new MerchantValidation(false, MerchantAccountEnvironment.Sandbox, null, AppErrors.MerchantPrivateKeyWasRejected));
 
         // Assert
-        Assert.Equal((MerchantAccountStatus.Invalid, "Wompi does not accept the private key."), (dto.Status, dto.InvalidReason));
+        Assert.Equal((MerchantAccountStatus.Invalid, "357"), (dto.Status, dto.InvalidReasonCode));
+    }
+
+    [Fact]
+    public async Task Validate_StoredKeysRejected_AnswersTheReasonInTheLanguageOfTheRequest()
+    {
+        // Arrange
+        ErrorLanguage.Current = "es";
+
+        // Act
+        var dto = await Validate(new MerchantValidation(false, MerchantAccountEnvironment.Sandbox, null, AppErrors.MerchantPrivateKeyWasRejected));
+
+        // Assert
+        Assert.Equal("La pasarela no acepta la llave privada.", dto.InvalidReasonMessage);
+    }
+
+    [Fact]
+    public async Task Validate_KeysOfAnotherEnvironment_InvalidatesWithThatReason()
+    {
+        // Act
+        var dto = await Validate(new MerchantValidation(true, MerchantAccountEnvironment.Production, "Comercio SAS", null));
+
+        // Assert
+        Assert.Equal((MerchantAccountStatus.Invalid, AppErrors.MerchantKeysEnvironmentMismatch.Code), (dto.Status, dto.InvalidReasonCode));
     }
 
     [Fact]
     public async Task Validate_InvalidAccountWithWorkingKeys_IsActiveAgain()
     {
         // Arrange
-        stored.Invalidate("rejected", TestData.User);
+        stored.Invalidate(AppErrors.MerchantPrivateKeyWasRejected.Code, TestData.User);
         stored.GetAndClearEvents();
 
         // Act
         var dto = await Validate(new MerchantValidation(true, MerchantAccountEnvironment.Sandbox, "Comercio SAS", null));
 
         // Assert
-        Assert.Equal((MerchantAccountStatus.Active, (string?)null), (dto.Status, dto.InvalidReason));
+        Assert.Equal((MerchantAccountStatus.Active, (string?)null), (dto.Status, dto.InvalidReasonCode));
         pubsub.Verify(x => x.PublishAsync(It.Is<IReadOnlyList<IDomainEvent>>(events => events.OfType<MerchantAccountRevalidatedDomainEvent>().Any()), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -122,7 +146,7 @@ public class MerchantAccountHealthTest
     {
         for (var i = 0; i < times; i++)
         {
-            await Health().ReportRejectionAsync(TestData.Payment(), "The private key was rejected.", CancellationToken.None);
+            await Health().ReportRejectionAsync(TestData.Payment(), Errors.MerchantPrivateKeyWasRejected, CancellationToken.None);
         }
     }
 

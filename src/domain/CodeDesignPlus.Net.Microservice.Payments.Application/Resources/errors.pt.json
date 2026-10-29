@@ -42,6 +42,12 @@
     "349": "Para conectar os pagamentos a terceiros, informe o usuário, a chave e a conta de origem.",
     "350": "A organização é obrigatória.",
     "351": "O gateway da conta não pode fazer pagamentos a terceiros.",
-    "352": "O gateway recusou as chaves da conta de recebimento."
+    "352": "O gateway recusou as chaves da conta de recebimento.",
+    "353": "A chave pública não é uma chave do gateway.",
+    "354": "A chave privada não é do gateway ou é de um ambiente diferente do da chave pública.",
+    "355": "O gateway não reconhece a chave pública.",
+    "356": "O comerciante está inativo no gateway.",
+    "357": "O gateway não aceita a chave privada.",
+    "358": "O segredo de eventos não verifica os eventos do gateway."
   }
 }

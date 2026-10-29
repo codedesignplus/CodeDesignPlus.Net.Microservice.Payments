@@ -38,7 +38,7 @@ public class ValidateMerchantAccountCommandHandler(IMerchantAccountRepository re
         var validation = await providers.GetCredentials(current.Provider!).ValidateAsync(current.PublicKey!, secrets, cancellationToken);
 
         var works = validation.IsValid && validation.Environment == options.Value.Environment;
-        var reason = validation.IsValid ? "The keys belong to another environment." : validation.Reason ?? "The provider rejected the keys.";
+        var reason = validation.IsValid ? Errors.MerchantKeysEnvironmentMismatch : validation.Reason ?? Errors.MerchantKeysWereRejected;
 
         MerchantAccountAggregate saved = null!;
 
@@ -50,7 +50,7 @@ public class ValidateMerchantAccountCommandHandler(IMerchantAccountRepository re
             }
             else
             {
-                account.Invalidate(reason, user.IdUser);
+                account.Invalidate(reason.Code, user.IdUser);
             }
 
             saved = account;

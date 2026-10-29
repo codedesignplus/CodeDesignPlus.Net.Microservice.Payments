@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
 using CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Notifications;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
@@ -24,10 +25,10 @@ public class MerchantAccountInvalidatedHandler(IInboxGrpc inbox, IOptions<Mercha
             notices.Roles.Select(x => x.ToString()),
             notices.Kind,
             "La cuenta de recaudo dejó de funcionar",
-            $"{data.Provider} rechazó las llaves de la cuenta de recaudo y el pago en línea quedó suspendido. Revisa las llaves en el panel de {data.Provider}, reemplázalas y valida la conexión.",
+            $"{new Error(data.ReasonCode).GetMessage(notices.Language)} El pago en línea quedó suspendido: revisa las llaves en el panel de {data.Provider}, reemplázalas y valida la conexión.",
             module: notices.Module,
             aggregateId: data.AggregateId.ToString(),
-            payload: new { accountId = data.AggregateId, provider = data.Provider },
+            payload: new { accountId = data.AggregateId, provider = data.Provider, reasonCode = data.ReasonCode },
             tenant: data.Tenant,
             sentBy: notices.SentBy,
             notificationId: NotificationIds.For(data.EventId, notices.Kind),

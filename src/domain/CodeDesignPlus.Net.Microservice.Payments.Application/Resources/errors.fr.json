@@ -42,6 +42,12 @@
     "349": "Pour connecter les paiements à des tiers, saisissez l'utilisateur, la clé et le compte d'origine.",
     "350": "L'organisation est obligatoire.",
     "351": "La passerelle du compte ne peut pas payer des tiers.",
-    "352": "La passerelle a refusé les clés du compte d'encaissement."
+    "352": "La passerelle a refusé les clés du compte d'encaissement.",
+    "353": "La clé publique n'est pas une clé de la passerelle.",
+    "354": "La clé privée n'est pas de la passerelle ou appartient à un autre environnement que la clé publique.",
+    "355": "La passerelle ne reconnaît pas la clé publique.",
+    "356": "Le commerçant est inactif auprès de la passerelle.",
+    "357": "La passerelle n'accepte pas la clé privée.",
+    "358": "Le secret des événements ne vérifie pas les événements de la passerelle."
   }
 }

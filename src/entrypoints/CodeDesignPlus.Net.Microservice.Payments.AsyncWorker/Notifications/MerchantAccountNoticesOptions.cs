@@ -31,6 +31,12 @@ public class MerchantAccountNoticesOptions : IValidatableObject
     public string Module { get; set; } = null!;
 
     /// <summary>
+    /// Language the notice is written in: the inbox stores the text, and a worker has no request to take it from.
+    /// </summary>
+    [Required]
+    public string Language { get; set; } = "es";
+
+    /// <summary>
     /// Author of the notice: the product's system user.
     /// </summary>
     public Guid SentBy { get; set; }

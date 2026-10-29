@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using Xunit;
+using AppErrors = CodeDesignPlus.Net.Microservice.Payments.Application.Errors;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.MerchantAccount;
 
@@ -103,7 +104,7 @@ public class SecretsNeverInClearTest
     private void Validates(bool isValid)
     {
         // The reason echoes nothing the tenant pasted, as the real adapter does.
-        validator.Setup(x => x.ValidateAsync(It.IsAny<string>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MerchantValidation(isValid, MerchantAccountEnvironment.Sandbox, "Comercio SAS", isValid ? null : "Wompi does not accept the private key."));
+        validator.Setup(x => x.ValidateAsync(It.IsAny<string>(), It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MerchantValidation(isValid, MerchantAccountEnvironment.Sandbox, "Comercio SAS", isValid ? null : AppErrors.MerchantPrivateKeyWasRejected));
     }
 
     private ConnectMerchantAccountCommandHandler Handler()

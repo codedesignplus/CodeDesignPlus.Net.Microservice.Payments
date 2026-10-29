@@ -42,6 +42,12 @@
     "349": "Para conectar los pagos a terceros, escribe el usuario, la llave y la cuenta de origen.",
     "350": "La organización es obligatoria.",
     "351": "La pasarela de la cuenta no puede hacer pagos a terceros.",
-    "352": "La pasarela rechazó las llaves de la cuenta de recaudo."
+    "352": "La pasarela rechazó las llaves de la cuenta de recaudo.",
+    "353": "La llave pública no es una llave de la pasarela.",
+    "354": "La llave privada no es de la pasarela o es de un ambiente distinto al de la llave pública.",
+    "355": "La pasarela no reconoce la llave pública.",
+    "356": "El comercio está inactivo en la pasarela.",
+    "357": "La pasarela no acepta la llave privada.",
+    "358": "El secreto de eventos no verifica los eventos de la pasarela."
   }
 }

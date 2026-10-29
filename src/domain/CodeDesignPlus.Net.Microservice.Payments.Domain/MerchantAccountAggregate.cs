@@ -103,9 +103,10 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     public int ConsecutiveRejections { get; private set; }
 
     /// <summary>
-    /// Why the provider stopped accepting the keys, while the account is <see cref="MerchantAccountStatus.Invalid"/>.
+    /// Code of the error catalog that says why the provider stopped accepting the keys, while the account is
+    /// <see cref="MerchantAccountStatus.Invalid"/>. A code and not a text, so each reader shows it in its language.
     /// </summary>
-    public string? InvalidReason { get; private set; }
+    public string? InvalidReasonCode { get; private set; }
 
     /// <summary>
     /// Whether the account can pay third parties.
@@ -187,7 +188,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         DomainGuard.IsTrue(Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Errors.MerchantAccountIsNotConnected);
 
         Status = MerchantAccountStatus.Disabled;
-        InvalidReason = null;
+        InvalidReasonCode = null;
         ConsecutiveRejections = 0;
         Environment = null;
         PublicKey = null;
@@ -207,12 +208,12 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     /// <summary>
     /// Counts a rejection of the keys by the provider and invalidates the account when they repeat.
     /// </summary>
-    /// <param name="reason">What the provider rejected, for the record; never a secret.</param>
+    /// <param name="reasonCode">Code of the error catalog that says what the provider rejected.</param>
     /// <param name="threshold">How many rejections in a row invalidate the account.</param>
     /// <returns>Whether the account changed and must be saved.</returns>
-    public bool RegisterRejection(string reason, int threshold)
+    public bool RegisterRejection(string reasonCode, int threshold)
     {
-        DomainGuard.IsNullOrEmpty(reason, Errors.FailureReasonIsRequired);
+        DomainGuard.IsNullOrEmpty(reasonCode, Errors.FailureReasonIsRequired);
 
         if (Status != MerchantAccountStatus.Active)
         {
@@ -224,7 +225,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
 
         if (ConsecutiveRejections >= threshold)
         {
-            Invalidate(reason, null);
+            Invalidate(reasonCode, null);
         }
 
         return true;
@@ -250,24 +251,24 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     /// <summary>
     /// The provider no longer accepts the keys: the tenant stops charging online until it replaces them.
     /// </summary>
-    /// <param name="reason">What the provider rejected, for the record; never a secret.</param>
+    /// <param name="reasonCode">Code of the error catalog that says what the provider rejected.</param>
     /// <param name="updatedBy">Who checked the keys, or null when the platform noticed it by itself.</param>
-    public void Invalidate(string reason, Guid? updatedBy)
+    public void Invalidate(string reasonCode, Guid? updatedBy)
     {
-        DomainGuard.IsNullOrEmpty(reason, Errors.FailureReasonIsRequired);
+        DomainGuard.IsNullOrEmpty(reasonCode, Errors.FailureReasonIsRequired);
         DomainGuard.IsTrue(Status is not (MerchantAccountStatus.Active or MerchantAccountStatus.Invalid), Errors.MerchantAccountIsNotConnected);
 
         var wasActive = Status == MerchantAccountStatus.Active;
 
         Status = MerchantAccountStatus.Invalid;
-        InvalidReason = reason;
+        InvalidReasonCode = reasonCode;
         ConsecutiveRejections = 0;
         UpdatedBy = updatedBy;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         if (wasActive)
         {
-            AddEvent(MerchantAccountInvalidatedDomainEvent.Create(Id, Tenant, Provider!, reason));
+            AddEvent(MerchantAccountInvalidatedDomainEvent.Create(Id, Tenant, Provider!, reasonCode));
         }
     }
 
@@ -283,7 +284,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         var now = SystemClock.Instance.GetCurrentInstant();
 
         Status = MerchantAccountStatus.Active;
-        InvalidReason = null;
+        InvalidReasonCode = null;
         ConsecutiveRejections = 0;
         LastValidatedAt = now;
         UpdatedBy = updatedBy;
@@ -317,7 +318,7 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         var now = SystemClock.Instance.GetCurrentInstant();
 
         Status = MerchantAccountStatus.Active;
-        InvalidReason = null;
+        InvalidReasonCode = null;
         ConsecutiveRejections = 0;
         Environment = connection.Environment;
         PublicKey = connection.PublicKey;

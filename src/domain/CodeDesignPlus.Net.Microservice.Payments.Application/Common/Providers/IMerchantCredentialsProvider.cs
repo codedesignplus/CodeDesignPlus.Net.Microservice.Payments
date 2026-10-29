@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Exceptions;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
 
 /// <summary>
@@ -21,5 +23,5 @@ public interface IMerchantCredentialsProvider : IPaymentProvider
 /// <param name="IsValid">Whether the provider accepted the keys.</param>
 /// <param name="Environment">Environment the keys belong to, when it could be told.</param>
 /// <param name="MerchantName">Name the provider has for the merchant.</param>
-/// <param name="Reason">Why the keys were rejected, for the log; never contains a secret.</param>
-public sealed record MerchantValidation(bool IsValid, MerchantAccountEnvironment? Environment, string? MerchantName, string? Reason);
+/// <param name="Reason">Why the keys were rejected, as an error of the catalog; null when they work.</param>
+public sealed record MerchantValidation(bool IsValid, MerchantAccountEnvironment? Environment, string? MerchantName, Error? Reason);

@@ -47,7 +47,7 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
         catch (CodeDesignPlusException exception) when (health.IsRejection(exception))
         {
             // The status stays as it was; the account counts the rejection and is invalidated if it repeats.
-            await health.ReportRejectionAsync(payment, "The private key was rejected.", cancellationToken);
+            await health.ReportRejectionAsync(payment, Errors.MerchantPrivateKeyWasRejected, cancellationToken);
 
             return PaymentStatusDto.From(payment);
         }

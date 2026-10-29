@@ -8,6 +8,7 @@ using CodeDesignPlus.Net.ValueObjects.Financial;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Xunit;
+using AppErrors = CodeDesignPlus.Net.Microservice.Payments.Application.Errors;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.Payment.Commands.ProcessProviderEvent;
 
@@ -70,7 +71,7 @@ public class ProcessProviderEventCommandHandlerTest
         await Handle();
 
         // Assert
-        health.Verify(x => x.ReportRejectionAsync(It.IsAny<PaymentAggregate>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        health.Verify(x => x.ReportRejectionAsync(It.IsAny<PaymentAggregate>(), It.IsAny<Error>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -84,7 +85,7 @@ public class ProcessProviderEventCommandHandlerTest
         await Handle();
 
         // Assert
-        health.Verify(x => x.ReportRejectionAsync(payment, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        health.Verify(x => x.ReportRejectionAsync(payment, AppErrors.MerchantEventsSecretDoesNotVerify, It.IsAny<CancellationToken>()), Times.Once);
         mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.Status == PaymentStatus.Succeeded), It.IsAny<CancellationToken>()), Times.Once);
     }
 

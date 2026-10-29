@@ -24,12 +24,29 @@ public class MerchantAccountInvalidatedHandlerTest
         inbox.Setup(x => x.NotifyAsync(It.IsAny<NotificationRequest>(), It.IsAny<CancellationToken>())).Callback<NotificationRequest, CancellationToken>((request, _) => sent = request).Returns(Task.CompletedTask);
 
         var options = Options.Create(new MerchantAccountNoticesOptions { Roles = [AdministratorRole], Kind = "payments.merchant-account-invalid", Module = "payments", SentBy = Guid.NewGuid() });
-        var @event = MerchantAccountInvalidatedDomainEvent.Create(Guid.NewGuid(), Tenant, "Wompi", "Wompi does not accept the private key.");
+        var @event = MerchantAccountInvalidatedDomainEvent.Create(Guid.NewGuid(), Tenant, "Wompi", "357");
 
         // Act
         await new MerchantAccountInvalidatedHandler(inbox.Object, options).HandleAsync(@event, CancellationToken.None);
 
         // Assert
         Assert.Equal((Tenant.ToString(), "payments.merchant-account-invalid", AdministratorRole.ToString(), NotificationIds.For(@event.EventId, "payments.merchant-account-invalid").ToString()), (sent!.Tenant, sent.Kind, sent.Audience.Values.Single(), sent.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_AccountInvalidated_TellsTheSameReasonTheScreenShows()
+    {
+        // Arrange
+        var inbox = new Mock<IInboxGrpc>();
+        NotificationRequest? sent = null;
+        inbox.Setup(x => x.NotifyAsync(It.IsAny<NotificationRequest>(), It.IsAny<CancellationToken>())).Callback<NotificationRequest, CancellationToken>((request, _) => sent = request).Returns(Task.CompletedTask);
+
+        var options = Options.Create(new MerchantAccountNoticesOptions { Roles = [AdministratorRole], Kind = "payments.merchant-account-invalid", Module = "payments", Language = "es", SentBy = Guid.NewGuid() });
+
+        // Act
+        await new MerchantAccountInvalidatedHandler(inbox.Object, options).HandleAsync(MerchantAccountInvalidatedDomainEvent.Create(Guid.NewGuid(), Tenant, "Wompi", "357"), CancellationToken.None);
+
+        // Assert
+        Assert.StartsWith("La pasarela no acepta la llave privada.", sent!.Body, StringComparison.Ordinal);
     }
 }

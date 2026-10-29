@@ -99,7 +99,7 @@ public class MerchantAccountConnectorTest
 
     private void Validates(bool isValid, MerchantAccountEnvironment environment)
     {
-        validator.Setup(x => x.ValidateAsync("pub_test_tenant", It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MerchantValidation(isValid, environment, "Comercio SAS", isValid ? null : "rejected"));
+        validator.Setup(x => x.ValidateAsync("pub_test_tenant", It.IsAny<MerchantSecrets>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MerchantValidation(isValid, environment, "Comercio SAS", isValid ? null : Errors.MerchantPrivateKeyWasRejected));
     }
 
     private MerchantAccountConnector Connector()

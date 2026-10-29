@@ -87,4 +87,12 @@ public class Errors: IErrorCodes
 
     // Keys rejected by the provider (pendings/660)
     public static readonly Error MerchantKeysRejectedByProvider = new("352");
+
+    // Why a collection account was invalidated (pendings/660)
+    public static readonly Error MerchantPublicKeyIsNotFromProvider = new("353");
+    public static readonly Error MerchantPrivateKeyDoesNotMatchPublicKey = new("354");
+    public static readonly Error MerchantPublicKeyIsUnknown = new("355");
+    public static readonly Error MerchantIsInactive = new("356");
+    public static readonly Error MerchantPrivateKeyWasRejected = new("357");
+    public static readonly Error MerchantEventsSecretDoesNotVerify = new("358");
 }

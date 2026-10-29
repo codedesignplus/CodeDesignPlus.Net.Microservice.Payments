@@ -73,7 +73,7 @@ public sealed class MerchantAccountConnector(IPaymentProviderFactory providers, 
 
         if (!validation.IsValid)
         {
-            logger.LogWarning("The keys of the collection account of tenant {Tenant} were rejected by {Provider}: {Reason}", account.Tenant, account.Provider, validation.Reason);
+            logger.LogWarning("The keys of the collection account of tenant {Tenant} were rejected by {Provider}: {Reason}", account.Tenant, account.Provider, validation.Reason?.Code);
         }
 
         ApplicationGuard.IsFalse(validation.IsValid, Errors.MerchantKeysWereRejected);

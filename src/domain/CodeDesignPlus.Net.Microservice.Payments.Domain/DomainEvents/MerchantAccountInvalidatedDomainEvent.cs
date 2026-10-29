@@ -9,7 +9,7 @@ public class MerchantAccountInvalidatedDomainEvent(
     Guid aggregateId,
     Guid tenant,
     string provider,
-    string reason,
+    string reasonCode,
     Guid? eventId = null,
     Instant? occurredAt = null,
     Dictionary<string, object>? metadata = null
@@ -19,12 +19,12 @@ public class MerchantAccountInvalidatedDomainEvent(
     public string Provider { get; } = provider;
 
     /// <summary>
-    /// What the provider rejected; never a secret.
+    /// Code of the error catalog that says what the provider rejected.
     /// </summary>
-    public string Reason { get; } = reason;
+    public string ReasonCode { get; } = reasonCode;
 
-    public static MerchantAccountInvalidatedDomainEvent Create(Guid aggregateId, Guid tenant, string provider, string reason)
+    public static MerchantAccountInvalidatedDomainEvent Create(Guid aggregateId, Guid tenant, string provider, string reasonCode)
     {
-        return new MerchantAccountInvalidatedDomainEvent(aggregateId, tenant, provider, reason);
+        return new MerchantAccountInvalidatedDomainEvent(aggregateId, tenant, provider, reasonCode);
     }
 }

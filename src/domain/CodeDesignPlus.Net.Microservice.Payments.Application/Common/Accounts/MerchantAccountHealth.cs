@@ -22,9 +22,9 @@ public interface IMerchantAccountHealth
     /// Counts a rejection of the keys of the account that collected a payment; repeated, it invalidates the account.
     /// </summary>
     /// <param name="payment">The payment whose account was rejected.</param>
-    /// <param name="reason">What was rejected; never a secret.</param>
+    /// <param name="reason">What was rejected, as an error of the catalog.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    Task ReportRejectionAsync(PaymentAggregate payment, string reason, CancellationToken cancellationToken);
+    Task ReportRejectionAsync(PaymentAggregate payment, Error reason, CancellationToken cancellationToken);
 
     /// <summary>
     /// The keys worked again; earlier rejections were transient. Writes only when there were rejections to forget.
@@ -49,18 +49,18 @@ public sealed class MerchantAccountHealth(IMerchantAccountRepository repository,
     public bool IsRejection(CodeDesignPlusException exception) => exception.Code == Errors.MerchantKeysRejectedByProvider.Code;
 
     /// <inheritdoc/>
-    public async Task ReportRejectionAsync(PaymentAggregate payment, string reason, CancellationToken cancellationToken)
+    public async Task ReportRejectionAsync(PaymentAggregate payment, Error reason, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(payment);
 
         if (payment.PlatformAccount || payment.Tenant is not { } tenant)
         {
-            logger.LogError("The provider rejected the keys of the platform's collection account while handling payment {PaymentId}: {Reason}", payment.Id, reason);
+            logger.LogError("The provider rejected the keys of the platform's collection account while handling payment {PaymentId}: {Reason}", payment.Id, reason.Code);
 
             return;
         }
 
-        logger.LogWarning("The provider rejected the keys of the collection account of tenant {Tenant} while handling payment {PaymentId}: {Reason}", tenant, payment.Id, reason);
+        logger.LogWarning("The provider rejected the keys of the collection account of tenant {Tenant} while handling payment {PaymentId}: {Reason}", tenant, payment.Id, reason.Code);
 
         MerchantAccountAggregate saved = null!;
 
@@ -68,7 +68,7 @@ public sealed class MerchantAccountHealth(IMerchantAccountRepository repository,
         {
             saved = account;
 
-            return account.RegisterRejection(reason, options.Value.InvalidateAfterRejections);
+            return account.RegisterRejection(reason.Code, options.Value.InvalidateAfterRejections);
         }, cancellationToken);
 
         if (!written || saved.Status != MerchantAccountStatus.Invalid)

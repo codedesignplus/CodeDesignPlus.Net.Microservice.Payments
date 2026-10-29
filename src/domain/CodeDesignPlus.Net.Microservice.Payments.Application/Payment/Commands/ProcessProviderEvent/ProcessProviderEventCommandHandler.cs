@@ -80,7 +80,7 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
                 return;
             }
 
-            await health.ReportRejectionAsync(payment, "The events secret does not verify the provider's events.", cancellationToken);
+            await health.ReportRejectionAsync(payment, Errors.MerchantEventsSecretDoesNotVerify, cancellationToken);
 
             outcome = confirmed;
         }
@@ -112,7 +112,7 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
         }
         catch (CodeDesignPlusException exception) when (health.IsRejection(exception))
         {
-            await health.ReportRejectionAsync(payment, "The private key was rejected.", cancellationToken);
+            await health.ReportRejectionAsync(payment, Errors.MerchantPrivateKeyWasRejected, cancellationToken);
 
             return null;
         }

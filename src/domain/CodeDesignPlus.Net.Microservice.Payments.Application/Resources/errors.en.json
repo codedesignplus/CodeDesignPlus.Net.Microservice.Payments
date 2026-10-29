@@ -42,6 +42,12 @@
     "349": "To connect payments to third parties, enter the user, the key and the source account.",
     "350": "The organization is required.",
     "351": "The payment gateway of the account cannot pay third parties.",
-    "352": "The payment gateway rejected the keys of the collection account."
+    "352": "The payment gateway rejected the keys of the collection account.",
+    "353": "The public key is not a key of the payment gateway.",
+    "354": "The private key is not a key of the payment gateway or belongs to another environment than the public key.",
+    "355": "The payment gateway does not recognize the public key.",
+    "356": "The merchant is inactive at the payment gateway.",
+    "357": "The payment gateway does not accept the private key.",
+    "358": "The events secret does not verify the events of the payment gateway."
   }
 }

@@ -1,3 +1,5 @@
+using CodeDesignPlus.Net.Exceptions;
+
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.DataTransferObjects;
 
 /// <summary>
@@ -80,9 +82,14 @@ public class MerchantAccountDto
     public Instant? LastValidatedAt { get; set; }
 
     /// <summary>
-    /// Why the provider stopped accepting the keys, while the account is invalid.
+    /// Code of the error catalog that says why the provider stopped accepting the keys, while the account is invalid.
     /// </summary>
-    public string? InvalidReason { get; set; }
+    public string? InvalidReasonCode { get; set; }
+
+    /// <summary>
+    /// The same reason, in the language of the request.
+    /// </summary>
+    public string? InvalidReasonMessage { get; set; }
 
     /// <summary>
     /// The webhook URL the tenant must configure on its provider panel; the same for every tenant.
@@ -111,7 +118,8 @@ public class MerchantAccountDto
         PayoutsSourceAccountId = account.PayoutsSourceAccountId,
         PayoutsApiKeyHint = account.PayoutsApiKeyHint,
         LastValidatedAt = account.LastValidatedAt,
-        InvalidReason = account.InvalidReason,
+        InvalidReasonCode = account.InvalidReasonCode,
+        InvalidReasonMessage = account.InvalidReasonCode is null ? null : new Error(account.InvalidReasonCode).GetMessage(),
         EventsUrl = eventsUrl.ToString()
     };
 

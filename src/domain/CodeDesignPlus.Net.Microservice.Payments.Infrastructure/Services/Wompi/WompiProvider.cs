@@ -5,6 +5,7 @@ using CodeDesignPlus.Net.gRpc.Clients.Services.Currencies;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Wompi.Models;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 using Microsoft.AspNetCore.WebUtilities;
+using AppErrors = CodeDesignPlus.Net.Microservice.Payments.Application.Errors;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Wompi;
 
@@ -118,31 +119,31 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
 
         if (environment is null || !publicKey.StartsWith("pub_", StringComparison.Ordinal))
         {
-            return new MerchantValidation(false, null, null, "The public key is not a Wompi public key.");
+            return new MerchantValidation(false, null, null, AppErrors.MerchantPublicKeyIsNotFromProvider);
         }
 
         if (WompiKeys.EnvironmentOf(secrets.PrivateKey) != environment || !secrets.PrivateKey.StartsWith("prv_", StringComparison.Ordinal))
         {
-            return new MerchantValidation(false, environment, null, "The private key is not a Wompi private key of the same environment as the public key.");
+            return new MerchantValidation(false, environment, null, AppErrors.MerchantPrivateKeyDoesNotMatchPublicKey);
         }
 
         var merchant = await client.GetMerchantAsync(publicKey, cancellationToken);
 
         if (merchant is null)
         {
-            return new MerchantValidation(false, environment, null, "Wompi does not recognize the public key.");
+            return new MerchantValidation(false, environment, null, AppErrors.MerchantPublicKeyIsUnknown);
         }
 
         if (!merchant.Active)
         {
-            return new MerchantValidation(false, environment, merchant.Name, "The Wompi merchant is not active.");
+            return new MerchantValidation(false, environment, merchant.Name, AppErrors.MerchantIsInactive);
         }
 
         var accepted = await client.IsPrivateKeyAcceptedAsync(secrets.PrivateKey, cancellationToken);
 
         if (!accepted)
         {
-            return new MerchantValidation(false, environment, merchant.Name, "Wompi does not accept the private key.");
+            return new MerchantValidation(false, environment, merchant.Name, AppErrors.MerchantPrivateKeyWasRejected);
         }
 
         return new MerchantValidation(true, environment, merchant.LegalName ?? merchant.Name, null);
