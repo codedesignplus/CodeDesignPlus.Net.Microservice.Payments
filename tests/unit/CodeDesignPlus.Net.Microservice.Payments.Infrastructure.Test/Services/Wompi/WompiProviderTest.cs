@@ -44,6 +44,33 @@ public class WompiProviderTest
     }
 
     [Fact]
+    public async Task CreateCheckoutAsync_VisitorWithoutEmailNorPhone_LeavesThemForThePage()
+    {
+        // Arrange: a visitor paying at the front desk is known only by name and document (pendings/665).
+        var payment = Payment(phone: "", email: "");
+
+        // Act
+        var session = await Provider().CreateCheckoutAsync(payment, credentials, new Uri("https://www.example.com/return"), Instant.FromUtc(2026, 10, 28, 20, 0), CancellationToken.None);
+
+        // Assert
+        var query = QueryHelpers.ParseQuery(session.RedirectUrl.Query);
+
+        Assert.Equal((false, false, "Ana Restrepo", "1020304050"), (query.ContainsKey("customer-data:email"), query.ContainsKey("customer-data:phone-number"), query["customer-data:full-name"].ToString(), query["customer-data:legal-id"].ToString()));
+    }
+
+    [Fact]
+    public async Task CreateCheckoutAsync_PayerWithEmailAndPhone_PrefillsThem()
+    {
+        // Act
+        var session = await Provider().CreateCheckoutAsync(Payment(), credentials, new Uri("https://www.example.com/return"), Instant.FromUtc(2026, 10, 28, 20, 0), CancellationToken.None);
+
+        // Assert
+        var query = QueryHelpers.ParseQuery(session.RedirectUrl.Query);
+
+        Assert.Equal(("ana@example.com", "3001112233"), (query["customer-data:email"].ToString(), query["customer-data:phone-number"].ToString()));
+    }
+
+    [Fact]
     public async Task CreateCheckoutAsync_CurrencyWithoutDecimals_ConvertsToCents()
     {
         // Arrange: a currency kept in whole units still goes to Wompi in cents.
@@ -236,9 +263,9 @@ public class WompiProviderTest
             .ReturnsAsync(Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", digits, 170));
     }
 
-    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L)
+    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L, string phone = "3001112233", string email = "ana@example.com")
     {
-        var buyer = Buyer.CreateWithoutShipping(Guid.NewGuid(), "Ana Restrepo", "3001112233", "ana@example.com", TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
+        var buyer = Buyer.CreateWithoutShipping(Guid.NewGuid(), "Ana Restrepo", phone, email, TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
 
         return PaymentAggregate.Create(PaymentId, "Invoicing", Guid.NewGuid(), Money.FromLong(subTotal, "COP"), Money.FromLong(tax, "COP"), Money.FromLong(subTotal + tax, "COP"), buyer, "Cuota de administración", "Wompi", false, Guid.NewGuid(), Guid.NewGuid());
     }

@@ -242,7 +242,13 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
             return;
         }
 
-        parameters["customer-data:email"] = buyer.Email;
+        // A payer known only by name and document (the visitor at the front desk, pendings/665) types the email and the phone
+        // on the page: an empty one would prefill nothing useful.
+        if (!string.IsNullOrWhiteSpace(buyer.Email))
+        {
+            parameters["customer-data:email"] = buyer.Email;
+        }
+
         parameters["customer-data:full-name"] = buyer.Name;
 
         // The page takes the number and its country prefix apart; a number already written with its prefix cannot be

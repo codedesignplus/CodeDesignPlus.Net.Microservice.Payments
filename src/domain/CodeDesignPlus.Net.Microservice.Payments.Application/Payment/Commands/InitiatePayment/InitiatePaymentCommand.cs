@@ -90,13 +90,18 @@ public class TaxAmountDtoValidator : AbstractValidator<Amount>
     }
 }
 
+/// <summary>
+/// The payer as the module knows them. Email and phone are optional: a visitor paying at the front desk is known only by
+/// name and document (pendings/665), and the provider's hosted page asks for what is missing. When they come, they are
+/// validated as before.
+/// </summary>
 public class BuyerInfoDtoValidator : AbstractValidator<ValueObjects.User.Buyer>
 {
     public BuyerInfoDtoValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(150);
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(255);
-        RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Email).EmailAddress().MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.Email));
+        RuleFor(x => x.Phone).MaximumLength(20).When(x => !string.IsNullOrWhiteSpace(x.Phone));
         RuleFor(x => x.Document).MaximumLength(20);
     }
 }
