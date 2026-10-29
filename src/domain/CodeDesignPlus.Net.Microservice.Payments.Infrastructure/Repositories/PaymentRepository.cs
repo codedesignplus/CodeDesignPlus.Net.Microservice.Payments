@@ -41,4 +41,15 @@ public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoO
 
         return result.DeletedCount;
     }
+
+    /// <inheritdoc/>
+    public async Task<PaymentAggregate?> FindByProviderTransactionAsync(string provider, string providerTransactionId, CancellationToken cancellationToken)
+    {
+        // Exact match on the code as it is stored: the payment keeps the provider's code as the adapter declares it, and a
+        // case-insensitive comparison would need a collation, which DocumentDB does not have.
+        var filter = Builders<PaymentAggregate>.Filter.Eq(x => x.ProviderTransactionId, providerTransactionId)
+            & Builders<PaymentAggregate>.Filter.Eq(x => x.Provider, provider);
+
+        return await GetCollection<PaymentAggregate>().Find(filter).FirstOrDefaultAsync(cancellationToken);
+    }
 }

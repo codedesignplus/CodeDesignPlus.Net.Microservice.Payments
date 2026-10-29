@@ -25,7 +25,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// provider does not keep retrying something that will never be accepted.
 /// </para>
 /// </remarks>
-public class ProcessProviderEventCommandHandler(IPaymentRepository repository, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMerchantAccountHealth health, IMediator mediator, ILogger<ProcessProviderEventCommandHandler> logger) : IRequestHandler<ProcessProviderEventCommand>
+public class ProcessProviderEventCommandHandler(IPaymentRepository repository, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMerchantAccountHealth health, IMediator mediator, IPubSub pubsub, ILogger<ProcessProviderEventCommandHandler> logger) : IRequestHandler<ProcessProviderEventCommand>
 {
     public async Task Handle(ProcessProviderEventCommand request, CancellationToken cancellationToken)
     {
@@ -37,7 +37,7 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
 
         if (notification is null)
         {
-            logger.LogInformation("Event from {Provider} discarded: it is not a payment event.", collect.Code);
+            await ProcessRefundAsync(collect, request.Body, cancellationToken);
 
             return;
         }
@@ -96,7 +96,77 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
             return;
         }
 
-        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType), cancellationToken);
+        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee), cancellationToken);
+    }
+
+    /// <summary>
+    /// Applies a refund event: it is trusted the same way as a payment event, by the signature of the account of the
+    /// payment it refunds, and then recorded on the payment.
+    /// </summary>
+    /// <remarks>
+    /// The refund's own reference is not necessarily the payment's, so the payment is looked up by it when it is one and by
+    /// the refunded transaction otherwise. A forged or unknown refund is discarded and logged, like a payment event.
+    /// </remarks>
+    private async Task ProcessRefundAsync(ICollectProvider collect, string body, CancellationToken cancellationToken)
+    {
+        var refunds = providers.FindRefunds(collect.Code);
+
+        var refund = refunds is null ? null : await refunds.ReadRefundNotificationAsync(body, cancellationToken);
+
+        if (refund is null)
+        {
+            logger.LogInformation("Event from {Provider} discarded: it is neither a payment nor a refund event.", collect.Code);
+
+            return;
+        }
+
+        PaymentAggregate? payment = null;
+
+        if (Guid.TryParse(refund.Reference, out var paymentId))
+        {
+            payment = await repository.FindAsync<PaymentAggregate>(paymentId, cancellationToken);
+        }
+
+        if (payment is null && !string.IsNullOrWhiteSpace(refund.TransactionId))
+        {
+            payment = await repository.FindByProviderTransactionAsync(collect.Code, refund.TransactionId, cancellationToken);
+        }
+
+        if (payment is null || !string.Equals(payment.Provider, collect.Code, StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning("Refund {RefundId} from {Provider} discarded: no payment of that provider for transaction {TransactionId}.", refund.RefundId, collect.Code, refund.TransactionId);
+
+            return;
+        }
+
+        var credentials = await credentialsResolver.ForPaymentAsync(payment, cancellationToken);
+
+        if (credentials is null || !collect.IsAuthentic(body, credentials))
+        {
+            logger.LogWarning("Refund {RefundId} from {Provider} for payment {PaymentId} of tenant {Tenant} discarded: it cannot be verified with the account's secret.", refund.RefundId, collect.Code, payment.Id, payment.Tenant);
+
+            return;
+        }
+
+        if (payment.Status != PaymentStatus.Succeeded)
+        {
+            logger.LogWarning("Refund {RefundId} from {Provider} discarded: payment {PaymentId} is {Status}, not succeeded.", refund.RefundId, collect.Code, payment.Id, payment.Status);
+
+            return;
+        }
+
+        if (!payment.RegisterRefund(refund.RefundId, refund.Status, refund.Amount, refund.Code, refund.Message))
+        {
+            logger.LogInformation("Refund {RefundId} of payment {PaymentId}: already known as {Status}.", refund.RefundId, payment.Id, refund.Status);
+
+            return;
+        }
+
+        await repository.UpdateAsync(payment, cancellationToken);
+
+        await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+
+        logger.LogInformation("Refund {RefundId} of payment {PaymentId} of tenant {Tenant}: {Status}.", refund.RefundId, payment.Id, payment.Tenant, refund.Status);
     }
 
     /// <summary>

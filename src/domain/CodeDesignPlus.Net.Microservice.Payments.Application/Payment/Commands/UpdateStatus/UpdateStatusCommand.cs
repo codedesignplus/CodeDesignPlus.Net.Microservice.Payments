@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
@@ -12,13 +13,15 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// <param name="ProviderTransactionId">Id of the transaction at the provider.</param>
 /// <param name="CapturedAmount">What the provider captured.</param>
 /// <param name="PaymentMethodType">Payment method the payer chose on the provider's page.</param>
+/// <param name="ReportedFee">The commission the provider reported for the transaction, when it reports it.</param>
 public record UpdateStatusCommand(
     Guid Id,
     PaymentStatus Status,
     Dictionary<string, string?> Metadata,
     string? ProviderTransactionId = null,
     Money? CapturedAmount = null,
-    string? PaymentMethodType = null
+    string? PaymentMethodType = null,
+    ProviderFee? ReportedFee = null
 ) : IRequest;
 
 public class Validator : AbstractValidator<UpdateStatusCommand>

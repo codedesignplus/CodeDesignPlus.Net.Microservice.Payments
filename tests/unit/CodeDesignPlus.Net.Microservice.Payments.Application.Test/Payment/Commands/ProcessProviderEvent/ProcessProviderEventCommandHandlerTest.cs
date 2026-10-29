@@ -26,6 +26,7 @@ public class ProcessProviderEventCommandHandlerTest
     private readonly Mock<IMerchantCredentialsResolver> resolver = new();
     private readonly Mock<IMediator> mediator = new();
     private readonly Mock<IMerchantAccountHealth> health = new();
+    private readonly Mock<IPubSub> pubsub = new();
 
     public ProcessProviderEventCommandHandlerTest()
     {
@@ -152,6 +153,49 @@ public class ProcessProviderEventCommandHandlerTest
         mediator.Verify(x => x.Send(It.IsAny<UpdateStatusCommand>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Handle_AuthenticRefundOfAKnownTransaction_RecordsItAndPublishesIt()
+    {
+        // Arrange: the refund's reference is its own, so the payment is found by the transaction.
+        RefundEvent();
+
+        // Act
+        await Handle();
+
+        // Assert
+        Assert.Equal(RefundStatus.Approved, payment.Refunds!.Single().Status);
+        pubsub.Verify(x => x.PublishAsync(It.Is<IReadOnlyList<IDomainEvent>>(e => e.OfType<Domain.DomainEvents.PaymentRefundUpdatedDomainEvent>().Any(r => r.RefundId == "COa7Bk9m1" && r.Amount!.Amount == 50_000L)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_RefundWithAnotherSignature_IsDiscarded()
+    {
+        // Arrange
+        RefundEvent();
+        collect.Setup(x => x.IsAuthentic(Body, It.IsAny<MerchantCredentials>())).Returns(false);
+
+        // Act
+        await Handle();
+
+        // Assert
+        Assert.Null(payment.Refunds);
+        pubsub.Verify(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private void RefundEvent()
+    {
+        payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "1292-1602113476-10985", Money.FromLong(119_000L, "COP"), "CARD");
+        payment.GetAndClearEvents();
+
+        var refunds = new Mock<IRefundProvider>();
+
+        refunds.SetupGet(x => x.Code).Returns("Wompi");
+        refunds.Setup(x => x.ReadRefundNotificationAsync(Body, It.IsAny<CancellationToken>())).ReturnsAsync(new ProviderRefundNotification("ORDER-2024-001", "1292-1602113476-10985", "COa7Bk9m1", RefundStatus.Approved, Money.FromLong(50_000L, "COP"), null, null));
+        collect.Setup(x => x.ReadNotificationAsync(Body, It.IsAny<CancellationToken>())).ReturnsAsync((ProviderNotification?)null);
+        providers.Setup(x => x.FindRefunds("Wompi")).Returns(refunds.Object);
+        repository.Setup(x => x.FindByProviderTransactionAsync("Wompi", "1292-1602113476-10985", It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+    }
+
     private static CollectOutcome Outcome(string transactionId, PaymentStatus status) => new(status, transactionId, Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = status.ToString() });
 
     private void Notify(string reference, PaymentStatus status)
@@ -163,7 +207,7 @@ public class ProcessProviderEventCommandHandlerTest
 
     private Task Handle()
     {
-        var handler = new ProcessProviderEventCommandHandler(repository.Object, providers.Object, resolver.Object, health.Object, mediator.Object, Mock.Of<ILogger<ProcessProviderEventCommandHandler>>());
+        var handler = new ProcessProviderEventCommandHandler(repository.Object, providers.Object, resolver.Object, health.Object, mediator.Object, pubsub.Object, Mock.Of<ILogger<ProcessProviderEventCommandHandler>>());
 
         return handler.Handle(new ProcessProviderEventCommand("wompi", Body), CancellationToken.None);
     }

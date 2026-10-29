@@ -62,6 +62,6 @@ public class ValidateMerchantAccountCommandHandler(IMerchantAccountRepository re
 
         await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 
-        return MerchantAccountDto.From(saved, options.Value.EventsUrl);
+        return MerchantAccountDto.From(saved, options.Value);
     }
 }

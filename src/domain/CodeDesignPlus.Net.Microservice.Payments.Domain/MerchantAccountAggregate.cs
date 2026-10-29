@@ -109,6 +109,12 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     public string? InvalidReasonCode { get; private set; }
 
     /// <summary>
+    /// The rates the provider charges the tenant; null while the tenant has not set them, and then the provider's
+    /// default of the deployment applies (<c>PaymentProviders:DefaultFees</c>).
+    /// </summary>
+    public ProviderFeeSchedule? FeeSchedule { get; private set; }
+
+    /// <summary>
     /// Whether the account can pay third parties.
     /// </summary>
     public bool PayoutsEnabled => Status == MerchantAccountStatus.Active && !string.IsNullOrEmpty(PayoutsSourceAccountId);
@@ -294,6 +300,23 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         {
             AddEvent(MerchantAccountRevalidatedDomainEvent.Create(Id, Tenant, Provider!));
         }
+    }
+
+    /// <summary>
+    /// Sets the rates the provider charges the tenant, as its contract with the provider says. Applies to the payments
+    /// that succeed from now on; the ones already closed keep the commission they were published with.
+    /// </summary>
+    /// <param name="schedule">The rates.</param>
+    /// <param name="updatedBy">Who set them.</param>
+    public void SetFeeSchedule(ProviderFeeSchedule schedule, Guid updatedBy)
+    {
+        DomainGuard.IsNull(schedule, Errors.ProviderFeeScheduleIsRequired);
+
+        FeeSchedule = schedule;
+        UpdatedBy = updatedBy;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        AddEvent(MerchantAccountFeeScheduleChangedDomainEvent.Create(Id, Tenant, schedule));
     }
 
     /// <summary>

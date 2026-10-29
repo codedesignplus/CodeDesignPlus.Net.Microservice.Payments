@@ -168,6 +168,12 @@
     "332": "The purpose of the payout is required.",
     "333": "The beneficiary of the payout is required.",
     "334": "The payout amount must be greater than zero.",
-    "335": "The user who requests the payout is required."
+    "335": "The user who requests the payout is required.",
+    "365": "The rates and the fixed amount of the provider fee cannot be negative.",
+    "366": "The fixed amount of the provider fee is required.",
+    "367": "The general rate of the provider fee is required.",
+    "368": "Each rate by payment method needs its payment method.",
+    "369": "The refund id is required.",
+    "370": "Only a succeeded payment can be refunded."
   }
 }

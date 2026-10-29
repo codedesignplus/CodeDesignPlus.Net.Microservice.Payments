@@ -48,6 +48,7 @@
     "355": "The payment gateway does not recognize the public key.",
     "356": "The merchant is inactive at the payment gateway.",
     "357": "The payment gateway does not accept the private key.",
-    "358": "The events secret does not verify the events of the payment gateway."
+    "358": "The events secret does not verify the events of the payment gateway.",
+    "371": "The tenant has no collection account yet."
   }
 }

@@ -95,4 +95,7 @@ public class Errors: IErrorCodes
     public static readonly Error MerchantIsInactive = new("356");
     public static readonly Error MerchantPrivateKeyWasRejected = new("357");
     public static readonly Error MerchantEventsSecretDoesNotVerify = new("358");
+
+    // Provider fee (pendings/660, stage 6)
+    public static readonly Error MerchantAccountNotFound = new("371");
 }

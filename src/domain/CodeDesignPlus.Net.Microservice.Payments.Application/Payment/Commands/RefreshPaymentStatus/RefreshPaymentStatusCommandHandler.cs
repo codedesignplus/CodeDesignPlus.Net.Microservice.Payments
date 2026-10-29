@@ -59,7 +59,7 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
             return PaymentStatusDto.From(payment);
         }
 
-        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType), cancellationToken);
+        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee), cancellationToken);
 
         var updated = await FindAsync(request.Id, cancellationToken);
 

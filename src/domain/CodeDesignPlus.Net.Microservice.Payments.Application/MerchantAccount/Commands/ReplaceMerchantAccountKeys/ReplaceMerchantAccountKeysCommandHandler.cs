@@ -42,6 +42,6 @@ public class ReplaceMerchantAccountKeysCommandHandler(IMerchantAccountRepository
 
         await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 
-        return MerchantAccountDto.From(saved, options.Value.EventsUrl);
+        return MerchantAccountDto.From(saved, options.Value);
     }
 }

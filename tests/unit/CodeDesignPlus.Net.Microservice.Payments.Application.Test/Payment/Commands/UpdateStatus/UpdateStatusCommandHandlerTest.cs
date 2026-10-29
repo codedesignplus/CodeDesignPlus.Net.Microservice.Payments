@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Fees;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
 using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
@@ -35,6 +36,7 @@ public class UpdateStatusCommandHandlerTest
     private readonly Mock<IUserContext> user = new();
     private readonly Mock<IPubSub> pubsub = new();
     private readonly Mock<ILiveChannelGrpc> liveChannel = new();
+    private readonly Mock<IProviderFeeCalculator> fees = new();
 
     public UpdateStatusCommandHandlerTest()
     {
@@ -77,6 +79,28 @@ public class UpdateStatusCommandHandlerTest
     }
 
     [Fact]
+    public async Task Handle_SucceededPayment_PublishesTheCommissionOfTheCapturedAmount()
+    {
+        // Arrange
+        var captured = Money.FromLong(119_000L, "COP");
+        var fee = new Domain.ValueObjects.ProviderFee(Money.FromLong(73_154L, "COP"), Money.FromLong(13_899L, "COP"), Domain.ValueObjects.ProviderFeeSources.Calculated);
+        var published = new List<IDomainEvent>();
+
+        fees.Setup(x => x.ForAsync(It.IsAny<PaymentAggregate>(), captured, "PSE", null, It.IsAny<CancellationToken>())).ReturnsAsync(fee);
+        pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events)).Returns(Task.CompletedTask);
+
+        var handler = new UpdateStatusCommandHandler(repository.Object, user.Object, pubsub.Object, liveChannel.Object, fees.Object);
+
+        // Act
+        await handler.Handle(new UpdateStatusCommand(PaymentId, PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", captured, "PSE"), CancellationToken.None);
+
+        // Assert
+        var response = published.OfType<Domain.DomainEvents.PaymentResponseAssociatedDomainEvent>().Single();
+
+        Assert.Equal((73_154L, 13_899L, 31_947L), (response.ProviderFee!.Amount, response.ProviderFeeTax!.Amount, response.ExpectedNetAmount!.Amount));
+    }
+
+    [Fact]
     public async Task UnaSesionCaducadaSeAceptaYNoRevienta()
     {
         // PayU manda `state_pol=5` cuando la sesion expira, que es justo lo que hace una transaccion PSE que
@@ -115,7 +139,7 @@ public class UpdateStatusCommandHandlerTest
             .Callback<LiveUserPush, CancellationToken>((r, _) => captured = r)
             .Returns(Task.CompletedTask);
 
-        var handler = new UpdateStatusCommandHandler(repository.Object, user.Object, pubsub.Object, liveChannel.Object);
+        var handler = new UpdateStatusCommandHandler(repository.Object, user.Object, pubsub.Object, liveChannel.Object, fees.Object);
 
         await handler.Handle(
             new UpdateStatusCommand(PaymentId, status, new Dictionary<string, string?> { ["state"] = status.ToString() }),

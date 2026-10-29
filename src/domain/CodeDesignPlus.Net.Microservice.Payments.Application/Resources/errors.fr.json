@@ -48,6 +48,7 @@
     "355": "La passerelle ne reconnaît pas la clé publique.",
     "356": "Le commerçant est inactif auprès de la passerelle.",
     "357": "La passerelle n'accepte pas la clé privée.",
-    "358": "Le secret des événements ne vérifie pas les événements de la passerelle."
+    "358": "Le secret des événements ne vérifie pas les événements de la passerelle.",
+    "371": "La copropriété n'a pas encore de compte d'encaissement."
   }
 }

@@ -118,6 +118,29 @@ public class WompiProviderTest
     }
 
     [Fact]
+    public async Task ReadRefundNotificationAsync_RefundDeclined_NormalizesItWithItsReason()
+    {
+        // Arrange: the example of docs/wompi/reembolsos.md.
+        const string body = "{\"event\":\"refund.updated\",\"data\":{\"refund\":{\"refund_id\":\"COa7Bk9m1\",\"transaction_id\":\"1292-1602113476-10985\",\"status\":\"DECLINED\",\"amount_in_cents\":50000,\"currency\":\"COP\",\"reference\":\"ORDER-2024-001\",\"code\":\"REFUND_DECLINED\",\"message\":\"El procesador rechazó el reembolso\"}},\"environment\":\"prod\",\"timestamp\":1530291411}";
+
+        // Act
+        var refund = await Provider().ReadRefundNotificationAsync(body, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(("COa7Bk9m1", "1292-1602113476-10985", RefundStatus.Declined, 50_000L, "REFUND_DECLINED"), (refund!.RefundId, refund.TransactionId, refund.Status, refund.Amount!.Amount, refund.Code));
+    }
+
+    [Fact]
+    public async Task ReadRefundNotificationAsync_TransactionEvent_IsNotARefund()
+    {
+        // Act
+        var refund = await Provider().ReadRefundNotificationAsync(Event("APPROVED"), CancellationToken.None);
+
+        // Assert
+        Assert.Null(refund);
+    }
+
+    [Fact]
     public async Task GetOutcomeAsync_DeclinedThenApproved_TheApprovedWins()
     {
         // Arrange: a payer declined on the page can try again with the same reference.

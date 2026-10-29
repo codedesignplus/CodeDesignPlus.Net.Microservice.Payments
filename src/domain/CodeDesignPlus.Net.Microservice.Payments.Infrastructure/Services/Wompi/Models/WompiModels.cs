@@ -47,6 +47,60 @@ public sealed class WompiMerchant
 }
 
 /// <summary>
+/// A refund, as Wompi reports it in its <c>refund.updated</c> event (docs/wompi/reembolsos.md).
+/// </summary>
+public sealed class WompiRefund
+{
+    /// <summary>
+    /// Id of the refund at Wompi.
+    /// </summary>
+    [JsonProperty("refund_id")]
+    public string? RefundId { get; set; }
+
+    /// <summary>
+    /// Id of the transaction refunded.
+    /// </summary>
+    [JsonProperty("transaction_id")]
+    public string? TransactionId { get; set; }
+
+    /// <summary>
+    /// PENDING, APPROVED, DECLINED, CANCELLED or ERROR.
+    /// </summary>
+    [JsonProperty("status")]
+    public string? Status { get; set; }
+
+    /// <summary>
+    /// Amount refunded, in cents.
+    /// </summary>
+    [JsonProperty("amount_in_cents")]
+    public long? AmountInCents { get; set; }
+
+    /// <summary>
+    /// ISO 4217 currency.
+    /// </summary>
+    [JsonProperty("currency")]
+    public string? Currency { get; set; }
+
+    /// <summary>
+    /// A reference of the refund, which is not necessarily the one of the transaction.
+    /// </summary>
+    [JsonProperty("reference")]
+    public string? Reference { get; set; }
+
+    /// <summary>
+    /// Code of the reason, when the refund did not go through.
+    /// </summary>
+    [JsonProperty("code")]
+    public string? Code { get; set; }
+
+    /// <summary>
+    /// The reason in Wompi's words, when the refund did not go through.
+    /// </summary>
+    [JsonProperty("message")]
+    public string? Message { get; set; }
+}
+
+/// <summary>
 /// A collection transaction, as Wompi reports it in its API and in its events.
 /// </summary>
 public sealed class WompiTransaction

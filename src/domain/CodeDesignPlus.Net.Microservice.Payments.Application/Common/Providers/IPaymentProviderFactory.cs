@@ -28,4 +28,11 @@ public interface IPaymentProviderFactory
     /// <returns>The adapter that pays third parties with that provider.</returns>
     /// <exception cref="Exceptions.CodeDesignPlusException">Thrown when the provider cannot pay third parties.</exception>
     IPayoutProvider GetPayouts(string provider);
+
+    /// <summary>
+    /// The refunds capability of a provider, which not every provider has.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <returns>The adapter that reads refund events of that provider, or null when it has none.</returns>
+    IRefundProvider? FindRefunds(string provider);
 }

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
+using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 
@@ -72,6 +74,29 @@ public class PaymentProvidersOptions : IValidatableObject
     public int ReconciliationBatchSize { get; set; } = 200;
 
     /// <summary>
+    /// The rates each provider charges by default, by provider code. A tenant that has not set its own rates on its
+    /// collection account pays these; the platform's account always does.
+    /// </summary>
+    public Dictionary<string, ProviderFeeScheduleOptions> DefaultFees { get; set; } = [];
+
+    /// <summary>
+    /// The default rates of a provider.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <returns>The rates, or null when the deployment has none for that provider.</returns>
+    public ProviderFeeSchedule? DefaultFeeFor(string? provider)
+    {
+        if (string.IsNullOrWhiteSpace(provider))
+        {
+            return null;
+        }
+
+        var entry = DefaultFees.FirstOrDefault(x => string.Equals(x.Key, provider, StringComparison.OrdinalIgnoreCase));
+
+        return entry.Value?.ToSchedule();
+    }
+
+    /// <summary>
     /// The provider routed for a country.
     /// </summary>
     /// <param name="country">ISO 3166-1 alpha-2 code.</param>
@@ -119,6 +144,111 @@ public class PaymentProvidersOptions : IValidatableObject
         if (ReconciliationBatchSize <= 0)
         {
             yield return new ValidationResult("ReconciliationBatchSize must be greater than zero.", [nameof(ReconciliationBatchSize)]);
+        }
+
+        foreach (var (provider, fee) in DefaultFees)
+        {
+            foreach (var problem in fee?.Problems() ?? ["the rates are missing"])
+            {
+                yield return new ValidationResult($"DefaultFees:{provider}: {problem}.", [nameof(DefaultFees)]);
+            }
+        }
+    }
+}
+
+/// <summary>
+/// The default rates of a provider, as they are written in the configuration.
+/// </summary>
+public class ProviderFeeScheduleOptions
+{
+    /// <summary>
+    /// The rate of every payment method without its own.
+    /// </summary>
+    public ProviderFeeRateOptions Default { get; set; } = null!;
+
+    /// <summary>
+    /// The payment methods with a rate of their own, by the code the provider gives the method (for example <c>CARD</c>).
+    /// </summary>
+    public Dictionary<string, ProviderFeeRateOptions> ByPaymentMethod { get; set; } = [];
+
+    /// <summary>
+    /// The rates as the domain keeps them.
+    /// </summary>
+    /// <returns>The schedule.</returns>
+    public ProviderFeeSchedule ToSchedule() => ProviderFeeSchedule.Create(Default.ToRate(), ByPaymentMethod.Select(x => new PaymentMethodFeeRate(x.Key, x.Value.ToRate())));
+
+    /// <summary>
+    /// What is wrong with the rates, so a bad configuration stops the start-up instead of computing wrong commissions.
+    /// </summary>
+    /// <returns>One text per problem; none when the rates are fine.</returns>
+    public IEnumerable<string> Problems()
+    {
+        if (Default is null)
+        {
+            yield return "the Default rate is missing";
+            yield break;
+        }
+
+        foreach (var problem in Default.Problems())
+        {
+            yield return $"Default {problem}";
+        }
+
+        foreach (var (method, rate) in ByPaymentMethod)
+        {
+            foreach (var problem in rate?.Problems() ?? ["is missing"])
+            {
+                yield return $"ByPaymentMethod:{method} {problem}";
+            }
+        }
+    }
+}
+
+/// <summary>
+/// A rate of a provider, as it is written in the configuration: basis points and minor units (rules 04 and 05).
+/// </summary>
+public class ProviderFeeRateOptions
+{
+    /// <summary>
+    /// Percentage of the gross, in basis points (265 = 2.65 %).
+    /// </summary>
+    public int RateBasisPoints { get; set; }
+
+    /// <summary>
+    /// Fixed amount per payment, in minor units of <see cref="Currency"/>.
+    /// </summary>
+    public long FixedAmount { get; set; }
+
+    /// <summary>
+    /// ISO 4217 currency of <see cref="FixedAmount"/>.
+    /// </summary>
+    public string Currency { get; set; } = null!;
+
+    /// <summary>
+    /// Tax on the commission, in basis points (1900 = 19 %).
+    /// </summary>
+    public int TaxRateBasisPoints { get; set; }
+
+    /// <summary>
+    /// The rate as the domain keeps it.
+    /// </summary>
+    /// <returns>The rate.</returns>
+    public ProviderFeeRate ToRate() => ProviderFeeRate.Create(RateBasisPoints, Money.FromLong(FixedAmount, Currency), TaxRateBasisPoints);
+
+    /// <summary>
+    /// What is wrong with the rate.
+    /// </summary>
+    /// <returns>One text per problem.</returns>
+    public IEnumerable<string> Problems()
+    {
+        if (RateBasisPoints < 0 || FixedAmount < 0 || TaxRateBasisPoints < 0)
+        {
+            yield return "cannot be negative";
+        }
+
+        if (string.IsNullOrWhiteSpace(Currency) || Currency.Length != 3)
+        {
+            yield return "needs the ISO 4217 Currency of its FixedAmount";
         }
     }
 }

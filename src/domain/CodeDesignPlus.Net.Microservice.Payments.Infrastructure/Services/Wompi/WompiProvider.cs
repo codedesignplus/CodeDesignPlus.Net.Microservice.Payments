@@ -18,7 +18,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services.Wompi
 /// money in the minor unit that ms-locations declares for the currency. Every amount crosses that boundary here and
 /// nowhere else.
 /// </remarks>
-public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrpc, IOptions<WompiOptions> options, ILogger<WompiProvider> logger) : ICollectProvider, IMerchantCredentialsProvider, IPayoutProvider
+public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrpc, IOptions<WompiOptions> options, ILogger<WompiProvider> logger) : ICollectProvider, IMerchantCredentialsProvider, IPayoutProvider, IRefundProvider
 {
     /// <summary>
     /// The code this provider is routed and stored with.
@@ -84,6 +84,43 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
         var outcome = await ToOutcomeAsync(transaction, root.Value<string>("environment"), cancellationToken);
 
         return new ProviderNotification(transaction.Reference, outcome);
+    }
+
+    /// <inheritdoc/>
+    public async Task<ProviderRefundNotification?> ReadRefundNotificationAsync(string body, CancellationToken cancellationToken)
+    {
+        var root = WompiKeys.Parse(body);
+
+        if (root is null || root.Value<string>("event") != "refund.updated")
+        {
+            return null;
+        }
+
+        var refund = root.SelectToken("data.refund")?.ToObject<WompiRefund>();
+
+        if (refund is null || string.IsNullOrWhiteSpace(refund.RefundId))
+        {
+            return null;
+        }
+
+        // The statuses of «Reembolsos» (docs/wompi/reembolsos.md): only PENDING is not final.
+        var status = refund.Status switch
+        {
+            "APPROVED" => RefundStatus.Approved,
+            "DECLINED" => RefundStatus.Declined,
+            "CANCELLED" => RefundStatus.Cancelled,
+            "ERROR" => RefundStatus.Error,
+            _ => RefundStatus.Pending
+        };
+
+        Money? amount = null;
+
+        if (refund.AmountInCents is { } cents && !string.IsNullOrWhiteSpace(refund.Currency))
+        {
+            amount = await FromCentsAsync(cents, refund.Currency, cancellationToken);
+        }
+
+        return new ProviderRefundNotification(refund.Reference, refund.TransactionId, refund.RefundId, status, amount, refund.Code, refund.Message);
     }
 
     /// <inheritdoc/>

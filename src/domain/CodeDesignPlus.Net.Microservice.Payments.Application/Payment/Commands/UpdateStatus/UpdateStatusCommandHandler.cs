@@ -1,8 +1,13 @@
-﻿using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
+using CodeDesignPlus.Net.gRpc.Clients.Abstractions;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Fees;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 
-public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILiveChannelGrpc liveChannel) : IRequestHandler<UpdateStatusCommand>
+/// <summary>
+/// Closes a payment and publishes its outcome, with the commission the provider keeps when the payment succeeded
+/// (pendings/660, stage 6): the tenant's books need it the day the payment is approved.
+/// </summary>
+public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILiveChannelGrpc liveChannel, IProviderFeeCalculator fees) : IRequestHandler<UpdateStatusCommand>
 {
     public async Task Handle(UpdateStatusCommand request, CancellationToken cancellationToken)
     {
@@ -17,7 +22,11 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
 
         ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
 
-        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType);
+        var fee = request.Status == PaymentStatus.Succeeded
+            ? await fees.ForAsync(payment, request.CapturedAmount, request.PaymentMethodType, request.ReportedFee, cancellationToken)
+            : null;
+
+        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee);
 
         await repository.UpdateAsync(payment, cancellationToken);
 

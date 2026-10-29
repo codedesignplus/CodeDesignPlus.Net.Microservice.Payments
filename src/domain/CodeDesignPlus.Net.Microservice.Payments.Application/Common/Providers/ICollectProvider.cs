@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
@@ -82,6 +83,12 @@ public sealed record ProviderNotification(string Reference, CollectOutcome Outco
 /// <param name="Raw">What the provider reported, kept as the record of the outcome. Never contains secrets.</param>
 public sealed record CollectOutcome(PaymentStatus Status, string? TransactionId, Money? Amount, string? PaymentMethodType, Dictionary<string, string?> Raw)
 {
+    /// <summary>
+    /// The commission the provider says it keeps from this transaction, when it reports it; it prevails over the one
+    /// computed with the account's rates. Wompi does not report it in the transaction (pendings/660).
+    /// </summary>
+    public ProviderFee? ReportedFee { get; init; }
+
     /// <summary>
     /// Whether the status is one the payment can close with.
     /// </summary>

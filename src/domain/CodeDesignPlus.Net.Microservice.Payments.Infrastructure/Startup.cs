@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Fees;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
@@ -37,6 +38,7 @@ public class Startup : IStartup
         services.AddSingleton<ICollectProvider>(x => x.GetRequiredService<WompiProvider>());
         services.AddSingleton<IMerchantCredentialsProvider>(x => x.GetRequiredService<WompiProvider>());
         services.AddSingleton<IPayoutProvider>(x => x.GetRequiredService<WompiProvider>());
+        services.AddSingleton<IRefundProvider>(x => x.GetRequiredService<WompiProvider>());
         services.AddSingleton<IPlatformMerchantAccount, WompiPlatformAccount>();
 
         services.AddSingleton<IPaymentProviderFactory, PaymentProviderFactory>();
@@ -46,5 +48,6 @@ public class Startup : IStartup
         services.AddScoped<IMerchantCredentialsResolver, MerchantCredentialsResolver>();
         services.AddScoped<IMerchantAccountConnector, MerchantAccountConnector>();
         services.AddScoped<IMerchantAccountHealth, MerchantAccountHealth>();
+        services.AddScoped<IProviderFeeCalculator, ProviderFeeCalculator>();
     }
 }

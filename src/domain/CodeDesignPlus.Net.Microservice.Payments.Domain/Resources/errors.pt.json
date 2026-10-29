@@ -168,6 +168,12 @@
     "332": "O propósito do pagamento a terceiro é obrigatório.",
     "333": "O beneficiário do pagamento a terceiro é obrigatório.",
     "334": "O valor do pagamento a terceiro deve ser maior que zero.",
-    "335": "O usuário que solicita o pagamento a terceiro é obrigatório."
+    "335": "O usuário que solicita o pagamento a terceiro é obrigatório.",
+    "365": "As taxas e o valor fixo da tarifa do provedor não podem ser negativos.",
+    "366": "O valor fixo da tarifa do provedor é obrigatório.",
+    "367": "A tarifa geral do provedor é obrigatória.",
+    "368": "Cada tarifa por meio de pagamento precisa do seu meio de pagamento.",
+    "369": "O identificador do reembolso é obrigatório.",
+    "370": "Só é possível reembolsar um pagamento aprovado."
   }
 }

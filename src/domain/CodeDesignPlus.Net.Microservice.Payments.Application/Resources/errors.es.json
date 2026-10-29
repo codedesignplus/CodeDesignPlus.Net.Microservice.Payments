@@ -48,6 +48,7 @@
     "355": "La pasarela no reconoce la llave pública.",
     "356": "El comercio está inactivo en la pasarela.",
     "357": "La pasarela no acepta la llave privada.",
-    "358": "El secreto de eventos no verifica los eventos de la pasarela."
+    "358": "El secreto de eventos no verifica los eventos de la pasarela.",
+    "371": "La copropiedad todavía no tiene cuenta de recaudo."
   }
 }

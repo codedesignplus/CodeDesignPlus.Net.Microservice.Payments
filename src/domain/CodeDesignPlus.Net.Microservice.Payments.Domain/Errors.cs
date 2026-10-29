@@ -226,4 +226,12 @@ public class Errors : IErrorCodes
     public static readonly Error PayoutBeneficiaryIsRequired = new("333");
     public static readonly Error PayoutAmountMustBePositive = new("334");
     public static readonly Error PayoutRequestedByCannotBeEmpty = new("335");
+
+    // Provider fee and refunds (pendings/660, stage 6)
+    public static readonly Error ProviderFeeRateCannotBeNegative = new("365");
+    public static readonly Error ProviderFeeFixedAmountIsRequired = new("366");
+    public static readonly Error ProviderFeeScheduleIsRequired = new("367");
+    public static readonly Error PaymentMethodTypeIsRequired = new("368");
+    public static readonly Error RefundIdIsRequired = new("369");
+    public static readonly Error OnlySucceededPaymentsCanBeRefunded = new("370");
 }

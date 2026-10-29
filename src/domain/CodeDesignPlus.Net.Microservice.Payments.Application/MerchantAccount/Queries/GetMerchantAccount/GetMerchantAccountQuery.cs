@@ -38,12 +38,12 @@ public class GetMerchantAccountQueryHandler(IMerchantAccountRepository repositor
 
         if (account is not null)
         {
-            return MerchantAccountDto.From(account, options.Value.EventsUrl);
+            return MerchantAccountDto.From(account, options.Value);
         }
 
         var country = await CountryOfAsync(request.Tenant, cancellationToken);
 
-        return MerchantAccountDto.Pending(request.Tenant, options.Value.ProviderFor(country), options.Value.EventsUrl);
+        return MerchantAccountDto.Pending(request.Tenant, options.Value.ProviderFor(country), options.Value);
     }
 
     private async Task<string?> CountryOfAsync(Guid tenant, CancellationToken cancellationToken)

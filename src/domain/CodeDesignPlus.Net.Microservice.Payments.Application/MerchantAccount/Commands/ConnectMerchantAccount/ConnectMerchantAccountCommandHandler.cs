@@ -43,7 +43,7 @@ public class ConnectMerchantAccountCommandHandler(IMerchantAccountRepository rep
 
         await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 
-        return MerchantAccountDto.From(saved, options.Value.EventsUrl);
+        return MerchantAccountDto.From(saved, options.Value);
     }
 
     private async Task<MerchantAccountAggregate> LoadAsync(Guid tenant, CancellationToken cancellationToken)

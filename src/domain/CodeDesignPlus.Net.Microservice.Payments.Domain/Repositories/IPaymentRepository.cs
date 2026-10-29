@@ -28,4 +28,13 @@ public interface IPaymentRepository : IRepositoryBase
     /// <param name="cancellationToken">Token de cancelacion.</param>
     /// <returns>Cuántos pagos se borraron.</returns>
     Task<long> DeleteByTenantKeepingLicensesAsync(Guid tenant, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The payment a provider's transaction collected, for the events that name the transaction and not the payment.
+    /// </summary>
+    /// <param name="provider">Code of the provider.</param>
+    /// <param name="providerTransactionId">Id of the transaction at the provider.</param>
+    /// <param name="cancellationToken">Token de cancelacion.</param>
+    /// <returns>The payment, or null when no payment of that provider has that transaction.</returns>
+    Task<PaymentAggregate?> FindByProviderTransactionAsync(string provider, string providerTransactionId, CancellationToken cancellationToken);
 }

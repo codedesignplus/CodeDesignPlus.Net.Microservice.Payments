@@ -1,4 +1,5 @@
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
+using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
@@ -70,6 +71,23 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// Payment method the payer chose on the provider's hosted page (for example "CARD" or "PSE").
     /// </summary>
     public string? PaymentMethodType { get; private set; }
+    /// <summary>
+    /// The commission the provider keeps from this payment, without its tax. Only set once the payment succeeded and
+    /// the commission could be known.
+    /// </summary>
+    public Money? ProviderFee { get; private set; }
+    /// <summary>
+    /// The tax on <see cref="ProviderFee"/>.
+    /// </summary>
+    public Money? ProviderFeeTax { get; private set; }
+    /// <summary>
+    /// Where the commission came from (<see cref="ProviderFeeSources"/>).
+    /// </summary>
+    public string? FeeSource { get; private set; }
+    /// <summary>
+    /// The refunds of this payment, as the provider last reported each one; null while there are none.
+    /// </summary>
+    public List<PaymentRefund>? Refunds { get; private set; }
     /// <summary>
     /// Almacena la respuesta inmediata del proveedor de pagos al iniciar la transacción.
     /// Puede contener una URL de redirección o datos para un widget.
@@ -165,7 +183,11 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <param name="providerTransactionId">Id of the transaction at the provider.</param>
     /// <param name="capturedAmount">What the provider captured; only kept when the payment succeeded.</param>
     /// <param name="paymentMethodType">Payment method the payer chose on the provider's page.</param>
-    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null)
+    /// <param name="fee">
+    /// The commission the provider keeps from the captured amount; only kept when the payment succeeded and it is in the
+    /// currency of the payment.
+    /// </param>
+    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null, ProviderFee? fee = null)
     {
         DomainGuard.IsTrue(
             finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed && finalStatus != PaymentStatus.Expired,
@@ -191,9 +213,62 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 
         // Only a succeeded payment captured money; a declined one may still report the amount it tried to charge.
         CapturedAmount = finalStatus == PaymentStatus.Succeeded ? capturedAmount : null;
+
+        // A commission is only known of money that came in, and only in the currency it came in.
+        var keepsFee = CapturedAmount is not null && fee is not null
+            && fee.Fee.Currency == CapturedAmount.Currency && fee.Tax.Currency == CapturedAmount.Currency;
+
+        ProviderFee = keepsFee ? fee!.Fee : null;
+        ProviderFeeTax = keepsFee ? fee!.Tax : null;
+        FeeSource = keepsFee ? fee!.Source : null;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider));
+        var expectedNet = keepsFee ? fee!.NetOf(CapturedAmount!) : null;
+
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount));
+    }
+
+    /// <summary>
+    /// Records what the provider reported about a refund of this payment.
+    /// </summary>
+    /// <remarks>
+    /// A redelivered report changes nothing, and a refund that reached a final status keeps it: the provider says those
+    /// never change, so a late «pending» cannot reopen one that was already approved.
+    /// </remarks>
+    /// <param name="refundId">Id of the refund at the provider.</param>
+    /// <param name="status">Its normalized status.</param>
+    /// <param name="amount">What is refunded, when the provider says it.</param>
+    /// <param name="code">Code of the provider's reason, when it did not go through.</param>
+    /// <param name="message">The provider's reason, when it did not go through.</param>
+    /// <returns>Whether the payment changed and must be saved.</returns>
+    public bool RegisterRefund(string refundId, RefundStatus status, Money? amount, string? code, string? message)
+    {
+        DomainGuard.IsNullOrEmpty(refundId, Errors.RefundIdIsRequired);
+        DomainGuard.IsTrue(Status != PaymentStatus.Succeeded, Errors.OnlySucceededPaymentsCanBeRefunded);
+
+        Refunds ??= [];
+
+        var current = Refunds.Find(x => x.RefundId == refundId);
+
+        if (current is not null && (current.Status == status || current.IsFinal))
+        {
+            return false;
+        }
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var refund = new PaymentRefund(refundId, status, amount ?? current?.Amount, code, message, now);
+
+        if (current is not null)
+        {
+            Refunds.Remove(current);
+        }
+
+        Refunds.Add(refund);
+        UpdatedAt = now;
+
+        AddEvent(PaymentRefundUpdatedDomainEvent.Create(Id, Module, ReferenceId, Tenant, Provider, ProviderTransactionId, refund));
+
+        return true;
     }
 
     /// <summary>
@@ -240,6 +315,6 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             ["reason"] = reason,
         };
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, null, Provider));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, null, Provider, platformAccount: PlatformAccount));
     }
 }

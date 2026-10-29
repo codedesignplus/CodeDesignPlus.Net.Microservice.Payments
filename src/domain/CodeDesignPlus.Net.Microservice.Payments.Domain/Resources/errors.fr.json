@@ -168,6 +168,12 @@
     "332": "L'objet du paiement à un tiers est obligatoire.",
     "333": "Le bénéficiaire du paiement à un tiers est obligatoire.",
     "334": "Le montant du paiement à un tiers doit être supérieur à zéro.",
-    "335": "L'utilisateur qui demande le paiement à un tiers est obligatoire."
+    "335": "L'utilisateur qui demande le paiement à un tiers est obligatoire.",
+    "365": "Les taux et le montant fixe des frais du prestataire ne peuvent pas être négatifs.",
+    "366": "Le montant fixe des frais du prestataire est obligatoire.",
+    "367": "Le tarif général du prestataire est obligatoire.",
+    "368": "Chaque tarif par moyen de paiement a besoin de son moyen de paiement.",
+    "369": "L'identifiant du remboursement est obligatoire.",
+    "370": "Seul un paiement approuvé peut être remboursé."
   }
 }

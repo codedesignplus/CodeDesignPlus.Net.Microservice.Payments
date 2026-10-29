@@ -48,6 +48,7 @@
     "355": "O gateway não reconhece a chave pública.",
     "356": "O comerciante está inativo no gateway.",
     "357": "O gateway não aceita a chave privada.",
-    "358": "O segredo de eventos não verifica os eventos do gateway."
+    "358": "O segredo de eventos não verifica os eventos do gateway.",
+    "371": "O condomínio ainda não tem conta de arrecadação."
   }
 }

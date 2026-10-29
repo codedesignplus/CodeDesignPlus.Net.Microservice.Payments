@@ -8,7 +8,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 /// Finds a provider's adapter by its code among the registered ones. Adding a provider is registering its adapter;
 /// nothing here changes.
 /// </summary>
-public sealed class PaymentProviderFactory(IEnumerable<ICollectProvider> collectProviders, IEnumerable<IMerchantCredentialsProvider> credentialsProviders, IEnumerable<IPayoutProvider> payoutProviders) : IPaymentProviderFactory
+public sealed class PaymentProviderFactory(IEnumerable<ICollectProvider> collectProviders, IEnumerable<IMerchantCredentialsProvider> credentialsProviders, IEnumerable<IPayoutProvider> payoutProviders, IEnumerable<IRefundProvider> refundProviders) : IPaymentProviderFactory
 {
     /// <inheritdoc/>
     public ICollectProvider GetCollect(string provider) => Find(collectProviders, provider, AppErrors.PaymentProviderNotSupported);
@@ -18,6 +18,9 @@ public sealed class PaymentProviderFactory(IEnumerable<ICollectProvider> collect
 
     /// <inheritdoc/>
     public IPayoutProvider GetPayouts(string provider) => Find(payoutProviders, provider, AppErrors.PaymentProviderCannotPayThirdParties);
+
+    /// <inheritdoc/>
+    public IRefundProvider? FindRefunds(string provider) => refundProviders.FirstOrDefault(x => string.Equals(x.Code, provider, StringComparison.OrdinalIgnoreCase));
 
     private static T Find<T>(IEnumerable<T> providers, string provider, Error error) where T : IPaymentProvider
     {
