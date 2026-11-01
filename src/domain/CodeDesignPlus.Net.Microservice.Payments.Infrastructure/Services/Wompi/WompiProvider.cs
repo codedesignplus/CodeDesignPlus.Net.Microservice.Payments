@@ -251,11 +251,13 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
 
         parameters["customer-data:full-name"] = buyer.Name;
 
-        // The page takes the number and its country prefix apart; a number already written with its prefix cannot be
-        // split without knowing the country, so it is left for the payer to type.
-        if (!string.IsNullOrWhiteSpace(buyer.Phone) && !buyer.Phone.TrimStart().StartsWith('+'))
+        // The page takes the number and its country prefix in two fields that always travel together
+        // (docs/wompi/widget-checkout-web.md). Before, a phone written with its prefix was skipped and the prefix was never
+        // sent, so no payer ever got the phone prefilled.
+        if (WompiPhone.TrySplit(buyer.Phone, out var prefix, out var number))
         {
-            parameters["customer-data:phone-number"] = new string([.. buyer.Phone.Where(char.IsDigit)]);
+            parameters["customer-data:phone-number"] = number;
+            parameters["customer-data:phone-number-prefix"] = prefix;
         }
 
         var legalIdType = buyer.TypeDocument?.Code;

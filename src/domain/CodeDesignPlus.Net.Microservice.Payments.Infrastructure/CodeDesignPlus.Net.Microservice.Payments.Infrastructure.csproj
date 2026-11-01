@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="CodeDesignPlus.Net.Resilience" Version="1.0.0-beta.13868" />
     <PackageReference Include="CodeDesignPlus.Net.Vault" Version="1.0.0-beta.13868" />
+    <PackageReference Include="libphonenumber-csharp" Version="9.0.42" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Test" />

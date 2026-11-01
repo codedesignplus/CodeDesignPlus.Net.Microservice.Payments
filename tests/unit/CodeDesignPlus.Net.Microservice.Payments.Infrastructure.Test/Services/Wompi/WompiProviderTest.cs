@@ -67,7 +67,36 @@ public class WompiProviderTest
         // Assert
         var query = QueryHelpers.ParseQuery(session.RedirectUrl.Query);
 
-        Assert.Equal(("ana@example.com", "3001112233"), (query["customer-data:email"].ToString(), query["customer-data:phone-number"].ToString()));
+        Assert.Equal(("ana@example.com", "3001112233", "+57"), (query["customer-data:email"].ToString(), query["customer-data:phone-number"].ToString(), query["customer-data:phone-number-prefix"].ToString()));
+    }
+
+    /// <summary>
+    /// A phone without its country prefix cannot be split without guessing the country: neither field is sent, because they
+    /// always travel together, and the payer types it on the page.
+    /// </summary>
+    [Fact]
+    public async Task CreateCheckoutAsync_PhoneWithoutPrefix_LeavesItForThePage()
+    {
+        // Act
+        var session = await Provider().CreateCheckoutAsync(Payment(phone: "3001112233"), credentials, new Uri("https://www.example.com/return"), Instant.FromUtc(2026, 10, 28, 20, 0), CancellationToken.None);
+
+        // Assert
+        var query = QueryHelpers.ParseQuery(session.RedirectUrl.Query);
+        Assert.Equal((false, false), (query.ContainsKey("customer-data:phone-number"), query.ContainsKey("customer-data:phone-number-prefix")));
+    }
+
+    [Theory]
+    [InlineData("+573105550170", "+57", "3105550170")]
+    [InlineData("+57 310 555 0170", "+57", "3105550170")]
+    [InlineData("+14155552671", "+1", "4155552671")]
+    [InlineData("+525512345678", "+52", "5512345678")]
+    public void TrySplit_InternationalPhone_GivesPrefixAndNationalNumber(string phone, string prefix, string number)
+    {
+        // Act
+        var split = WompiPhone.TrySplit(phone, out var actualPrefix, out var actualNumber);
+
+        // Assert
+        Assert.Equal((true, prefix, number), (split, actualPrefix, actualNumber));
     }
 
     [Fact]
@@ -263,7 +292,7 @@ public class WompiProviderTest
             .ReturnsAsync(Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", digits, 170));
     }
 
-    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L, string phone = "3001112233", string email = "ana@example.com")
+    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L, string phone = "+573001112233", string email = "ana@example.com")
     {
         var buyer = Buyer.CreateWithoutShipping(Guid.NewGuid(), "Ana Restrepo", phone, email, TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
 
