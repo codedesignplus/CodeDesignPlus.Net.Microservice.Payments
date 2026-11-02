@@ -26,7 +26,7 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
             ? await fees.ForAsync(payment, request.CapturedAmount, request.PaymentMethodType, request.ReportedFee, cancellationToken)
             : null;
 
-        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee);
+        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
 
         await repository.UpdateAsync(payment, cancellationToken);
 

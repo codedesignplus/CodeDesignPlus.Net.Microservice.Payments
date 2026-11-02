@@ -305,8 +305,27 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
             raw["environment"] = environment;
         }
 
-        return new CollectOutcome(status, transaction.Id, amount, transaction.PaymentMethodType, raw);
+        return new CollectOutcome(status, transaction.Id, amount, transaction.PaymentMethodType, raw)
+        {
+            FailureReason = FailureReasonOf(transaction.Status),
+            ProviderMessage = transaction.StatusMessage
+        };
     }
+
+    /// <summary>
+    /// Translates the final statuses of a Wompi transaction that are not an approval (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Wompi has no status of its own for a lapsed session: a page that expires leaves no transaction, and the platform
+    /// closes the payment as <see cref="PaymentFailureReason.Expired"/> by itself.
+    /// </remarks>
+    private static PaymentFailureReason FailureReasonOf(string? status) => status switch
+    {
+        "DECLINED" => PaymentFailureReason.Declined,
+        "VOIDED" => PaymentFailureReason.Voided,
+        "ERROR" => PaymentFailureReason.ProviderError,
+        _ => PaymentFailureReason.None
+    };
 
     private async Task<long> ToCentsAsync(Money money, CancellationToken cancellationToken)
     {

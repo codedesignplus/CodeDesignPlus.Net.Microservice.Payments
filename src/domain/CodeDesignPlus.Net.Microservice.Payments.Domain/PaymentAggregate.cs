@@ -104,6 +104,18 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// Miembro suelto y no argumento del constructor (regla 31): los cobros guardados antes no lo traen y se leen con null.
     /// </remarks>
     public Instant? CheckoutExpiresAt { get; private set; }
+    /// <summary>
+    /// Why the payment did not succeed, as the provider reported it once normalized (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Loose member, not a constructor argument (rule 31): payments closed before it read it as <see cref="PaymentFailureReason.None"/>.
+    /// </remarks>
+    public PaymentFailureReason FailureReason { get; private set; }
+    /// <summary>
+    /// What the bank or the provider said about the outcome, as they said it (for example «Fondos insuficientes»), cut to
+    /// <see cref="FieldLength.Description"/>. Null when they said nothing or the payment succeeded.
+    /// </summary>
+    public string? ProviderMessage { get; private set; }
 
 
     /// <summary>
@@ -197,7 +209,9 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// The commission the provider keeps from the captured amount; only kept when the payment succeeded and it is in the
     /// currency of the payment.
     /// </param>
-    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null, ProviderFee? fee = null)
+    /// <param name="failureReason">Why it did not succeed, normalized by the provider adapter; ignored when it succeeded.</param>
+    /// <param name="providerMessage">What the bank or the provider said, as they said it; ignored when it succeeded.</param>
+    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null, ProviderFee? fee = null, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null)
     {
         DomainGuard.IsTrue(
             finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed && finalStatus != PaymentStatus.Expired,
@@ -220,6 +234,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         FinalResponse = response;
         ProviderTransactionId = providerTransactionId;
         PaymentMethodType = paymentMethodType;
+        FailureReason = ReasonFor(finalStatus, failureReason);
+        ProviderMessage = finalStatus == PaymentStatus.Succeeded ? null : Shorten(providerMessage);
 
         // Only a succeeded payment captured money; a declined one may still report the amount it tried to charge.
         CapturedAmount = finalStatus == PaymentStatus.Succeeded ? capturedAmount : null;
@@ -235,7 +251,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 
         var expectedNet = keepsFee ? fee!.NetOf(CapturedAmount!) : null;
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount, FailureReason, ProviderMessage));
     }
 
     /// <summary>
@@ -314,6 +330,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             Errors.OnlyPaymentsInProgressCanExpire);
 
         Status = PaymentStatus.Expired;
+        FailureReason = PaymentFailureReason.Expired;
+        ProviderMessage = null;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         // Se deja constancia de que esto lo decidio la plataforma y no el proveedor. La clave dice quien
@@ -325,6 +343,45 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
             ["reason"] = reason,
         };
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, null, Provider, platformAccount: PlatformAccount));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, null, Provider, platformAccount: PlatformAccount, failureReason: FailureReason));
+    }
+
+    /// <summary>
+    /// Whether a user, in the tenant of the session, can read this payment: it belongs to that tenant or the user started it.
+    /// </summary>
+    /// <remarks>
+    /// The one who started it can read it whatever the session's tenant, because a platform payment (a license) is read by
+    /// the administrator who buys it, possibly before the tenant it pays for exists (same criterion as
+    /// <c>GET Order/{id}</c> in ms-licenses, pendings/735).
+    /// </remarks>
+    /// <param name="tenant">The tenant of the session.</param>
+    /// <param name="user">The user of the session.</param>
+    /// <returns><see langword="true"/> if the payment belongs to the tenant or the user started it.</returns>
+    public bool IsVisibleTo(Guid tenant, Guid user) => (tenant != Guid.Empty && Tenant == tenant) || (user != Guid.Empty && CreatedBy == user);
+
+    /// <summary>
+    /// The reason a closed payment keeps: none when it succeeded, <see cref="PaymentFailureReason.Expired"/> when its session
+    /// lapsed, and what the provider reported when it failed.
+    /// </summary>
+    private static PaymentFailureReason ReasonFor(PaymentStatus status, PaymentFailureReason reported) => status switch
+    {
+        PaymentStatus.Succeeded => PaymentFailureReason.None,
+        PaymentStatus.Expired => PaymentFailureReason.Expired,
+        _ => reported
+    };
+
+    /// <summary>
+    /// The provider's message without surrounding blanks and cut to the standard length of a description (rule 48).
+    /// </summary>
+    private static string? Shorten(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return null;
+        }
+
+        var trimmed = message.Trim();
+
+        return trimmed.Length <= FieldLength.Description ? trimmed : trimmed[..FieldLength.Description];
     }
 }

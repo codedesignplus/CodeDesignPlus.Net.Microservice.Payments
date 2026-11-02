@@ -10,7 +10,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 /// It is the contract with every module that charges through this service, and they read <c>Module</c>,
 /// <c>ReferenceId</c>, <c>Status</c> (as a number) and <c>Tenant</c>. It only grows: <c>CapturedAmount</c>,
 /// <c>Provider</c>, the commission (<c>ProviderFee</c>, <c>ProviderFeeTax</c>, <c>ExpectedNetAmount</c>,
-/// <c>FeeSource</c>) and <c>PlatformAccount</c> are additions that a consumer which does not know them ignores.
+/// <c>FeeSource</c>), <c>PlatformAccount</c>, <c>FailureReason</c> and <c>ProviderMessage</c> are additions that a consumer which does not know them ignores.
 /// </remarks>
 [EventKey<PaymentAggregate>(1, "PaymentResponseAssociatedDomainEvent")]
 public class PaymentResponseAssociatedDomainEvent(
@@ -27,6 +27,8 @@ public class PaymentResponseAssociatedDomainEvent(
     Money? expectedNetAmount = null,
     string? feeSource = null,
     bool platformAccount = false,
+    PaymentFailureReason failureReason = PaymentFailureReason.None,
+    string? providerMessage = null,
     Guid? eventId = null,
     Instant? occurredAt = null,
     Dictionary<string, object>? metadata = null
@@ -75,8 +77,20 @@ public class PaymentResponseAssociatedDomainEvent(
     /// </summary>
     public bool PlatformAccount { get; } = platformAccount;
 
-    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false)
+    /// <summary>
+    /// Why the payment did not succeed, as a number of <see cref="PaymentFailureReason"/>; <c>None</c> (0) when it succeeded
+    /// or the publisher did not know it (pendings/622). Optional: a consumer that does not know it keeps working.
+    /// </summary>
+    public PaymentFailureReason FailureReason { get; } = failureReason;
+
+    /// <summary>
+    /// What the bank or the provider said about the outcome, as they said it (for example «Fondos insuficientes»); null when
+    /// they said nothing or the payment succeeded.
+    /// </summary>
+    public string? ProviderMessage { get; } = providerMessage;
+
+    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null)
     {
-        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount);
+        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount, failureReason, providerMessage);
     }
 }

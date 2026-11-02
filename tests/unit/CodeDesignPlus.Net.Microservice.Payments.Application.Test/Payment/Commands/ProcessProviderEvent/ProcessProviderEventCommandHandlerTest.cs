@@ -49,6 +49,25 @@ public class ProcessProviderEventCommandHandlerTest
     }
 
     [Fact]
+    public async Task Handle_DeclinedEvent_ClosesThePaymentWithTheReasonAndTheBankMessage()
+    {
+        // Arrange
+        var outcome = new CollectOutcome(PaymentStatus.Failed, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = "DECLINED" })
+        {
+            FailureReason = PaymentFailureReason.Declined,
+            ProviderMessage = "Fondos insuficientes"
+        };
+
+        collect.Setup(x => x.ReadNotificationAsync(Body, It.IsAny<CancellationToken>())).ReturnsAsync(new ProviderNotification(payment.Id.ToString(), outcome));
+
+        // Act
+        await Handle();
+
+        // Assert
+        mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.FailureReason == PaymentFailureReason.Declined && c.ProviderMessage == "Fondos insuficientes"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_SignatureOfAnotherSecret_IsDiscarded()
     {
         // Arrange: a forged event; the provider knows nothing of what it claims.

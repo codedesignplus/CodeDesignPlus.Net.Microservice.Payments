@@ -101,6 +101,25 @@ public class UpdateStatusCommandHandlerTest
     }
 
     [Fact]
+    public async Task Handle_DeclinedPayment_PublishesTheReasonAndTheBankMessage()
+    {
+        // Arrange
+        var published = new List<IDomainEvent>();
+
+        pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events)).Returns(Task.CompletedTask);
+
+        var handler = new UpdateStatusCommandHandler(repository.Object, user.Object, pubsub.Object, liveChannel.Object, fees.Object);
+
+        // Act
+        await handler.Handle(new UpdateStatusCommand(PaymentId, PaymentStatus.Failed, new Dictionary<string, string?> { ["status"] = "DECLINED" }, "tx-1", FailureReason: PaymentFailureReason.Declined, ProviderMessage: "Fondos insuficientes"), CancellationToken.None);
+
+        // Assert
+        var response = published.OfType<Domain.DomainEvents.PaymentResponseAssociatedDomainEvent>().Single();
+
+        Assert.Equal((PaymentFailureReason.Declined, "Fondos insuficientes"), (response.FailureReason, response.ProviderMessage));
+    }
+
+    [Fact]
     public async Task UnaSesionCaducadaSeAceptaYNoRevienta()
     {
         // PayU manda `state_pol=5` cuando la sesion expira, que es justo lo que hace una transaccion PSE que

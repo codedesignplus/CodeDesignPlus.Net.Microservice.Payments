@@ -14,6 +14,8 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// <param name="CapturedAmount">What the provider captured.</param>
 /// <param name="PaymentMethodType">Payment method the payer chose on the provider's page.</param>
 /// <param name="ReportedFee">The commission the provider reported for the transaction, when it reports it.</param>
+/// <param name="FailureReason">Why it did not succeed, normalized by the provider adapter.</param>
+/// <param name="ProviderMessage">What the bank or the provider said, as they said it.</param>
 public record UpdateStatusCommand(
     Guid Id,
     PaymentStatus Status,
@@ -21,7 +23,9 @@ public record UpdateStatusCommand(
     string? ProviderTransactionId = null,
     Money? CapturedAmount = null,
     string? PaymentMethodType = null,
-    ProviderFee? ReportedFee = null
+    ProviderFee? ReportedFee = null,
+    PaymentFailureReason FailureReason = PaymentFailureReason.None,
+    string? ProviderMessage = null
 ) : IRequest;
 
 public class Validator : AbstractValidator<UpdateStatusCommand>

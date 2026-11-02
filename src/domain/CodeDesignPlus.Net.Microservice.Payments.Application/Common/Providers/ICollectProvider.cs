@@ -90,6 +90,17 @@ public sealed record CollectOutcome(PaymentStatus Status, string? TransactionId,
     public ProviderFee? ReportedFee { get; init; }
 
     /// <summary>
+    /// Why it did not succeed, translated by the adapter from the provider's own status; <see cref="PaymentFailureReason.None"/>
+    /// when it succeeded or is still pending (pendings/622).
+    /// </summary>
+    public PaymentFailureReason FailureReason { get; init; }
+
+    /// <summary>
+    /// What the bank or the provider said about the transaction, as they said it (for example «Fondos insuficientes»).
+    /// </summary>
+    public string? ProviderMessage { get; init; }
+
+    /// <summary>
     /// Whether the status is one the payment can close with.
     /// </summary>
     public bool IsFinal => Status is PaymentStatus.Succeeded or PaymentStatus.Failed or PaymentStatus.Expired;

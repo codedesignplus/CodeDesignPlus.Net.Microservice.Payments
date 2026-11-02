@@ -150,6 +150,31 @@ public class WompiProviderTest
         Assert.Equal(expected, notification!.Outcome.Status);
     }
 
+    [Theory]
+    [InlineData("DECLINED", PaymentFailureReason.Declined)]
+    [InlineData("VOIDED", PaymentFailureReason.Voided)]
+    [InlineData("ERROR", PaymentFailureReason.ProviderError)]
+    [InlineData("APPROVED", PaymentFailureReason.None)]
+    [InlineData("PENDING", PaymentFailureReason.None)]
+    public async Task ReadNotificationAsync_TransactionUpdated_TranslatesTheFailureReason(string wompiStatus, PaymentFailureReason expected)
+    {
+        // Act
+        var notification = await Provider().ReadNotificationAsync(Event(wompiStatus), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expected, notification!.Outcome.FailureReason);
+    }
+
+    [Fact]
+    public async Task ReadNotificationAsync_Declined_KeepsTheBankMessageAsItCame()
+    {
+        // Act
+        var notification = await Provider().ReadNotificationAsync(Event("DECLINED"), CancellationToken.None);
+
+        // Assert
+        Assert.Equal("Fondos insuficientes", notification!.Outcome.ProviderMessage);
+    }
+
     [Fact]
     public async Task ReadNotificationAsync_Approved_ReportsTheAmountInMinorUnits()
     {
@@ -338,7 +363,8 @@ public class WompiProviderTest
               "reference": "{{PaymentId}}",
               "currency": "COP",
               "payment_method_type": "CARD",
-              "status": "{{status}}"
+              "status": "{{status}}",
+              "status_message": "Fondos insuficientes"
             }
           },
           "environment": "test",

@@ -1,6 +1,7 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ProcessProviderEvent;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.RefreshPaymentStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentOutcome;
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -79,6 +80,25 @@ public class PaymentController(IMediator mediator) : ControllerBase
         }
 
         return Ok();
+    }
+
+    /// <summary>
+    /// How a payment ended and why it did not go through, for the screen of the payer (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Only a payment of the session's tenant or one the user started; another tenant's answers like one that does not
+    /// exist. It never asks the provider: <c>POST {id}/refresh</c> does.
+    /// </remarks>
+    /// <param name="id">Id of the payment.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">The status, the reason it failed and what the bank or the provider said.</response>
+    /// <response code="400">If the payment does not exist or is not the user's to read.</response>
+    [HttpGet("{id:guid}/outcome")]
+    public async Task<IActionResult> GetOutcome(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetPaymentOutcomeQuery(id), cancellationToken);
+
+        return Ok(result);
     }
 
     /// <summary>
