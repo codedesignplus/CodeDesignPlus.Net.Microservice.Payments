@@ -35,7 +35,9 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
 
         ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
 
-        if (payment!.Status is not (PaymentStatus.Initiated or PaymentStatus.Pending))
+        // A payment awaiting a retry is still open: the provider may have approved the retry, or its window may have ended
+        // (pendings/622).
+        if (payment!.Status is not (PaymentStatus.Initiated or PaymentStatus.Pending or PaymentStatus.AwaitingRetry))
         {
             return PaymentStatusDto.From(payment);
         }
@@ -75,7 +77,7 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
             return PaymentStatusDto.From(payment);
         }
 
-        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage), cancellationToken);
+        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage, outcome.RetryableUntil), cancellationToken);
 
         var updated = await FindAsync(request.Id, cancellationToken);
 

@@ -10,7 +10,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 /// It is the contract with every module that charges through this service, and they read <c>Module</c>,
 /// <c>ReferenceId</c>, <c>Status</c> (as a number) and <c>Tenant</c>. It only grows: <c>CapturedAmount</c>,
 /// <c>Provider</c>, the commission (<c>ProviderFee</c>, <c>ProviderFeeTax</c>, <c>ExpectedNetAmount</c>,
-/// <c>FeeSource</c>), <c>PlatformAccount</c>, <c>FailureReason</c> and <c>ProviderMessage</c> are additions that a consumer which does not know them ignores.
+/// <c>FeeSource</c>), <c>PlatformAccount</c>, <c>FailureReason</c>, <c>ProviderMessage</c> and <c>LateApproval</c> are additions that a consumer which does not know them ignores.
 /// </remarks>
 [EventKey<PaymentAggregate>(1, "PaymentResponseAssociatedDomainEvent")]
 public class PaymentResponseAssociatedDomainEvent(
@@ -29,6 +29,7 @@ public class PaymentResponseAssociatedDomainEvent(
     bool platformAccount = false,
     PaymentFailureReason failureReason = PaymentFailureReason.None,
     string? providerMessage = null,
+    bool lateApproval = false,
     Guid? eventId = null,
     Instant? occurredAt = null,
     Dictionary<string, object>? metadata = null
@@ -89,8 +90,16 @@ public class PaymentResponseAssociatedDomainEvent(
     /// </summary>
     public string? ProviderMessage { get; } = providerMessage;
 
-    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null)
+    /// <summary>
+    /// Whether the provider approved a payment this service had already closed as failed or expired (pendings/622): a retry
+    /// approved after its window, or a PSE confirmed after the page lapsed. The money came in, but what the payment was for may
+    /// no longer exist; the module applies it if it can and otherwise leaves it as the payer's credit and tells the
+    /// administration. Optional: a consumer that does not know it reads an ordinary approval.
+    /// </summary>
+    public bool LateApproval { get; } = lateApproval;
+
+    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null, bool lateApproval = false)
     {
-        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount, failureReason, providerMessage);
+        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount, failureReason, providerMessage, lateApproval);
     }
 }

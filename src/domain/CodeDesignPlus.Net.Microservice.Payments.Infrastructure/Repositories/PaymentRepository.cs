@@ -13,7 +13,7 @@ public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoO
         // `In` sobre los dos estados en curso, y no dos `Ne` sobre los resueltos: con `Ne` cualquier estado
         // nuevo que se anadiera al enum entraria en el barrido por omision, y lo que hay que enumerar es lo
         // que se cierra, no lo que se salva.
-        var inProgress = new[] { PaymentStatus.Initiated, PaymentStatus.Pending };
+        var inProgress = new[] { PaymentStatus.Initiated, PaymentStatus.Pending, PaymentStatus.AwaitingRetry };
 
         var filter = Builders<PaymentAggregate>.Filter.In(x => x.Status, inProgress)
             & Builders<PaymentAggregate>.Filter.Lt(x => x.CreatedAt, cutoff)
@@ -24,6 +24,20 @@ public class PaymentRepository(IServiceProvider serviceProvider, IOptions<MongoO
         return await collection
             .Find(filter)
             .SortBy(x => x.CreatedAt)
+            .Limit(limit)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<PaymentAggregate>> GetRetryWindowsEndedAsync(Instant now, int limit, CancellationToken cancellationToken)
+    {
+        var filter = Builders<PaymentAggregate>.Filter.Eq(x => x.Status, PaymentStatus.AwaitingRetry)
+            & Builders<PaymentAggregate>.Filter.Lte(x => x.RetryWindowEndsAt, now)
+            & Builders<PaymentAggregate>.Filter.Eq(x => x.IsActive, true);
+
+        return await GetCollection<PaymentAggregate>()
+            .Find(filter)
+            .SortBy(x => x.RetryWindowEndsAt)
             .Limit(limit)
             .ToListAsync(cancellationToken);
     }

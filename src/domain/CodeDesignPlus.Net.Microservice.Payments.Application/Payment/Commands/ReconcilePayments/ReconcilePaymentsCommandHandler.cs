@@ -14,6 +14,11 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// payment in progress older than <see cref="PaymentProvidersOptions.ReconciliationMinimumAge"/>, so the payer still
 /// on the hosted page is not polled.
 /// <para>
+/// It also closes, whatever their age, the payments whose retry window ended (pendings/622): a declined attempt waits as
+/// <see cref="PaymentStatus.AwaitingRetry"/> for the payer to retry on the provider's page, and the window is shorter than
+/// the minimum age. The provider is asked once more, so a retry approved at the last moment still wins.
+/// </para>
+/// <para>
 /// A payment that fails does not stop the rest, but the run throws at the end if any did: carrying on and reporting
 /// success are different things, and the job panel must show the failure.
 /// </para>
@@ -26,7 +31,11 @@ public class ReconcilePaymentsCommandHandler(IPaymentRepository repository, IMed
 
         var cutoff = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromTimeSpan(options.Value.ReconciliationMinimumAge));
 
-        var inProgress = await repository.GetInProgressOlderThanAsync(cutoff, options.Value.ReconciliationBatchSize, cancellationToken);
+        var older = await repository.GetInProgressOlderThanAsync(cutoff, options.Value.ReconciliationBatchSize, cancellationToken);
+
+        var retryEnded = await repository.GetRetryWindowsEndedAsync(SystemClock.Instance.GetCurrentInstant(), options.Value.ReconciliationBatchSize, cancellationToken);
+
+        var inProgress = older.Concat(retryEnded).DistinctBy(x => x.Id).ToList();
 
         var closed = 0;
         var failed = 0;

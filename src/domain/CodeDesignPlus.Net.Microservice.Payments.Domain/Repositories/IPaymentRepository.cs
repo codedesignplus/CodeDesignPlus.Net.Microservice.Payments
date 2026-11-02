@@ -17,6 +17,19 @@ public interface IPaymentRepository : IRepositoryBase
     Task<List<PaymentAggregate>> GetInProgressOlderThanAsync(Instant cutoff, int limit, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The payments awaiting a retry whose window already ended at <paramref name="now"/>, whatever their age (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// The reconciliation only asks about payments older than its minimum age, which is longer than the retry window: without
+    /// this, a declined payment would wait for that age instead of closing when its window ends.
+    /// </remarks>
+    /// <param name="now">The instant the windows are checked against.</param>
+    /// <param name="limit">How many at most.</param>
+    /// <param name="cancellationToken">Token de cancelacion.</param>
+    /// <returns>The payments to close, oldest window first.</returns>
+    Task<List<PaymentAggregate>> GetRetryWindowsEndedAsync(Instant now, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Borra los pagos de una copropiedad purgada, salvo los de la venta de licencias.
     /// </summary>
     /// <remarks>

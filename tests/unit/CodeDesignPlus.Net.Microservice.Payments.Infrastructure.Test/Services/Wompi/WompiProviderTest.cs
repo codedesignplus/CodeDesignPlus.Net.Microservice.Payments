@@ -241,8 +241,8 @@ public class WompiProviderTest
     [InlineData("VOIDED")]
     public async Task GetOutcomeAsync_FailedAttemptAMinuteAgo_ClosesThePaymentAsFailed(string status)
     {
-        // Arrange: aunque la página de Wompi todavía deje reintentar con otro medio, el rechazo cierra el cobro en cuanto la
-        // conciliación lo encuentra; el pagador vuelve a pulsar «Pagar» en Kappali (pendings/622).
+        // Arrange: the attempt is reported as it is, failed; whether the payment waits for a retry is decided with
+        // RetryableUntil (pendings/622).
         UseLatest(status, TimeSpan.FromMinutes(1));
 
         // Act
@@ -250,6 +250,36 @@ public class WompiProviderTest
 
         // Assert
         Assert.Equal((PaymentStatus.Failed, true), (outcome!.Status, outcome.IsFinal));
+    }
+
+    [Theory]
+    [InlineData("DECLINED")]
+    [InlineData("ERROR")]
+    public async Task GetOutcomeAsync_FailedAttempt_IsRetryableForThreeMinutesFromItsEnd(string status)
+    {
+        // Arrange
+        UseLatest(status, TimeSpan.FromMinutes(1));
+
+        // Act
+        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
+
+        // Assert
+        var remaining = outcome!.RetryableUntil!.Value - SystemClock.Instance.GetCurrentInstant();
+
+        Assert.InRange(remaining.TotalSeconds, 115, 121);
+    }
+
+    [Fact]
+    public async Task GetOutcomeAsync_Voided_OpensNoRetry()
+    {
+        // Arrange
+        UseLatest("VOIDED", TimeSpan.FromMinutes(1));
+
+        // Act
+        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
+
+        // Assert
+        Assert.Null(outcome!.RetryableUntil);
     }
 
     private void UseLatest(string status, TimeSpan finalizedAgo)

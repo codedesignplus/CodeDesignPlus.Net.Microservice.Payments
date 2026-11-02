@@ -31,6 +31,12 @@ public class PaymentOutcomeDto
     public string? ProviderMessage { get; set; }
 
     /// <summary>
+    /// Until when the payer can retry on the provider's page after a declined attempt; set while the status is AwaitingRetry
+    /// and kept afterwards (pendings/622).
+    /// </summary>
+    public Instant? RetryWindowEndsAt { get; set; }
+
+    /// <summary>
     /// Builds the outcome of a payment.
     /// </summary>
     /// <param name="payment">The payment.</param>
@@ -40,6 +46,7 @@ public class PaymentOutcomeDto
         Id = payment.Id,
         Status = payment.Status,
         FailureReason = payment.FailureReason,
-        ProviderMessage = payment.ProviderMessage
+        ProviderMessage = payment.ProviderMessage,
+        RetryWindowEndsAt = payment.RetryWindowEndsAt
     };
 }

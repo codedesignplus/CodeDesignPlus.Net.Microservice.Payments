@@ -149,6 +149,91 @@ public class UpdateStatusCommandHandlerTest
         await Assert.ThrowsAsync<CodeDesignPlusException>(() => CaptureAsync(PaymentStatus.Unknown));
     }
 
+    [Fact]
+    public async Task Handle_FailedAttemptTheProviderLetsRetry_AwaitsTheRetryAndPushesTheRejection()
+    {
+        // Arrange
+        var payment = BuildPayment();
+        var published = Publishing(payment);
+        var pushes = 0;
+
+        liveChannel.Setup(x => x.PushToUserAsync(It.IsAny<LiveUserPush>(), It.IsAny<CancellationToken>())).Callback(() => pushes++).Returns(Task.CompletedTask);
+
+        // Act
+        await Handler().Handle(Declined(SystemClock.Instance.GetCurrentInstant() + Duration.FromMinutes(3)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal((PaymentStatus.AwaitingRetry, 1, 0, 1), (payment.Status, published.OfType<Domain.DomainEvents.PaymentAttemptDeclinedDomainEvent>().Count(), published.OfType<Domain.DomainEvents.PaymentResponseAssociatedDomainEvent>().Count(), pushes));
+    }
+
+    [Fact]
+    public async Task Handle_FailureWhileTheRetryWindowIsOpen_LeavesThePaymentAwaiting()
+    {
+        // Arrange
+        var payment = BuildPayment();
+
+        payment.DeclineAttempt(new Dictionary<string, string?> { ["status"] = "DECLINED" }, "tx-1", "CARD", PaymentFailureReason.Declined, null, SystemClock.Instance.GetCurrentInstant() + Duration.FromMinutes(3));
+        payment.GetAndClearEvents();
+
+        var published = Publishing(payment);
+
+        // Act
+        await Handler().Handle(Declined(null), CancellationToken.None);
+
+        // Assert
+        Assert.Equal((PaymentStatus.AwaitingRetry, 0), (payment.Status, published.Count));
+    }
+
+    [Fact]
+    public async Task Handle_FailureAfterTheRetryWindow_ClosesThePaymentWithoutPushingTheRejectionAgain()
+    {
+        // Arrange
+        var payment = BuildPayment();
+
+        payment.DeclineAttempt(new Dictionary<string, string?> { ["status"] = "DECLINED" }, "tx-1", "CARD", PaymentFailureReason.Declined, null, SystemClock.Instance.GetCurrentInstant() - Duration.FromSeconds(1));
+        payment.GetAndClearEvents();
+
+        var published = Publishing(payment);
+        var pushes = 0;
+
+        liveChannel.Setup(x => x.PushToUserAsync(It.IsAny<LiveUserPush>(), It.IsAny<CancellationToken>())).Callback(() => pushes++).Returns(Task.CompletedTask);
+
+        // Act
+        await Handler().Handle(Declined(null), CancellationToken.None);
+
+        // Assert
+        Assert.Equal((PaymentStatus.Failed, PaymentStatus.Failed, 0), (payment.Status, published.OfType<Domain.DomainEvents.PaymentResponseAssociatedDomainEvent>().Single().Status, pushes));
+    }
+
+    [Fact]
+    public async Task Handle_FailedAttemptWithoutRetry_ClosesThePaymentRightAway()
+    {
+        // Arrange
+        var payment = BuildPayment();
+
+        Publishing(payment);
+
+        // Act
+        await Handler().Handle(Declined(null), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(PaymentStatus.Failed, payment.Status);
+    }
+
+    private static UpdateStatusCommand Declined(Instant? retryableUntil) => new(PaymentId, PaymentStatus.Failed, new Dictionary<string, string?> { ["status"] = "DECLINED" }, "tx-1", FailureReason: PaymentFailureReason.Declined, RetryableUntil: retryableUntil);
+
+    private UpdateStatusCommandHandler Handler() => new(repository.Object, user.Object, pubsub.Object, liveChannel.Object, fees.Object);
+
+    private List<IDomainEvent> Publishing(PaymentAggregate payment)
+    {
+        var published = new List<IDomainEvent>();
+
+        repository.Setup(x => x.FindAsync<PaymentAggregate>(PaymentId, Tenant, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events)).Returns(Task.CompletedTask);
+
+        return published;
+    }
+
     private async Task<LiveUserPush?> CaptureAsync(PaymentStatus status)
     {
         LiveUserPush? captured = null;

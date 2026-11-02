@@ -28,5 +28,11 @@ public enum PaymentStatus
     /// <summary>
     /// The payment is pending, meaning it has not yet been confirmed or rejected.
     /// </summary>
-    Pending
+    Pending,
+    /// <summary>
+    /// The provider declined an attempt and the payer can still retry on the same hosted page until the payment's
+    /// <c>RetryWindowEndsAt</c> (pendings/622). Not final: it ends as Succeeded if a retry is approved, or as Failed when the
+    /// window closes without one.
+    /// </summary>
+    AwaitingRetry
 }

@@ -96,7 +96,7 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
             return;
         }
 
-        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage), cancellationToken);
+        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage, outcome.RetryableUntil), cancellationToken);
     }
 
     /// <summary>

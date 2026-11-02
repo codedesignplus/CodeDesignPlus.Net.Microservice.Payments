@@ -144,9 +144,8 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
         var transaction = transactions.FirstOrDefault(x => x.Status == "APPROVED")
             ?? transactions.OrderByDescending(x => x.CreatedAt, StringComparer.Ordinal).FirstOrDefault();
 
-        // Un intento rechazado o con error cierra el cobro en cuanto se conoce, igual que si llegara por el aviso de Wompi:
-        // aunque la página deje reintentar con otro medio, en Kappali el pagador vuelve a pulsar «Pagar» y empieza un cobro
-        // nuevo (pendings/622, decisión del 2-nov-2026).
+        // A declined or failed attempt says until when the page lets the payer retry (RetryableUntil); the payment decides with it
+        // whether to wait or to close (pendings/622).
         return transaction is null ? null : await ToOutcomeAsync(transaction, null, cancellationToken);
     }
 
@@ -308,8 +307,33 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
         return new CollectOutcome(status, transaction.Id, amount, transaction.PaymentMethodType, raw)
         {
             FailureReason = FailureReasonOf(transaction.Status),
-            ProviderMessage = transaction.StatusMessage
+            ProviderMessage = transaction.StatusMessage,
+            RetryableUntil = RetryableUntil(transaction)
         };
+    }
+
+    /// <summary>
+    /// Until when the hosted page lets the payer retry after this transaction (docs/wompi/reintento-de-pago.md): only after a
+    /// declined attempt or an error, counted from when it was finalized or, without that, from when it was created.
+    /// </summary>
+    /// <remarks>
+    /// A voided transaction opens no retry. Without a readable moment the retry is counted from now: the window must never be
+    /// skipped because a date came in another format.
+    /// </remarks>
+    private Instant? RetryableUntil(WompiTransaction transaction)
+    {
+        if (transaction.Status is not ("DECLINED" or "ERROR"))
+        {
+            return null;
+        }
+
+        var failedAt = transaction.FinalizedAt ?? transaction.CreatedAt;
+
+        var moment = DateTimeOffset.TryParse(failedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
+            ? Instant.FromDateTimeOffset(parsed)
+            : SystemClock.Instance.GetCurrentInstant();
+
+        return moment + Duration.FromTimeSpan(options.Value.CheckoutRetryWindow);
     }
 
     /// <summary>

@@ -55,6 +55,13 @@ public class WompiOptions : IValidatableObject
     public WompiPlatformAccountOptions Platform { get; set; } = new();
 
     /// <summary>
+    /// How long the hosted page lets the payer retry with another payment method after a declined or failed attempt, with the
+    /// same reference (3 minutes, docs/wompi/reintento-de-pago.md). Meanwhile the payment waits as AwaitingRetry instead of
+    /// closing as failed (pendings/622).
+    /// </summary>
+    public TimeSpan CheckoutRetryWindow { get; set; } = TimeSpan.FromMinutes(3);
+
+    /// <summary>
     /// Timeouts, retries and circuit breaker of the calls to Wompi.
     /// </summary>
     public ResilienceOptions Resilience { get; set; } = new();
@@ -68,6 +75,11 @@ public class WompiOptions : IValidatableObject
         if (platformKeys.Any(x => !string.IsNullOrWhiteSpace(x)) && platformKeys.Any(string.IsNullOrWhiteSpace))
         {
             yield return new ValidationResult("Wompi:Platform needs PublicKey, PrivateKey, EventsSecret and IntegritySecret, or none of them.", [nameof(Platform)]);
+        }
+
+        if (CheckoutRetryWindow < TimeSpan.Zero)
+        {
+            yield return new ValidationResult("Wompi:CheckoutRetryWindow cannot be negative.", [nameof(CheckoutRetryWindow)]);
         }
 
         if (!string.IsNullOrWhiteSpace(Platform.PublicKey) && WompiKeys.EnvironmentOf(Platform.PublicKey) is null)

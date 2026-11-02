@@ -101,6 +101,12 @@ public sealed record CollectOutcome(PaymentStatus Status, string? TransactionId,
     public string? ProviderMessage { get; init; }
 
     /// <summary>
+    /// Until when the payer can still retry on the provider's page with the same reference after this failed attempt; null when
+    /// the provider offers no retry for it (pendings/622).
+    /// </summary>
+    public Instant? RetryableUntil { get; init; }
+
+    /// <summary>
     /// Whether the status is one the payment can close with.
     /// </summary>
     public bool IsFinal => Status is PaymentStatus.Succeeded or PaymentStatus.Failed or PaymentStatus.Expired;

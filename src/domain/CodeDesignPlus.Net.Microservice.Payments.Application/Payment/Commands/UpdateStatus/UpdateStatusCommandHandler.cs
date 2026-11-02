@@ -7,6 +7,12 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// Closes a payment and publishes its outcome, with the commission the provider keeps when the payment succeeded
 /// (pendings/660, stage 6): the tenant's books need it the day the payment is approved.
 /// </summary>
+/// <remarks>
+/// A failed attempt the provider still lets the payer retry does not close the payment (pendings/622): it waits as
+/// <see cref="PaymentStatus.AwaitingRetry"/> and the modules hear about the rejection without applying its consequences. While
+/// that window is open another failure changes nothing; once it ends, the reconciliation brings the failure back and the
+/// payment closes.
+/// </remarks>
 public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPubSub pubsub, ILiveChannelGrpc liveChannel, IProviderFeeCalculator fees) : IRequestHandler<UpdateStatusCommand>
 {
     public async Task Handle(UpdateStatusCommand request, CancellationToken cancellationToken)
@@ -26,13 +32,29 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
             ? await fees.ForAsync(payment, request.CapturedAmount, request.PaymentMethodType, request.ReportedFee, cancellationToken)
             : null;
 
-        payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var wasAwaitingRetry = payment.Status == PaymentStatus.AwaitingRetry;
+
+        if (request.Status == PaymentStatus.Failed && payment.IsAwaitingRetryAt(now))
+        {
+            return;
+        }
+
+        if (request.Status == PaymentStatus.Failed && payment.Status is (PaymentStatus.Initiated or PaymentStatus.Pending) && request.RetryableUntil is { } retryableUntil && now < retryableUntil)
+        {
+            payment.DeclineAttempt(request.Metadata, request.ProviderTransactionId, request.PaymentMethodType, request.FailureReason, request.ProviderMessage, retryableUntil);
+        }
+        else
+        {
+            payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
+        }
 
         await repository.UpdateAsync(payment, cancellationToken);
 
         await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
 
-        if (request.Status == CodeDesignPlus.Net.Microservice.Payments.Domain.Enums.PaymentStatus.Failed)
+        // The payer hears about the rejection once: when the attempt is declined, not again when its retry window closes.
+        if (request.Status == PaymentStatus.Failed && !wasAwaitingRetry)
         {
             // Efimero: el desenlace del pago ya es consultable. La pantalla de compra reconcilia
             // contra GET Order/{id}, asi que quien no estuviera mirando se entera igual al volver,

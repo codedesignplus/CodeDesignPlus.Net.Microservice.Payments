@@ -116,6 +116,21 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <see cref="FieldLength.Description"/>. Null when they said nothing or the payment succeeded.
     /// </summary>
     public string? ProviderMessage { get; private set; }
+    /// <summary>
+    /// Until when the payer can retry on the provider's page after a declined attempt; null while no attempt was declined
+    /// (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Loose member, not a constructor argument (rule 31): payments stored before it read it as null.
+    /// </remarks>
+    public Instant? RetryWindowEndsAt { get; private set; }
+    /// <summary>
+    /// Whether the provider approved the payment after this service had closed it as failed or expired (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Loose member, not a constructor argument (rule 31): payments stored before it read it as false.
+    /// </remarks>
+    public bool ApprovedLate { get; private set; }
 
 
     /// <summary>
@@ -193,12 +208,67 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     }
 
     /// <summary>
+    /// Records an attempt the provider declined while the payer can still retry on the same hosted page (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// The payment stays open as <see cref="PaymentStatus.AwaitingRetry"/> until <paramref name="retryWindowEndsAt"/>: a retry
+    /// is a new transaction with the same reference, so closing the payment now would leave an approved retry with nowhere to
+    /// go. The modules hear about the rejection right away (<see cref="PaymentAttemptDeclinedDomainEvent"/>) and apply its
+    /// consequences only with the final outcome, which <see cref="SetFinalResponse"/> records.
+    /// <para>
+    /// A second declined attempt inside the window changes nothing: the window is the one the first rejection opened, and the
+    /// payer was already told.
+    /// </para>
+    /// </remarks>
+    /// <param name="response">What the provider reported about the declined attempt.</param>
+    /// <param name="providerTransactionId">Id of the declined transaction at the provider.</param>
+    /// <param name="paymentMethodType">Payment method of the declined attempt.</param>
+    /// <param name="failureReason">Why it was declined, normalized by the provider adapter.</param>
+    /// <param name="providerMessage">What the bank or the provider said, as they said it.</param>
+    /// <param name="retryWindowEndsAt">Until when the provider's page lets the payer retry.</param>
+    public void DeclineAttempt(Dictionary<string, string?> response, string? providerTransactionId, string? paymentMethodType, PaymentFailureReason failureReason, string? providerMessage, Instant retryWindowEndsAt)
+    {
+        DomainGuard.IsEmpty(response, Errors.FinalResponseCannotBeEmpty);
+
+        if (Status == PaymentStatus.AwaitingRetry)
+        {
+            return;
+        }
+
+        DomainGuard.IsTrue(Status != PaymentStatus.Initiated && Status != PaymentStatus.Pending, Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
+
+        Status = PaymentStatus.AwaitingRetry;
+        RetryWindowEndsAt = retryWindowEndsAt;
+        FinalResponse = response;
+        ProviderTransactionId = providerTransactionId;
+        PaymentMethodType = paymentMethodType;
+        FailureReason = failureReason;
+        ProviderMessage = Shorten(providerMessage);
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        AddEvent(PaymentAttemptDeclinedDomainEvent.Create(Id, Module, ReferenceId, Tenant, Provider, PlatformAccount, FailureReason, ProviderMessage, retryWindowEndsAt));
+    }
+
+    /// <summary>
+    /// Whether the payment waits for a retry whose window is still open at <paramref name="now"/>.
+    /// </summary>
+    /// <param name="now">The instant to check.</param>
+    /// <returns><see langword="true"/> while a declined payment can still be retried on the provider's page.</returns>
+    public bool IsAwaitingRetryAt(Instant now) => Status == PaymentStatus.AwaitingRetry && RetryWindowEndsAt is { } endsAt && now < endsAt;
+
+    /// <summary>
     /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook) y cierra el cobro.
     /// </summary>
     /// <remarks>
     /// Accepts <see cref="PaymentStatus.Expired"/> too: a provider may report that the payer let the session lapse,
     /// and rejecting that outcome would leave the payment in progress forever. It differs from <see cref="Expire"/>,
     /// where nobody answered and the platform closes the payment by silence.
+    /// <para>
+    /// A payment already closed as failed or expired still takes an approval (pendings/622): a retry approved after its window,
+    /// or a PSE confirmed after the page lapsed. The money came in, and rejecting the approval left it charged and applied to
+    /// nothing. It is kept as <see cref="ApprovedLate"/> and travels as <c>LateApproval</c>, so the module applies it if what
+    /// it paid for still exists and otherwise leaves it as the payer's credit.
+    /// </para>
     /// </remarks>
     /// <param name="finalStatus">The resolved status reported by the provider.</param>
     /// <param name="response">What the provider reported, kept as the record of the outcome.</param>
@@ -222,15 +292,18 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
         if (Status == finalStatus)
             return;
 
-        // Reject conflicting transitions (e.g., Succeeded → Failed)
+        var late = finalStatus == PaymentStatus.Succeeded && Status is (PaymentStatus.Failed or PaymentStatus.Expired);
+
+        // Reject conflicting transitions (e.g., Succeeded → Failed); only an approval reopens a closed payment.
         DomainGuard.IsTrue(
-            Status != PaymentStatus.Initiated && Status != finalStatus,
+            Status is not (PaymentStatus.Initiated or PaymentStatus.Pending or PaymentStatus.AwaitingRetry) && !late,
             Errors.OnlyCanSetFinalResponseIfStatusIsInitiated);
 
         // A capture in another currency is not this payment: applying it would settle the debt with a wrong amount.
         DomainGuard.IsTrue(capturedAmount is not null && capturedAmount.Currency != Total.Currency, Errors.CapturedAmountCurrencyMustMatchTotal);
 
         Status = finalStatus;
+        ApprovedLate = late;
         FinalResponse = response;
         ProviderTransactionId = providerTransactionId;
         PaymentMethodType = paymentMethodType;
@@ -251,7 +324,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
 
         var expectedNet = keepsFee ? fee!.NetOf(CapturedAmount!) : null;
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount, FailureReason, ProviderMessage));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount, FailureReason, ProviderMessage, ApprovedLate));
     }
 
     /// <summary>
@@ -316,17 +389,17 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// resuelve las dos limpiezas, sin inventar un segundo barrido que hurgue en el estado de otro servicio.
     /// </para>
     /// <para>
-    /// <b>Es irreversible, y por eso quien lo llama tiene que ser generoso con el plazo.</b> Si la pasarela
-    /// contesta despues, <see cref="SetFinalResponse"/> rechaza la transicion y el aviso acaba en la cola de
-    /// errores: el dinero se cobro y no se aplico. Esperar de mas solo alarga una cotizacion congelada;
-    /// cerrar de menos pierde un cobro real.
+    /// <b>Quien lo llama tiene que ser generoso con el plazo.</b> Si la pasarela aprueba despues,
+    /// <see cref="SetFinalResponse"/> lo acepta como aprobacion tardia (pendings/622), pero lo que el cobro esperaba ya se
+    /// cancelo y el dinero queda como saldo a favor del pagador. Esperar de mas solo alarga una cotizacion congelada;
+    /// cerrar de menos convierte un pago normal en uno tardio.
     /// </para>
     /// </remarks>
     /// <param name="reason">Por que se cierra, que viaja en la respuesta para que quede dicho en el registro.</param>
     public void Expire(string reason)
     {
         DomainGuard.IsTrue(
-            Status != PaymentStatus.Initiated && Status != PaymentStatus.Pending,
+            Status is not (PaymentStatus.Initiated or PaymentStatus.Pending or PaymentStatus.AwaitingRetry),
             Errors.OnlyPaymentsInProgressCanExpire);
 
         Status = PaymentStatus.Expired;
