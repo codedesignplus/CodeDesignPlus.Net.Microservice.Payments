@@ -97,6 +97,13 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// Almacena la respuesta final y asíncrona del proveedor (ej. del webhook).
     /// </summary>
     public Dictionary<string, string?> FinalResponse { get; private set; } = [];
+    /// <summary>
+    /// Hasta cuándo acepta el pago la página del proveedor: el mismo instante que se le envió al crearla (pendings/622).
+    /// </summary>
+    /// <remarks>
+    /// Miembro suelto y no argumento del constructor (regla 31): los cobros guardados antes no lo traen y se leen con null.
+    /// </remarks>
+    public Instant? CheckoutExpiresAt { get; private set; }
 
 
     /// <summary>
@@ -159,12 +166,15 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <summary>
     /// Asocia la respuesta inmediata de la pasarela de pagos después de iniciar la transacción.
     /// </summary>
-    public void SetInitiateResponse(Dictionary<string, string?> response)
+    /// <param name="response">Lo que respondió la pasarela, con la URL de su página.</param>
+    /// <param name="checkoutExpiresAt">El vencimiento que se le envió a la página del proveedor.</param>
+    public void SetInitiateResponse(Dictionary<string, string?> response, Instant checkoutExpiresAt)
     {
         DomainGuard.IsTrue(Status != PaymentStatus.Initiated, Errors.OnlyCanSetInitiateResponseIfStatusIsInitiated);
         DomainGuard.IsEmpty(response, Errors.InitiateResponseCannotBeEmpty);
 
         InitiateResponse = response;
+        CheckoutExpiresAt = checkoutExpiresAt;
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         AddEvent(PaymentInitiationRespondedDomainEvent.Create(Id, response, Tenant));

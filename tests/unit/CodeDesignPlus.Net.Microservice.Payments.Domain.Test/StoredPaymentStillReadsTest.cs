@@ -41,6 +41,21 @@ public class StoredPaymentStillReadsTest
         Assert.Equal(((string?)null, false, (Money?)null, (string?)null, (Money?)null, (string?)null, false), (payment.Provider, payment.PlatformAccount, payment.CapturedAmount, payment.PaymentMethodType, payment.ProviderFee, payment.FeeSource, payment.Refunds is not null));
     }
 
+    [Fact]
+    public void Deserialize_PaymentStoredBeforeCheckoutExpiresAt_ReadsItAsAbsent()
+    {
+        // Arrange: los cobros guardados antes de pendings/622 no traen el vencimiento de la página.
+        var document = Payment().ToBsonDocument();
+
+        document.Remove("CheckoutExpiresAt");
+
+        // Act
+        var payment = BsonSerializer.Deserialize<PaymentAggregate>(document);
+
+        // Assert
+        Assert.Null(payment.CheckoutExpiresAt);
+    }
+
     private static PaymentAggregate Payment()
     {
         var subTotal = Money.FromLong(100_000L, "COP");

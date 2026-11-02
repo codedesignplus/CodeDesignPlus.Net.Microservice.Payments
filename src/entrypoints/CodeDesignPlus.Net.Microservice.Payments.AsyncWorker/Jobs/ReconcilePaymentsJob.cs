@@ -15,9 +15,9 @@ namespace CodeDesignPlus.Net.Microservice.Payments.AsyncWorker.Jobs;
 /// payments younger than the configured minimum age are skipped so the payer still on the hosted page is not polled.
 /// <para>
 /// También es lo que cierra el cobro cuya página de pago venció sin transacción en el proveedor (pendings/622), y por eso
-/// corre cada minuto: los módulos que esperan la respuesta (una reserva de parqueadero, un pase de visita) se cansan a los
-/// 20 minutos, y el cobro tiene que cerrarse antes, cerca de un minuto después de su página de 15. Cada diez minutos habría
-/// cerrado algunos a los 25. Las consultas de más tienen tope: solo se pregunta por los cobros en curso que pasan la edad
+/// corre cada minuto: el cobro se cierra a los 5 minutos de margen después de su página de 15, hacia los 20 o 21, y los
+/// módulos que esperan la respuesta (una reserva de parqueadero, un pase de visita) se cansan a los 30, así que siempre
+/// cierra antes ms-payments. Cada diez minutos habría cerrado algunos a los 30, empatado con ellos. Las consultas de más tienen tope: solo se pregunta por los cobros en curso que pasan la edad
 /// mínima, y los abandonados salen del grupo en cuanto vencen.
 /// </para>
 /// </remarks>

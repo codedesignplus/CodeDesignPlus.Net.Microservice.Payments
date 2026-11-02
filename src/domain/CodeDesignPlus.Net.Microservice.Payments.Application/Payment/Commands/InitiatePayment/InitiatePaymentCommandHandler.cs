@@ -59,7 +59,9 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
 
         var session = await collect.CreateCheckoutAsync(payment, credentials, returnUrl, expiresAt, cancellationToken);
 
-        payment.SetInitiateResponse(new Dictionary<string, string?> { { "redirectUrl", session.RedirectUrl.ToString() } });
+        // Se guarda el mismo instante que se le envió a la página, no uno recalculado: es lo que decide cuándo un cobro sin
+        // transacción ya no puede pagarse (pendings/622).
+        payment.SetInitiateResponse(new Dictionary<string, string?> { { "redirectUrl", session.RedirectUrl.ToString() } }, expiresAt);
 
         await repository.UpdateAsync(payment, cancellationToken);
 

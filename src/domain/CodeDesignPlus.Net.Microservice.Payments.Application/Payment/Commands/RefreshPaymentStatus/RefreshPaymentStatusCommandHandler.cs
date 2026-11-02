@@ -16,8 +16,8 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// reconciliation job that recovers events the webhook never received. Both end in the same
 /// <see cref="UpdateStatusCommand"/> the webhook uses, so a payment closes the same way whoever learns first.
 /// <para>
-/// Un cobro cuya página de pago ya venció (<see cref="PaymentProvidersOptions.CheckoutLifetime"/> más
-/// <see cref="PaymentProvidersOptions.CheckoutExpirationGrace"/>) y del que el proveedor no tiene ninguna transacción se
+/// Un cobro cuya página de pago ya venció (<see cref="PaymentAggregate.CheckoutExpiresAt"/>, el vencimiento que se le envió
+/// al proveedor, más <see cref="PaymentProvidersOptions.CheckoutExpirationGrace"/>) y del que el proveedor no tiene ninguna transacción se
 /// cierra aquí como vencido (pendings/622). El <c>expiration-time</c> de la página limita el inicio del pago: pasado ese
 /// momento y sin transacción, ya no puede aparecer ninguna. Antes ese cobro seguía en curso hasta el barrido diario, un día
 /// después, y el módulo que lo pidió nunca recibía respuesta: en Las Acacias, el 2-nov-2026, una reserva de parqueadero
@@ -92,9 +92,12 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
             return false;
         }
 
-        var pageClosedAt = payment.CreatedAt + Duration.FromTimeSpan(options.Value.CheckoutLifetime + options.Value.CheckoutExpirationGrace);
+        // Un cobro guardado antes de que existiera CheckoutExpiresAt no lo trae: solo para él se estima con la creación y la vida
+        // de la página. Es una lectura de respaldo, sin migración ni backfill; deja de usarse sola cuando ya no queden cobros
+        // en curso de antes de pendings/622, y entonces se puede quitar.
+        var expiresAt = payment.CheckoutExpiresAt ?? payment.CreatedAt + Duration.FromTimeSpan(options.Value.CheckoutLifetime);
 
-        return SystemClock.Instance.GetCurrentInstant() >= pageClosedAt;
+        return SystemClock.Instance.GetCurrentInstant() >= expiresAt + Duration.FromTimeSpan(options.Value.CheckoutExpirationGrace);
     }
 
     private async Task<PaymentStatusDto> ExpireAsync(PaymentAggregate payment, CancellationToken cancellationToken)

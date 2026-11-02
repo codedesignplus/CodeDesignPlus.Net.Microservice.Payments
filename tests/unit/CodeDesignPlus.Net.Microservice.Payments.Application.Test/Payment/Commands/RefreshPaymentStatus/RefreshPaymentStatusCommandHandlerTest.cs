@@ -25,7 +25,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Test.Payment.Comm
 public class RefreshPaymentStatusCommandHandlerTest
 {
     private static readonly TimeSpan CheckoutLifetime = TimeSpan.FromMinutes(15);
-    private static readonly TimeSpan Grace = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan Grace = TimeSpan.FromMinutes(5);
 
     private readonly PaymentAggregate payment = TestData.Payment();
     private readonly Mock<IPaymentRepository> repository = new();
@@ -143,6 +143,50 @@ public class RefreshPaymentStatusCommandHandlerTest
 
         // Assert
         Assert.Equal(PaymentStatus.Initiated, result.Status);
+    }
+
+    [Fact]
+    public async Task Handle_PageExpiresLaterThanItsCreationSuggests_WaitsForTheExpirationSentToTheProvider()
+    {
+        // Arrange: creado hace 25 minutos, pero la página que se le envió a Wompi vence hace solo 2; el margen no ha pasado.
+        CreatedAgo(TimeSpan.FromMinutes(25));
+        ExpiresAgo(TimeSpan.FromMinutes(2));
+
+        // Act
+        var result = await Handle();
+
+        // Assert
+        Assert.Equal(PaymentStatus.Initiated, result.Status);
+    }
+
+    [Fact]
+    public async Task Handle_PageSentToTheProviderExpiredPastTheGrace_ExpiresThePayment()
+    {
+        // Arrange: recién creado según CreatedAt, pero el vencimiento guardado ya pasó con su margen.
+        CreatedAgo(TimeSpan.FromMinutes(1));
+        ExpiresAgo(Grace + TimeSpan.FromSeconds(1));
+
+        // Act
+        var result = await Handle();
+
+        // Assert
+        Assert.Equal(PaymentStatus.Expired, result.Status);
+    }
+
+    [Fact]
+    public void Options_Default_GraceIsFiveMinutes()
+    {
+        // Act
+        var options = new PaymentProvidersOptions();
+
+        // Assert
+        Assert.Equal(TimeSpan.FromMinutes(5), options.CheckoutExpirationGrace);
+    }
+
+    private void ExpiresAgo(TimeSpan age)
+    {
+        payment.SetInitiateResponse(new Dictionary<string, string?> { ["redirectUrl"] = "https://checkout.wompi.co/p/" }, SystemClock.Instance.GetCurrentInstant() - Duration.FromTimeSpan(age));
+        payment.GetAndClearEvents();
     }
 
     private void CreatedAgo(TimeSpan age) => payment.CreatedAt = SystemClock.Instance.GetCurrentInstant() - Duration.FromTimeSpan(age);

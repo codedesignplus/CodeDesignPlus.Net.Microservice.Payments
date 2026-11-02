@@ -111,6 +111,22 @@ public class InitiatePaymentCommandHandlerTest
         Assert.Equal(("Wompi", false, TestData.Tenant), (created!.Provider, created.PlatformAccount, created.Tenant));
     }
 
+    [Fact]
+    public async Task Handle_Payment_KeepsTheExpirationSentToTheHostedPage()
+    {
+        // Arrange
+        Instant? sent = null;
+        PaymentAggregate? updated = null;
+        collect.Setup(x => x.CreateCheckoutAsync(It.IsAny<PaymentAggregate>(), It.IsAny<MerchantCredentials>(), It.IsAny<Uri>(), It.IsAny<Instant>(), It.IsAny<CancellationToken>())).Callback<PaymentAggregate, MerchantCredentials, Uri, Instant, CancellationToken>((_, _, _, expiresAt, _) => sent = expiresAt).ReturnsAsync(new CheckoutSession(HostedPage));
+        repository.Setup(x => x.UpdateAsync(It.IsAny<PaymentAggregate>(), It.IsAny<CancellationToken>())).Callback<PaymentAggregate, CancellationToken>((payment, _) => updated = payment);
+
+        // Act
+        await Handler().Handle(Command(), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(sent, updated!.CheckoutExpiresAt);
+    }
+
     private InitiatePaymentCommandHandler Handler()
     {
         var options = Options.Create(new PaymentProvidersOptions { DefaultReturnUrl = DefaultReturnUrl, EventsUrl = new Uri("https://www.example.com/notify/wompi") });

@@ -211,6 +211,55 @@ public class WompiProviderTest
     }
 
     [Fact]
+    public async Task GetOutcomeAsync_DeclinedInsideTheRetryWindow_IsNotFinal()
+    {
+        // Arrange: rechazado hace un minuto; la página todavía deja reintentar con otro medio (pendings/622).
+        UseLatest("DECLINED", TimeSpan.FromMinutes(1));
+
+        // Act
+        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
+
+        // Assert
+        Assert.Equal((PaymentStatus.Pending, false), (outcome!.Status, outcome.IsFinal));
+    }
+
+    [Fact]
+    public async Task GetOutcomeAsync_DeclinedAfterTheRetryWindow_IsFailed()
+    {
+        // Arrange
+        UseLatest("DECLINED", TimeSpan.FromMinutes(4));
+
+        // Act
+        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(PaymentStatus.Failed, outcome!.Status);
+    }
+
+    [Fact]
+    public async Task GetOutcomeAsync_VoidedInsideTheRetryWindow_IsFailed()
+    {
+        // Arrange: una anulación no abre reintento.
+        UseLatest("VOIDED", TimeSpan.FromMinutes(1));
+
+        // Act
+        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(PaymentStatus.Failed, outcome!.Status);
+    }
+
+    private void UseLatest(string status, TimeSpan finalizedAgo)
+    {
+        var finalizedAt = (SystemClock.Instance.GetCurrentInstant() - Duration.FromTimeSpan(finalizedAgo)).ToString("uuuu-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture);
+        var transaction = Transaction("tx-9", status, finalizedAt);
+
+        transaction.FinalizedAt = finalizedAt;
+
+        client.Setup(x => x.GetTransactionsByReferenceAsync("prv_test_tenant", PaymentId.ToString(), It.IsAny<CancellationToken>())).ReturnsAsync([transaction]);
+    }
+
+    [Fact]
     public async Task GetOutcomeAsync_NoTransactionYet_IsNull()
     {
         // Arrange

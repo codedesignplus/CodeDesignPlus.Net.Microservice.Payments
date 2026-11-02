@@ -45,9 +45,11 @@ public class PaymentProvidersOptions : IValidatableObject
 
     /// <summary>
     /// Cuánto se espera, después de que vence la página de pago, para cerrar como vencido un cobro sin transacción en el
-    /// proveedor: una transacción iniciada en los últimos segundos de la página alcanza a aparecer (pendings/622).
+    /// proveedor: una transacción iniciada en los últimos segundos de la página alcanza a aparecer (pendings/622). Cinco
+    /// minutos por recomendación del experto en Wompi: su documentación no dice si el checkout crea la transacción desde que
+    /// el pagador elige el medio, ni si el vencimiento lo valida el servidor, y el cierre es irreversible.
     /// </summary>
-    public TimeSpan CheckoutExpirationGrace { get; set; } = TimeSpan.FromMinutes(1);
+    public TimeSpan CheckoutExpirationGrace { get; set; } = TimeSpan.FromMinutes(5);
 
     /// <summary>
     /// How old a payment in progress must be before the reconciliation asks the provider about it, so the payer still

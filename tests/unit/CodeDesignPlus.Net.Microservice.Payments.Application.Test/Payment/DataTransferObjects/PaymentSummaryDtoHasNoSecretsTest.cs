@@ -181,7 +181,7 @@ public class PaymentSummaryDtoHasNoSecretsTest
     {
         var payment = Build();
 
-        payment.SetInitiateResponse(new Dictionary<string, string?> { ["redirectUrl"] = ProviderAnswerProbe });
+        payment.SetInitiateResponse(new Dictionary<string, string?> { ["redirectUrl"] = ProviderAnswerProbe }, SystemClock.Instance.GetCurrentInstant());
         payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["statusMessage"] = ProviderAnswerProbe }, "tx-1", payment.Total, "CARD");
 
         return payment;
