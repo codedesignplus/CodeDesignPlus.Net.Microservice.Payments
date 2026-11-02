@@ -44,6 +44,12 @@ public class PaymentProvidersOptions : IValidatableObject
     public TimeSpan CheckoutLifetime { get; set; } = TimeSpan.FromMinutes(15);
 
     /// <summary>
+    /// Cuánto se espera, después de que vence la página de pago, para cerrar como vencido un cobro sin transacción en el
+    /// proveedor: una transacción iniciada en los últimos segundos de la página alcanza a aparecer (pendings/622).
+    /// </summary>
+    public TimeSpan CheckoutExpirationGrace { get; set; } = TimeSpan.FromMinutes(1);
+
+    /// <summary>
     /// How old a payment in progress must be before the reconciliation asks the provider about it, so the payer still
     /// on the hosted page is not polled.
     /// </summary>
@@ -124,6 +130,11 @@ public class PaymentProvidersOptions : IValidatableObject
         if (CheckoutLifetime <= TimeSpan.Zero)
         {
             yield return new ValidationResult("CheckoutLifetime must be greater than zero.", [nameof(CheckoutLifetime)]);
+        }
+
+        if (CheckoutExpirationGrace < TimeSpan.Zero)
+        {
+            yield return new ValidationResult("CheckoutExpirationGrace cannot be negative.", [nameof(CheckoutExpirationGrace)]);
         }
 
         if (ReconciliationMinimumAge <= TimeSpan.Zero)

@@ -1,8 +1,10 @@
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.RefreshPaymentStatus;
 
@@ -13,8 +15,17 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// Serves the page the provider returns to, which must not trust the query string the provider appends, and the
 /// reconciliation job that recovers events the webhook never received. Both end in the same
 /// <see cref="UpdateStatusCommand"/> the webhook uses, so a payment closes the same way whoever learns first.
+/// <para>
+/// Un cobro cuya página de pago ya venció (<see cref="PaymentProvidersOptions.CheckoutLifetime"/> más
+/// <see cref="PaymentProvidersOptions.CheckoutExpirationGrace"/>) y del que el proveedor no tiene ninguna transacción se
+/// cierra aquí como vencido (pendings/622). El <c>expiration-time</c> de la página limita el inicio del pago: pasado ese
+/// momento y sin transacción, ya no puede aparecer ninguna. Antes ese cobro seguía en curso hasta el barrido diario, un día
+/// después, y el módulo que lo pidió nunca recibía respuesta: en Las Acacias, el 2-nov-2026, una reserva de parqueadero
+/// abrió Wompi a las 20:29, la página venció a las 20:44 y a las 20:50 el cobro seguía iniciado. Un cobro con una
+/// transacción pendiente no se toca: esa transacción todavía puede aprobarse.
+/// </para>
 /// </remarks>
-public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMerchantAccountHealth health, IMediator mediator, ILogger<RefreshPaymentStatusCommandHandler> logger) : IRequestHandler<RefreshPaymentStatusCommand, PaymentStatusDto>
+public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, IUserContext user, IPaymentProviderFactory providers, IMerchantCredentialsResolver credentialsResolver, IMerchantAccountHealth health, IMediator mediator, IPubSub pubsub, IOptions<PaymentProvidersOptions> options, ILogger<RefreshPaymentStatusCommandHandler> logger) : IRequestHandler<RefreshPaymentStatusCommand, PaymentStatusDto>
 {
     public async Task<PaymentStatusDto> Handle(RefreshPaymentStatusCommand request, CancellationToken cancellationToken)
     {
@@ -54,6 +65,11 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
 
         await health.ReportAcceptanceAsync(payment, credentials, cancellationToken);
 
+        if (outcome is null && IsAbandoned(payment))
+        {
+            return await ExpireAsync(payment, cancellationToken);
+        }
+
         if (outcome is null || !outcome.IsFinal)
         {
             return PaymentStatusDto.From(payment);
@@ -64,6 +80,36 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
         var updated = await FindAsync(request.Id, cancellationToken);
 
         return PaymentStatusDto.From(updated!);
+    }
+
+    /// <summary>
+    /// Si la página de pago de un cobro que nunca llegó al proveedor ya dejó de aceptarlo.
+    /// </summary>
+    private bool IsAbandoned(PaymentAggregate payment)
+    {
+        if (payment.Status != PaymentStatus.Initiated)
+        {
+            return false;
+        }
+
+        var pageClosedAt = payment.CreatedAt + Duration.FromTimeSpan(options.Value.CheckoutLifetime + options.Value.CheckoutExpirationGrace);
+
+        return SystemClock.Instance.GetCurrentInstant() >= pageClosedAt;
+    }
+
+    private async Task<PaymentStatusDto> ExpireAsync(PaymentAggregate payment, CancellationToken cancellationToken)
+    {
+        payment.Expire("La página de pago venció sin que se iniciara ninguna transacción.");
+
+        // El cobro antes que su evento (regla 23, §6): el módulo que lo pidió se entera por el mismo evento de un rechazo y
+        // cancela lo que lo esperaba.
+        await repository.UpdateAsync(payment, cancellationToken);
+
+        await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+
+        logger.LogInformation("Payment {PaymentId} of tenant {Tenant} expired: its hosted page closed with no transaction at {Provider}.", payment.Id, payment.Tenant, payment.Provider);
+
+        return PaymentStatusDto.From(payment);
     }
 
     private Task<PaymentAggregate> FindAsync(Guid id, CancellationToken cancellationToken)
