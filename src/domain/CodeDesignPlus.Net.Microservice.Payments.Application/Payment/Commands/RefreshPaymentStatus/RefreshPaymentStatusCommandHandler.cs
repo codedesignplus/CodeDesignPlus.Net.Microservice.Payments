@@ -92,12 +92,17 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
             return false;
         }
 
-        // Un cobro guardado antes de que existiera CheckoutExpiresAt no lo trae: solo para él se estima con la creación y la vida
-        // de la página. Es una lectura de respaldo, sin migración ni backfill; deja de usarse sola cuando ya no queden cobros
-        // en curso de antes de pendings/622, y entonces se puede quitar.
-        var expiresAt = payment.CheckoutExpiresAt ?? payment.CreatedAt + Duration.FromTimeSpan(options.Value.CheckoutLifetime);
+        // Sin el vencimiento que se le envió a la página no se estima uno: cerrar es irreversible y un vencimiento adivinado
+        // podría cerrar un cobro que el pagador todavía puede completar. Solo queda así un cobro cuya página nunca se creó
+        // (falló la llamada al proveedor después de guardarlo); lo cierra el barrido diario de cobros sin respuesta.
+        if (payment.CheckoutExpiresAt is null)
+        {
+            logger.LogWarning("Payment {PaymentId} of tenant {Tenant} is in progress without the expiration of its hosted page; it is not expired as abandoned.", payment.Id, payment.Tenant);
 
-        return SystemClock.Instance.GetCurrentInstant() >= expiresAt + Duration.FromTimeSpan(options.Value.CheckoutExpirationGrace);
+            return false;
+        }
+
+        return SystemClock.Instance.GetCurrentInstant() >= payment.CheckoutExpiresAt.Value + Duration.FromTimeSpan(options.Value.CheckoutExpirationGrace);
     }
 
     private async Task<PaymentStatusDto> ExpireAsync(PaymentAggregate payment, CancellationToken cancellationToken)

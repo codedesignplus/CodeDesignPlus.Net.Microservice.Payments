@@ -144,43 +144,10 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
         var transaction = transactions.FirstOrDefault(x => x.Status == "APPROVED")
             ?? transactions.OrderByDescending(x => x.CreatedAt, StringComparer.Ordinal).FirstOrDefault();
 
-        if (transaction is null)
-        {
-            return null;
-        }
-
-        var outcome = await ToOutcomeAsync(transaction, null, cancellationToken);
-
-        // Tras un intento fallido, la página de Wompi deja reintentar con otro medio durante unos minutos y con la misma
-        // referencia (docs/wompi/reintento-de-pago.md). Mientras esa ventana siga abierta, el rechazo todavía no es el final:
-        // cerrar el cobro como fallido haría que un reintento aprobado llegara a un cobro ya cerrado, y ese cierre no se
-        // deshace (pendings/622).
-        if (outcome.Status == PaymentStatus.Failed && IsRetryWindowOpen(transaction))
-        {
-            return outcome with { Status = PaymentStatus.Pending };
-        }
-
-        return outcome;
-    }
-
-    /// <summary>
-    /// Si la página todavía deja reintentar después de esta transacción rechazada o con error.
-    /// </summary>
-    private bool IsRetryWindowOpen(WompiTransaction transaction)
-    {
-        if (transaction.Status is not ("DECLINED" or "ERROR"))
-        {
-            return false;
-        }
-
-        var failedAt = transaction.FinalizedAt ?? transaction.CreatedAt;
-
-        if (!DateTimeOffset.TryParse(failedAt, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var moment))
-        {
-            return false;
-        }
-
-        return SystemClock.Instance.GetCurrentInstant() < Instant.FromDateTimeOffset(moment) + Duration.FromTimeSpan(options.Value.CheckoutRetryWindow);
+        // Un intento rechazado o con error cierra el cobro en cuanto se conoce, igual que si llegara por el aviso de Wompi:
+        // aunque la página deje reintentar con otro medio, en Kappali el pagador vuelve a pulsar «Pagar» y empieza un cobro
+        // nuevo (pendings/622, decisión del 2-nov-2026).
+        return transaction is null ? null : await ToOutcomeAsync(transaction, null, cancellationToken);
     }
 
     /// <inheritdoc/>

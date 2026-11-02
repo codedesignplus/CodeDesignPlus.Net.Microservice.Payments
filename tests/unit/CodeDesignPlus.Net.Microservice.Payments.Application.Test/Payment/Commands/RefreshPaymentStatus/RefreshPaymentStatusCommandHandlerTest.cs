@@ -52,7 +52,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_PageExpiredWithoutTransaction_ExpiresThePayment()
     {
         // Arrange
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromSeconds(1));
+        ExpiresAgo(Grace + TimeSpan.FromSeconds(1));
 
         // Act
         var result = await Handle();
@@ -65,7 +65,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_PageExpiredWithoutTransaction_TellsTheModuleThatAskedForIt()
     {
         // Arrange
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromSeconds(1));
+        ExpiresAgo(Grace + TimeSpan.FromSeconds(1));
 
         // Act
         await Handle();
@@ -79,7 +79,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     {
         // Arrange
         var order = new List<string>();
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromSeconds(1));
+        ExpiresAgo(Grace + TimeSpan.FromSeconds(1));
         repository.Setup(x => x.UpdateAsync(payment, It.IsAny<CancellationToken>())).Callback(() => order.Add("update")).Returns(Task.CompletedTask);
         pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback(() => order.Add("publish")).Returns(Task.CompletedTask);
 
@@ -94,7 +94,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_PageStillOpenWithoutTransaction_LeavesThePaymentInProgress()
     {
         // Arrange: el pagador puede seguir en la página, dentro del margen.
-        CreatedAgo(CheckoutLifetime + Grace - TimeSpan.FromSeconds(5));
+        ExpiresAgo(Grace - TimeSpan.FromSeconds(5));
 
         // Act
         var result = await Handle();
@@ -107,7 +107,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_PageExpiredWithPendingTransaction_LeavesThePaymentInProgress()
     {
         // Arrange: una transacción iniciada antes de que venciera la página todavía puede aprobarse.
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromMinutes(5));
+        ExpiresAgo(Grace + TimeSpan.FromMinutes(5));
         collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CollectOutcome(PaymentStatus.Pending, "tx-1", null, "PSE", new Dictionary<string, string?> { ["status"] = "PENDING" }));
 
         // Act
@@ -121,7 +121,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_PageExpiredWithApprovedTransaction_AppliesTheProviderAnswer()
     {
         // Arrange
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromMinutes(5));
+        ExpiresAgo(Grace + TimeSpan.FromMinutes(5));
         collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CollectOutcome(PaymentStatus.Succeeded, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = "APPROVED" }));
 
         // Act
@@ -135,7 +135,7 @@ public class RefreshPaymentStatusCommandHandlerTest
     public async Task Handle_AccountWithoutKeys_DoesNotExpireWithoutAskingTheProvider()
     {
         // Arrange
-        CreatedAgo(CheckoutLifetime + Grace + TimeSpan.FromMinutes(5));
+        ExpiresAgo(Grace + TimeSpan.FromMinutes(5));
         resolver.Setup(x => x.ForPaymentAsync(payment, It.IsAny<CancellationToken>())).ReturnsAsync((MerchantCredentials?)null);
 
         // Act
@@ -171,6 +171,34 @@ public class RefreshPaymentStatusCommandHandlerTest
 
         // Assert
         Assert.Equal(PaymentStatus.Expired, result.Status);
+    }
+
+    [Fact]
+    public async Task Handle_PaymentWithoutTheExpirationOfItsPage_IsNotExpiredAsAbandoned()
+    {
+        // Arrange: creado hace una hora y sin transacción, pero sin el vencimiento que se le envió a la página; no se estima
+        // uno con la creación (pendings/622).
+        CreatedAgo(TimeSpan.FromHours(1));
+
+        // Act
+        var result = await Handle();
+
+        // Assert
+        Assert.Equal(PaymentStatus.Initiated, result.Status);
+    }
+
+    [Fact]
+    public async Task Handle_FailedAttemptFound_ClosesThePaymentRightAway()
+    {
+        // Arrange: Wompi rechazó el intento hace un minuto; la conciliación lo cierra sin esperar a que el pagador reintente.
+        ExpiresAgo(-TimeSpan.FromMinutes(10));
+        collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CollectOutcome(PaymentStatus.Failed, "tx-1", null, "CARD", new Dictionary<string, string?> { ["status"] = "DECLINED" }));
+
+        // Act
+        await Handle();
+
+        // Assert
+        mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.Id == payment.Id && c.Status == PaymentStatus.Failed), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

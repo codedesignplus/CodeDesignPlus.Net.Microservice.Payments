@@ -210,43 +210,21 @@ public class WompiProviderTest
         Assert.Equal(("tx-1", PaymentStatus.Succeeded), (outcome!.TransactionId, outcome.Status));
     }
 
-    [Fact]
-    public async Task GetOutcomeAsync_DeclinedInsideTheRetryWindow_IsNotFinal()
+    [Theory]
+    [InlineData("DECLINED")]
+    [InlineData("ERROR")]
+    [InlineData("VOIDED")]
+    public async Task GetOutcomeAsync_FailedAttemptAMinuteAgo_ClosesThePaymentAsFailed(string status)
     {
-        // Arrange: rechazado hace un minuto; la página todavía deja reintentar con otro medio (pendings/622).
-        UseLatest("DECLINED", TimeSpan.FromMinutes(1));
+        // Arrange: aunque la página de Wompi todavía deje reintentar con otro medio, el rechazo cierra el cobro en cuanto la
+        // conciliación lo encuentra; el pagador vuelve a pulsar «Pagar» en Kappali (pendings/622).
+        UseLatest(status, TimeSpan.FromMinutes(1));
 
         // Act
         var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
 
         // Assert
-        Assert.Equal((PaymentStatus.Pending, false), (outcome!.Status, outcome.IsFinal));
-    }
-
-    [Fact]
-    public async Task GetOutcomeAsync_DeclinedAfterTheRetryWindow_IsFailed()
-    {
-        // Arrange
-        UseLatest("DECLINED", TimeSpan.FromMinutes(4));
-
-        // Act
-        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(PaymentStatus.Failed, outcome!.Status);
-    }
-
-    [Fact]
-    public async Task GetOutcomeAsync_VoidedInsideTheRetryWindow_IsFailed()
-    {
-        // Arrange: una anulación no abre reintento.
-        UseLatest("VOIDED", TimeSpan.FromMinutes(1));
-
-        // Act
-        var outcome = await Provider().GetOutcomeAsync(Payment(), credentials, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(PaymentStatus.Failed, outcome!.Status);
+        Assert.Equal((PaymentStatus.Failed, true), (outcome!.Status, outcome.IsFinal));
     }
 
     private void UseLatest(string status, TimeSpan finalizedAgo)
