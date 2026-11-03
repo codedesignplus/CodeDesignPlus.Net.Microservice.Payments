@@ -18,9 +18,12 @@ namespace CodeDesignPlus.Net.Microservice.Payments.gRpc.Services;
 /// </summary>
 /// <remarks>
 /// <c>GetMerchantAccount</c>, <c>RequestPayout</c> and <c>GetPayout</c> are anonymous because a worker calls them without
-/// a user token, so the tenant travels in the request. That is only safe because this gRPC endpoint is not published
+/// a user token, so the tenant travels in the request. <c>GetPaymentStatus</c> is anonymous for the same reason: the
+/// order reconciliation job of ms-licenses asks for a payment's status without a token, and without a tenant the query
+/// looks the payment up by its id alone (pendings/738). That is only safe because this gRPC endpoint is not published
 /// outside the cluster: its Service is a ClusterIP and no VirtualService or Ingress routes to it (checked on 28-oct-2026
-/// in the Helm values and in the live cluster, pendings/660). Publishing it would expose these three methods.
+/// in the Helm values and in the live cluster, pendings/660). Publishing it would expose these four methods. A service
+/// identity for internal calls would replace this (pendings/740).
 /// </remarks>
 public class PaymentService(IMediator mediator, IMapper mapper) : Payment.PaymentBase
 {
@@ -43,6 +46,7 @@ public class PaymentService(IMediator mediator, IMapper mapper) : Payment.Paymen
         }
     }
 
+    [AllowAnonymous]
     public override async Task<GetPaymentStatusResponse> GetPaymentStatus(GetPaymentStatusRequest request, ServerCallContext context)
     {
         InfrastructureGuard.IsFalse(Guid.TryParse(request.Id, out var id), Errors.InvalidId);

@@ -19,6 +19,7 @@ public class PaymentServiceTest
     [InlineData(nameof(PaymentService.GetMerchantAccount))]
     [InlineData(nameof(PaymentService.RequestPayout))]
     [InlineData(nameof(PaymentService.GetPayout))]
+    [InlineData(nameof(PaymentService.GetPaymentStatus))]
     public void WorkerMethods_AreAnonymous(string method)
     {
         // Arrange: a worker calls them without a user token; the tenant travels in the request.
@@ -31,13 +32,11 @@ public class PaymentServiceTest
         Assert.NotNull(anonymous);
     }
 
-    [Theory]
-    [InlineData(nameof(PaymentService.InitiatePayment))]
-    [InlineData(nameof(PaymentService.GetPaymentStatus))]
-    public void UserMethods_StayAuthenticated(string method)
+    [Fact]
+    public void InitiatePayment_StaysAuthenticated()
     {
         // Arrange
-        var info = typeof(PaymentService).GetMethod(method)!;
+        var info = typeof(PaymentService).GetMethod(nameof(PaymentService.InitiatePayment))!;
 
         // Act
         var anonymous = info.GetCustomAttribute<AllowAnonymousAttribute>();
