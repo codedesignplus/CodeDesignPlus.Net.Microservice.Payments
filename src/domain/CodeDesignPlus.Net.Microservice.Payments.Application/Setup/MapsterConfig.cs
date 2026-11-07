@@ -47,6 +47,34 @@ public static class MapsterConfigPayment
                 BuyerName = src.Buyer.Name
             });
 
+        // Field by field for the same reason (pendings/674). The net is only known with the commission, in the currency
+        // that came in: the aggregate keeps the commission only then.
+        TypeAdapterConfig<PaymentAggregate, PlatformPaymentDto>
+            .NewConfig()
+            .MapWith(src => new PlatformPaymentDto
+            {
+                Id = src.Id,
+                Module = src.Module,
+                ReferenceId = src.ReferenceId,
+                Description = src.Description,
+                BuyerName = src.Buyer.Name,
+                Status = src.Status,
+                FailureReason = src.FailureReason,
+                ProviderMessage = src.ProviderMessage,
+                ApprovedLate = src.ApprovedLate,
+                Provider = src.Provider,
+                PaymentMethodType = src.PaymentMethodType,
+                ProviderTransactionId = src.ProviderTransactionId,
+                CreatedAt = src.CreatedAt,
+                UpdatedAt = src.UpdatedAt,
+                Total = src.Total,
+                CapturedAmount = src.CapturedAmount,
+                ProviderFee = src.ProviderFee,
+                ProviderFeeTax = src.ProviderFeeTax,
+                NetAmount = src.CapturedAmount != null && src.ProviderFee != null && src.ProviderFeeTax != null ? src.CapturedAmount - src.ProviderFee - src.ProviderFeeTax : null,
+                FeeSource = src.FeeSource
+            });
+
         TypeAdapterConfig<SavedCardAggregate, SavedCardDto>
             .NewConfig()
             .MapWith(src => new SavedCardDto

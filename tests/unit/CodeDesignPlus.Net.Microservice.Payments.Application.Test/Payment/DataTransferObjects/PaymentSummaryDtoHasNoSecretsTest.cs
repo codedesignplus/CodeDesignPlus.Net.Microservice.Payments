@@ -66,6 +66,19 @@ public class PaymentSummaryDtoHasNoSecretsTest
     }
 
     [Fact]
+    public void PlatformPaymentDto_WalkedByReflection_NamesNoSecret()
+    {
+        // Arrange: the Super Admin's contract of the platform's payments (pendings/674).
+        var paths = Walk(typeof(PlatformPaymentDto), nameof(PlatformPaymentDto), []);
+
+        // Act
+        var found = paths.Where(path => Forbidden.Any(name => path.Contains(name, StringComparison.OrdinalIgnoreCase))).ToList();
+
+        // Assert
+        Assert.True(found.Count == 0, $"The query DTO exposes data that may not leave the service: {string.Join(", ", found)}");
+    }
+
+    [Fact]
     public void PaymentDto_WalkedByReflection_NamesTheProviderAnswers()
     {
         // Arrange: the test of the test. If the walk found nothing here, where the raw answers are, the check above

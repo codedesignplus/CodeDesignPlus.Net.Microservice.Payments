@@ -1,6 +1,7 @@
 using CodeDesignPlus.Net.Core.Abstractions.Models.Pager;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPlatformPayments;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Test.Controllers;
 
@@ -56,6 +57,26 @@ public class PaymentQueryEndpointTest
 
         Assert.NotNull(enviada);
         Assert.Same(criteria, enviada!.Criteria);
+    }
+
+    [Fact]
+    public async Task GetPlatformPayments_Criteria_SendsThePlatformQueryWithIt()
+    {
+        // Arrange: the Super Admin's list (pendings/674) must not go through the tenant's query, nor build its own criteria.
+        GetAllPlatformPaymentsQuery? sent = null;
+        var page = Pagination<PlatformPaymentDto>.Create([], 0, 10, 0);
+        var criteria = new C.Criteria { Filters = "Status=2", OrderBy = "CreatedAt", Limit = 25 };
+
+        mediator
+            .Setup(x => x.Send(It.IsAny<GetAllPlatformPaymentsQuery>(), It.IsAny<CancellationToken>()))
+            .Callback<object, CancellationToken>((query, _) => sent = (GetAllPlatformPaymentsQuery)query)
+            .ReturnsAsync(page);
+
+        // Act
+        var response = await BuildController().GetPlatformPayments(criteria, CancellationToken.None);
+
+        // Assert
+        Assert.Equal((criteria, (object?)page), (sent!.Criteria, Assert.IsType<OkObjectResult>(response).Value));
     }
 
     private PaymentController BuildController() => new(mediator.Object);

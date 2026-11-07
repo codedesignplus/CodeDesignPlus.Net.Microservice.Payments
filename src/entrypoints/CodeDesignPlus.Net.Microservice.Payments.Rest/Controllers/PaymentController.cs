@@ -1,7 +1,9 @@
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ProcessProviderEvent;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.RefreshPaymentStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPaymentSummaries;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetAllPlatformPayments;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPaymentOutcome;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPlatformPaymentById;
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -43,6 +45,44 @@ public class PaymentController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAllPaymentSummariesQuery(criteria), cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// The payments charged to the platform's own merchant account (the licenses of ExcellenceForge), for the Super Admin
+    /// (pendings/674).
+    /// </summary>
+    /// <remarks>
+    /// With the provider, the method and the transaction, the status and its date, the order it charges
+    /// (<c>referenceId</c>) and the gross, the commission, its tax and the net. Only the platform's: the condition goes in
+    /// the filter whatever the client sends. Never the buyer's document nor the provider's raw answers.
+    /// </remarks>
+    /// <param name="criteria">Filters, order and page.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">The page of platform payments.</response>
+    /// <response code="403">If the user may not read the platform's payments.</response>
+    [HttpGet("platform")]
+    public async Task<IActionResult> GetPlatformPayments([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetAllPlatformPaymentsQuery(criteria), cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// One payment charged to the platform's own merchant account: the payment of a license order, read by the order's
+    /// <c>paymentId</c> (pendings/674).
+    /// </summary>
+    /// <param name="id">Id of the payment.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">The payment.</response>
+    /// <response code="400">If it does not exist or is not a platform payment.</response>
+    /// <response code="403">If the user may not read the platform's payments.</response>
+    [HttpGet("platform/{id:guid}")]
+    public async Task<IActionResult> GetPlatformPaymentById(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetPlatformPaymentByIdQuery(id), cancellationToken);
 
         return Ok(result);
     }
