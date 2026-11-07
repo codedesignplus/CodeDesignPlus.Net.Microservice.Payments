@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Test.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Fees;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.UpdateStatus;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
@@ -46,6 +47,8 @@ public class UpdateStatusCommandHandlerTest
         repository
             .Setup(x => x.FindAsync<PaymentAggregate>(PaymentId, Tenant, It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildPayment());
+
+        repository.ReappliesInPlace();
     }
 
     [Fact]

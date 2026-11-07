@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Test.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ExpireStalePayments;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.Enums;
@@ -39,9 +40,7 @@ public class ExpireStalePaymentsCommandHandlerTest
 
     public ExpireStalePaymentsCommandHandlerTest()
     {
-        repository
-            .Setup(x => x.UpdateAsync(It.IsAny<PaymentAggregate>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        repository.ReappliesInPlace();
 
         pubsub
             .Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>()))
@@ -106,7 +105,7 @@ public class ExpireStalePaymentsCommandHandlerTest
         await Handle();
 
         Assert.Empty(published);
-        repository.Verify(x => x.UpdateAsync(It.IsAny<PaymentAggregate>(), It.IsAny<CancellationToken>()), Times.Never);
+        repository.Verify(x => x.UpdateWithRetryAsync(It.IsAny<Func<Task<PaymentAggregate>>>(), It.IsAny<Func<PaymentAggregate, bool>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>Un cobro que falla no impide cerrar los demas.</summary>
@@ -120,9 +119,13 @@ public class ExpireStalePaymentsCommandHandlerTest
 
         Found(bad, good);
 
-        repository
-            .Setup(x => x.UpdateAsync(bad, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("mongo caido"));
+        repository.ReappliesInPlace(payment =>
+        {
+            if (payment == bad)
+            {
+                throw new InvalidOperationException("mongo caido");
+            }
+        });
 
         await Assert.ThrowsAsync<InvalidOperationException>(Handle);
 
@@ -152,10 +155,17 @@ public class ExpireStalePaymentsCommandHandlerTest
         Assert.True((cutoff!.Value - expected).TotalSeconds is > -5 and < 5, $"cutoff={cutoff} expected={expected}");
     }
 
-    private void Found(params PaymentAggregate[] payments) =>
+    private void Found(params PaymentAggregate[] payments)
+    {
         repository
             .Setup(x => x.GetInProgressOlderThanAsync(It.IsAny<Instant>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([.. payments]);
+
+        foreach (var payment in payments)
+        {
+            repository.Setup(x => x.FindAsync<PaymentAggregate>(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        }
+    }
 
     private Task Handle()
     {

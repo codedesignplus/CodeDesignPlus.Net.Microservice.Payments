@@ -155,16 +155,31 @@ public class ProcessProviderEventCommandHandler(IPaymentRepository repository, I
             return;
         }
 
-        if (!payment.RegisterRefund(refund.RefundId, refund.Status, refund.Amount, refund.Code, refund.Message))
+        PaymentAggregate? refunded = null;
+
+        // Reread and reapplied on a conflict (rule 59): the webhook and the reconciliation may be writing the same payment.
+        await repository.UpdateWithRetryAsync(() => repository.FindAsync<PaymentAggregate>(payment.Id, cancellationToken), current =>
+        {
+            refunded = null;
+
+            if (current.Status != PaymentStatus.Succeeded || !current.RegisterRefund(refund.RefundId, refund.Status, refund.Amount, refund.Code, refund.Message))
+            {
+                return false;
+            }
+
+            refunded = current;
+
+            return true;
+        }, cancellationToken);
+
+        if (refunded is null)
         {
             logger.LogInformation("Refund {RefundId} of payment {PaymentId}: already known as {Status}.", refund.RefundId, payment.Id, refund.Status);
 
             return;
         }
 
-        await repository.UpdateAsync(payment, cancellationToken);
-
-        await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+        await pubsub.PublishAsync(refunded.GetAndClearEvents(), cancellationToken);
 
         logger.LogInformation("Refund {RefundId} of payment {PaymentId} of tenant {Tenant}: {Status}.", refund.RefundId, payment.Id, payment.Tenant, refund.Status);
     }

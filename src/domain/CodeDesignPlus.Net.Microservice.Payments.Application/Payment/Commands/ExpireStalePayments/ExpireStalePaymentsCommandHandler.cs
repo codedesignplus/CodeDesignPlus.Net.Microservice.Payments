@@ -47,16 +47,38 @@ public class ExpireStalePaymentsCommandHandler(
         {
             try
             {
-                payment.Expire($"Sin respuesta de la pasarela en {request.OlderThan}.");
+                PaymentAggregate? closed = null;
 
+                // Se relee antes de cerrar (regla 59): la pasarela pudo responder entre la lectura del barrido y esta
+                // escritura, y esa respuesta gana. Un cobro que ya no está en curso no se toca.
+                //
                 // El agregado antes que el evento: si la publicacion falla, el cobro ya esta cerrado y el
                 // barrido de manana no vuelve a encontrarlo, pero facturacion no se ha enterado y su
                 // cotizacion sigue viva. Al reves seria peor —anunciar un cierre que no llego a escribirse—
                 // asi que el orden es este, y el hueco no atrapa a nadie: facturacion deja de tener en cuenta
                 // una cotizacion pasados 30 minutos, sin necesidad de este evento.
-                await repository.UpdateAsync(payment, cancellationToken);
+                await repository.UpdateWithRetryAsync(() => repository.FindAsync<PaymentAggregate>(payment.Id, cancellationToken), current =>
+                {
+                    closed = null;
 
-                await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+                    if (!current.IsInProgress)
+                    {
+                        return false;
+                    }
+
+                    current.Expire($"Sin respuesta de la pasarela en {request.OlderThan}.");
+
+                    closed = current;
+
+                    return true;
+                }, cancellationToken);
+
+                if (closed is null)
+                {
+                    continue;
+                }
+
+                await pubsub.PublishAsync(closed.GetAndClearEvents(), cancellationToken);
 
                 expired++;
             }

@@ -4,8 +4,22 @@ using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
 
-public class PaymentAggregate(Guid id) : AggregateRootBase(id)
+/// <summary>
+/// A charge asked for by a module and paid on the provider's hosted page.
+/// </summary>
+/// <remarks>
+/// Several processes write the same payment: the provider's webhook, the reconciliation job that asks the provider and
+/// closes a page that lapsed with no transaction, the daily sweep of payments with no answer, and the refund events. The
+/// job could read a payment as in progress, the webhook approve it in the meantime, and the job then overwrite the
+/// approval with «expired» and announce both outcomes to the module (pendings/665, rule 59). Hence
+/// <see cref="IVersionedAggregate"/>: each writer rereads and reapplies its change, and declines it when the payment no
+/// longer allows it.
+/// </remarks>
+public class PaymentAggregate(Guid id) : AggregateRootBase(id), IVersionedAggregate
 {
+    /// <inheritdoc/>
+    public long Version { get; private set; }
+
     /// <summary>
     /// El módulo con el que ms-licenses cobra la venta de una licencia.
     /// </summary>
@@ -255,6 +269,11 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id)
     /// <param name="now">The instant to check.</param>
     /// <returns><see langword="true"/> while a declined payment can still be retried on the provider's page.</returns>
     public bool IsAwaitingRetryAt(Instant now) => Status == PaymentStatus.AwaitingRetry && RetryWindowEndsAt is { } endsAt && now < endsAt;
+
+    /// <summary>
+    /// Whether the payment has no final outcome yet: started, pending at the provider or waiting for a retry.
+    /// </summary>
+    public bool IsInProgress => Status is PaymentStatus.Initiated or PaymentStatus.Pending or PaymentStatus.AwaitingRetry;
 
     /// <summary>
     /// Asocia la respuesta final del proveedor de pagos (recibida vía webhook) y cierra el cobro.

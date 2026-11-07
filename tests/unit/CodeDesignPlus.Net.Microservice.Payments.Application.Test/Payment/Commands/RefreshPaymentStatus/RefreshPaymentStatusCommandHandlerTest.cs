@@ -43,6 +43,7 @@ public class RefreshPaymentStatusCommandHandlerTest
 
         providers.Setup(x => x.GetCollect("Wompi")).Returns(collect.Object);
         repository.Setup(x => x.FindAsync<PaymentAggregate>(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        repository.ReappliesInPlace();
         resolver.Setup(x => x.ForPaymentAsync(payment, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Credentials());
         collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync((CollectOutcome?)null);
         pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events)).Returns(Task.CompletedTask);
@@ -80,7 +81,7 @@ public class RefreshPaymentStatusCommandHandlerTest
         // Arrange
         var order = new List<string>();
         ExpiresAgo(Grace + TimeSpan.FromSeconds(1));
-        repository.Setup(x => x.UpdateAsync(payment, It.IsAny<CancellationToken>())).Callback(() => order.Add("update")).Returns(Task.CompletedTask);
+        repository.ReappliesInPlace(_ => order.Add("update"));
         pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback(() => order.Add("publish")).Returns(Task.CompletedTask);
 
         // Act

@@ -19,39 +19,59 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
     {
         ApplicationGuard.IsNull(request, Errors.InvalidRequest);
 
-        PaymentAggregate payment;
-
-        if (user.Tenant != Guid.Empty)
-            payment = await repository.FindAsync<PaymentAggregate>(request.Id, user.Tenant, cancellationToken);
-        else
-            payment = await repository.FindAsync<PaymentAggregate>(request.Id, cancellationToken);
+        var payment = await FindAsync(request.Id, cancellationToken);
 
         ApplicationGuard.IsNull(payment, Errors.PaymentNotFound);
 
         var fee = request.Status == PaymentStatus.Succeeded
-            ? await fees.ForAsync(payment, request.CapturedAmount, request.PaymentMethodType, request.ReportedFee, cancellationToken)
+            ? await fees.ForAsync(payment!, request.CapturedAmount, request.PaymentMethodType, request.ReportedFee, cancellationToken)
             : null;
 
         var now = SystemClock.Instance.GetCurrentInstant();
-        var wasAwaitingRetry = payment.Status == PaymentStatus.AwaitingRetry;
+        var wasAwaitingRetry = false;
+        PaymentAggregate? saved = null;
 
-        if (request.Status == PaymentStatus.Failed && payment.IsAwaitingRetryAt(now))
+        // Reread and reapplied on a conflict (rule 59): the reconciliation job may be expiring this same payment, and an
+        // approval that arrives right at the limit must not be overwritten by it. If the job wrote first, the approval is
+        // applied on top as a late one; if the approval wrote first, the job finds it closed and does nothing.
+        await repository.UpdateWithRetryAsync(() => FindAsync(request.Id, cancellationToken), current =>
+        {
+            saved = null;
+            wasAwaitingRetry = current.Status == PaymentStatus.AwaitingRetry;
+
+            if (request.Status == PaymentStatus.Failed && current.IsAwaitingRetryAt(now))
+            {
+                return false;
+            }
+
+            var stamp = current.UpdatedAt;
+
+            if (request.Status == PaymentStatus.Failed && current.Status is (PaymentStatus.Initiated or PaymentStatus.Pending) && request.RetryableUntil is { } retryableUntil && now < retryableUntil)
+            {
+                current.DeclineAttempt(request.Metadata, request.ProviderTransactionId, request.PaymentMethodType, request.FailureReason, request.ProviderMessage, retryableUntil);
+            }
+            else
+            {
+                current.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
+            }
+
+            // Both decline a redelivered outcome without touching the payment.
+            if (current.UpdatedAt == stamp)
+            {
+                return false;
+            }
+
+            saved = current;
+
+            return true;
+        }, cancellationToken);
+
+        if (saved is null)
         {
             return;
         }
 
-        if (request.Status == PaymentStatus.Failed && payment.Status is (PaymentStatus.Initiated or PaymentStatus.Pending) && request.RetryableUntil is { } retryableUntil && now < retryableUntil)
-        {
-            payment.DeclineAttempt(request.Metadata, request.ProviderTransactionId, request.PaymentMethodType, request.FailureReason, request.ProviderMessage, retryableUntil);
-        }
-        else
-        {
-            payment.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
-        }
-
-        await repository.UpdateAsync(payment, cancellationToken);
-
-        await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+        await pubsub.PublishAsync(saved.GetAndClearEvents(), cancellationToken);
 
         // The payer hears about the rejection once: when the attempt is declined, not again when its retry window closes.
         if (request.Status == PaymentStatus.Failed && !wasAwaitingRetry)
@@ -64,7 +84,7 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
             // "OrderPaymentFailed" y lee { message }. Renombrarlo aqui no rompe nada visible — el
             // push sale, el acuse dice success, y la pantalla se queda esperando para siempre.
             await liveChannel.PushToUserAsync(
-                payment.Buyer.BuyerId,
+                saved.Buyer.BuyerId,
                 "OrderPaymentFailed",
                 new
                 {
@@ -73,5 +93,12 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
                 user.Tenant,
                 cancellationToken: cancellationToken);
         }
+    }
+
+    private Task<PaymentAggregate> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return user.Tenant != Guid.Empty
+            ? repository.FindAsync<PaymentAggregate>(id, user.Tenant, cancellationToken)
+            : repository.FindAsync<PaymentAggregate>(id, cancellationToken);
     }
 }

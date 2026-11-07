@@ -109,17 +109,41 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
 
     private async Task<PaymentStatusDto> ExpireAsync(PaymentAggregate payment, CancellationToken cancellationToken)
     {
-        payment.Expire("La página de pago venció sin que se iniciara ninguna transacción.");
+        PaymentAggregate? expired = null;
+
+        // Reread before closing (rule 59): the provider's webhook may have approved or declined it since it was read, and an
+        // outcome that arrived right at the limit wins over the platform's closing by silence. Only a payment still started
+        // and with its page lapsed is closed.
+        await repository.UpdateWithRetryAsync(() => FindAsync(payment.Id, cancellationToken), current =>
+        {
+            expired = null;
+
+            if (!IsAbandoned(current))
+            {
+                return false;
+            }
+
+            current.Expire("La página de pago venció sin que se iniciara ninguna transacción.");
+
+            expired = current;
+
+            return true;
+        }, cancellationToken);
+
+        if (expired is null)
+        {
+            var current = await FindAsync(payment.Id, cancellationToken);
+
+            return PaymentStatusDto.From(current ?? payment);
+        }
 
         // El cobro antes que su evento (regla 23, §6): el módulo que lo pidió se entera por el mismo evento de un rechazo y
         // cancela lo que lo esperaba.
-        await repository.UpdateAsync(payment, cancellationToken);
+        await pubsub.PublishAsync(expired.GetAndClearEvents(), cancellationToken);
 
-        await pubsub.PublishAsync(payment.GetAndClearEvents(), cancellationToken);
+        logger.LogInformation("Payment {PaymentId} of tenant {Tenant} expired: its hosted page closed with no transaction at {Provider}.", expired.Id, expired.Tenant, expired.Provider);
 
-        logger.LogInformation("Payment {PaymentId} of tenant {Tenant} expired: its hosted page closed with no transaction at {Provider}.", payment.Id, payment.Tenant, payment.Provider);
-
-        return PaymentStatusDto.From(payment);
+        return PaymentStatusDto.From(expired);
     }
 
     private Task<PaymentAggregate> FindAsync(Guid id, CancellationToken cancellationToken)

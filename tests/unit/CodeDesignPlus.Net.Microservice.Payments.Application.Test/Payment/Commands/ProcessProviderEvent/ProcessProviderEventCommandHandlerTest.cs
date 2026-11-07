@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.Microservice.Payments.Application.Test.Common;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Accounts;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Providers;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.ProcessProviderEvent;
@@ -33,6 +34,7 @@ public class ProcessProviderEventCommandHandlerTest
         collect.SetupGet(x => x.Code).Returns("Wompi");
         providers.Setup(x => x.GetCollect("wompi")).Returns(collect.Object);
         repository.Setup(x => x.FindAsync<PaymentAggregate>(payment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(payment);
+        repository.ReappliesInPlace();
         resolver.Setup(x => x.ForPaymentAsync(payment, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Credentials());
         collect.Setup(x => x.IsAuthentic(Body, It.IsAny<MerchantCredentials>())).Returns(true);
         Notify(payment.Id.ToString(), PaymentStatus.Succeeded);
