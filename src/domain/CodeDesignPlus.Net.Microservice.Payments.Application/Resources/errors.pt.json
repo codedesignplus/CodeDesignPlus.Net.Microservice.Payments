@@ -49,6 +49,7 @@
     "356": "O comerciante está inativo no gateway.",
     "357": "O gateway não aceita a chave privada.",
     "358": "O segredo de eventos não verifica os eventos do gateway.",
-    "371": "O condomínio ainda não tem conta de arrecadação."
+    "371": "O condomínio ainda não tem conta de arrecadação.",
+    "372": "O valor é menor que o mínimo que o gateway aceita para pagar on-line."
   }
 }

@@ -98,4 +98,7 @@ public class Errors: IErrorCodes
 
     // Provider fee (pendings/660, stage 6)
     public static readonly Error MerchantAccountNotFound = new("371");
+
+    // Smallest payment of the provider (pendings/665): ms-parking reads this code to tell the front desk to collect in cash.
+    public static readonly Error PaymentBelowProviderMinimum = new("372");
 }

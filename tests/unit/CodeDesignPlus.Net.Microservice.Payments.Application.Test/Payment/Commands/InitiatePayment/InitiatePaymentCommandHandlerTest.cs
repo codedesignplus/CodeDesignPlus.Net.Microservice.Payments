@@ -127,11 +127,63 @@ public class InitiatePaymentCommandHandlerTest
         Assert.Equal(sent, updated!.CheckoutExpiresAt);
     }
 
-    private InitiatePaymentCommandHandler Handler()
+    private InitiatePaymentCommandHandler Handler(long? wompiMinimumCop = null)
     {
-        var options = Options.Create(new PaymentProvidersOptions { DefaultReturnUrl = DefaultReturnUrl, EventsUrl = new Uri("https://www.example.com/notify/wompi") });
+        var minimums = wompiMinimumCop is { } minimum ? new Dictionary<string, Dictionary<string, long>> { ["Wompi"] = new() { ["COP"] = minimum } } : [];
+        var options = Options.Create(new PaymentProvidersOptions { DefaultReturnUrl = DefaultReturnUrl, EventsUrl = new Uri("https://www.example.com/notify/wompi"), MinimumAmounts = minimums });
 
         return new InitiatePaymentCommandHandler(repository.Object, user.Object, pubsub.Object, resolver.Object, providers.Object, options);
+    }
+
+    /// <summary>
+    /// Wompi's page refuses less than $1.500 before creating a transaction (pendings/665): the payment is refused here with its
+    /// own error, before anything is stored or any page is asked for. The command's total is $1.190.
+    /// </summary>
+    [Fact]
+    public async Task Handle_BelowTheProviderMinimum_ThrowsItsErrorAndCreatesNothing()
+    {
+        // Act
+        var exception = await Assert.ThrowsAsync<CodeDesignPlusException>(() => Handler(wompiMinimumCop: 150_000L).Handle(Command(), CancellationToken.None));
+
+        // Assert
+        Assert.Equal((AppErrors.PaymentBelowProviderMinimum.GetCode(), 0), (exception.Code, repository.Invocations.Count(x => x.Method.Name == nameof(IPaymentRepository.CreateAsync)) + collect.Invocations.Count(x => x.Method.Name == nameof(ICollectProvider.CreateCheckoutAsync))));
+    }
+
+    [Fact]
+    public async Task Handle_ExactlyTheProviderMinimum_AnswersTheHostedPage()
+    {
+        // Act
+        var response = await Handler(wompiMinimumCop: 119_000L).Handle(Command(), CancellationToken.None);
+
+        // Assert
+        Assert.True(response.Success);
+    }
+
+    [Fact]
+    public async Task Handle_MinimumOfAnotherCurrency_DoesNotApply()
+    {
+        // Arrange
+        var minimums = new Dictionary<string, Dictionary<string, long>> { ["Wompi"] = new() { ["USD"] = 500_000L } };
+        var handler = new InitiatePaymentCommandHandler(repository.Object, user.Object, pubsub.Object, resolver.Object, providers.Object, Options.Create(new PaymentProvidersOptions { DefaultReturnUrl = DefaultReturnUrl, EventsUrl = new Uri("https://www.example.com/notify/wompi"), MinimumAmounts = minimums }));
+
+        // Act
+        var response = await handler.Handle(Command(), CancellationToken.None);
+
+        // Assert
+        Assert.True(response.Success);
+    }
+
+    [Fact]
+    public void Options_NegativeMinimum_IsRejectedAtStartUp()
+    {
+        // Arrange
+        var options = new PaymentProvidersOptions { DefaultReturnUrl = DefaultReturnUrl, EventsUrl = new Uri("https://www.example.com/notify/wompi"), SecretsKeyName = "merchant-accounts", MinimumAmounts = new() { ["Wompi"] = new() { ["COP"] = -1 } } };
+
+        // Act
+        var problems = options.Validate(new System.ComponentModel.DataAnnotations.ValidationContext(options)).ToList();
+
+        // Assert
+        Assert.Contains(problems, x => x.MemberNames.Contains(nameof(PaymentProvidersOptions.MinimumAmounts)));
     }
 
     private static InitiatePaymentCommand Command(string? provider = null, string? returnUrl = null)

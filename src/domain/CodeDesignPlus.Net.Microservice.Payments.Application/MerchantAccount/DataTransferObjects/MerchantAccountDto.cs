@@ -1,6 +1,7 @@
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Application.Common.Options;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
+using CodeDesignPlus.Net.ValueObjects.Financial;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.DataTransferObjects;
 
@@ -110,6 +111,13 @@ public class MerchantAccountDto
     public bool FeeScheduleIsDefault { get; set; }
 
     /// <summary>
+    /// The smallest payment the account's provider accepts online, one per currency in minor units; empty when there is none
+    /// (pendings/665). The front desk offers the QR code only for an amount at or above it, and collects a smaller one in
+    /// cash.
+    /// </summary>
+    public List<Money> MinimumAmounts { get; set; } = [];
+
+    /// <summary>
     /// Builds the view of an account.
     /// </summary>
     /// <param name="account">The account.</param>
@@ -119,6 +127,7 @@ public class MerchantAccountDto
     {
         FeeSchedule = ProviderFeeScheduleDto.From(account.FeeSchedule ?? options.DefaultFeeFor(account.Provider)),
         FeeScheduleIsDefault = account.FeeSchedule is null,
+        MinimumAmounts = options.MinimumAmountsOf(account.Provider),
         Id = account.Id,
         Tenant = account.Tenant,
         Provider = account.Provider,
@@ -149,6 +158,7 @@ public class MerchantAccountDto
     {
         FeeSchedule = ProviderFeeScheduleDto.From(options.DefaultFeeFor(provider)),
         FeeScheduleIsDefault = true,
+        MinimumAmounts = options.MinimumAmountsOf(provider),
         Id = MerchantAccountAggregate.IdFor(tenant),
         Tenant = tenant,
         Provider = provider,

@@ -49,6 +49,7 @@
     "356": "El comercio está inactivo en la pasarela.",
     "357": "La pasarela no acepta la llave privada.",
     "358": "El secreto de eventos no verifica los eventos de la pasarela.",
-    "371": "La copropiedad todavía no tiene cuenta de recaudo."
+    "371": "La copropiedad todavía no tiene cuenta de recaudo.",
+    "372": "El valor es menor que el mínimo que la pasarela acepta para pagar en línea."
   }
 }

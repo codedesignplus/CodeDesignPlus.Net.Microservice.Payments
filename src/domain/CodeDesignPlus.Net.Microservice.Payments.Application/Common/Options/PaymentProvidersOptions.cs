@@ -88,6 +88,51 @@ public class PaymentProvidersOptions : IValidatableObject
     public Dictionary<string, ProviderFeeScheduleOptions> DefaultFees { get; set; } = [];
 
     /// <summary>
+    /// The smallest payment each provider accepts, by provider code and then by ISO 4217 currency, in minor units
+    /// (for example <c>Wompi:COP = 150000</c>, $1.500). A provider or a currency without an entry has no minimum here.
+    /// </summary>
+    /// <remarks>
+    /// Wompi's hosted page refuses a smaller amount before it creates any transaction («El monto mínimo de una transacción es
+    /// $1,500 exceptuando impuestos»), so the payment would wait for an answer that never comes (pendings/665). Wompi
+    /// excepts the taxes declared to it, and the hosted page receives none (only <c>amount-in-cents</c>): what it compares is
+    /// the total. The value is Wompi's and can change, so it is configuration and not a constant.
+    /// </remarks>
+    public Dictionary<string, Dictionary<string, long>> MinimumAmounts { get; set; } = [];
+
+    /// <summary>
+    /// The smallest payment a provider accepts in a currency.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <param name="currency">ISO 4217 currency of the payment.</param>
+    /// <returns>The minimum, or null when the deployment sets none for that provider and currency.</returns>
+    public Money? MinimumAmountFor(string? provider, string? currency)
+    {
+        if (string.IsNullOrWhiteSpace(currency))
+        {
+            return null;
+        }
+
+        return MinimumAmountsOf(provider).FirstOrDefault(x => string.Equals(x.Currency, currency, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Every minimum of a provider, one per currency.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <returns>The minimums; empty when the deployment sets none for that provider.</returns>
+    public List<Money> MinimumAmountsOf(string? provider)
+    {
+        if (string.IsNullOrWhiteSpace(provider))
+        {
+            return [];
+        }
+
+        var entry = MinimumAmounts.FirstOrDefault(x => string.Equals(x.Key, provider, StringComparison.OrdinalIgnoreCase));
+
+        return entry.Value is null ? [] : [.. entry.Value.Select(x => Money.FromLong(x.Value, x.Key.ToUpperInvariant()))];
+    }
+
+    /// <summary>
     /// The default rates of a provider.
     /// </summary>
     /// <param name="provider">The provider code.</param>
@@ -157,6 +202,17 @@ public class PaymentProvidersOptions : IValidatableObject
         if (ReconciliationBatchSize <= 0)
         {
             yield return new ValidationResult("ReconciliationBatchSize must be greater than zero.", [nameof(ReconciliationBatchSize)]);
+        }
+
+        foreach (var (provider, minimums) in MinimumAmounts)
+        {
+            foreach (var (currency, amount) in minimums ?? [])
+            {
+                if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3 || amount < 0)
+                {
+                    yield return new ValidationResult($"MinimumAmounts:{provider}:{currency} must be an ISO 4217 currency with a non-negative amount in minor units.", [nameof(MinimumAmounts)]);
+                }
+            }
         }
 
         foreach (var (provider, fee) in DefaultFees)
