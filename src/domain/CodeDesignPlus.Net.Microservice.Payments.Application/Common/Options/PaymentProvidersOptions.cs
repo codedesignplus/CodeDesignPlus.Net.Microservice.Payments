@@ -116,6 +116,45 @@ public class PaymentProvidersOptions : IValidatableObject
     }
 
     /// <summary>
+    /// The smallest payment that is charged online: the larger of the provider's and the tenant's, in the same currency
+    /// (pendings/660). A tenant can raise the provider's minimum, never lower it.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <param name="currency">ISO 4217 currency of the payment.</param>
+    /// <param name="accountMinimum">The tenant's own minimum, or null when it has none or it is the platform's account.</param>
+    /// <returns>The minimum, or null when neither sets one in that currency.</returns>
+    public Money? EffectiveMinimumFor(string? provider, string? currency, Money? accountMinimum)
+    {
+        var providerMinimum = MinimumAmountFor(provider, currency);
+        var own = accountMinimum is not null && string.Equals(accountMinimum.Currency, currency, StringComparison.OrdinalIgnoreCase) ? accountMinimum : null;
+
+        if (providerMinimum is null || own is null)
+        {
+            return providerMinimum ?? own;
+        }
+
+        return own.Amount > providerMinimum.Amount ? own : providerMinimum;
+    }
+
+    /// <summary>
+    /// Every minimum that applies to an account, one per currency: the provider's, raised by the tenant's where it is higher.
+    /// </summary>
+    /// <param name="provider">The provider code.</param>
+    /// <param name="accountMinimum">The tenant's own minimum, or null.</param>
+    /// <returns>The minimums; empty when neither sets one.</returns>
+    public List<Money> EffectiveMinimumAmountsOf(string? provider, Money? accountMinimum)
+    {
+        var currencies = MinimumAmountsOf(provider).Select(x => x.Currency).ToList();
+
+        if (accountMinimum is not null && !currencies.Contains(accountMinimum.Currency, StringComparer.OrdinalIgnoreCase))
+        {
+            currencies.Add(accountMinimum.Currency);
+        }
+
+        return [.. currencies.Select(currency => EffectiveMinimumFor(provider, currency, accountMinimum)!)];
+    }
+
+    /// <summary>
     /// Every minimum of a provider, one per currency.
     /// </summary>
     /// <param name="provider">The provider code.</param>

@@ -49,6 +49,12 @@ public sealed record MerchantCredentials(string Provider, MerchantAccountEnviron
     public int PendingRejections { get; init; }
 
     /// <summary>
+    /// The smallest payment the tenant accepts online, when it set one on its collection account; null for the platform's
+    /// account, which only has the provider's (pendings/660).
+    /// </summary>
+    public CodeDesignPlus.Net.ValueObjects.Financial.Money? MinimumAmount { get; init; }
+
+    /// <summary>
     /// Never prints a secret.
     /// </summary>
     /// <returns>A redacted description.</returns>

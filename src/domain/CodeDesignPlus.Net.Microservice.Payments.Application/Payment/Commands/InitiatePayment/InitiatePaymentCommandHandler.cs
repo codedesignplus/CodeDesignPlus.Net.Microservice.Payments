@@ -38,7 +38,8 @@ public class InitiatePaymentCommandHandler(IPaymentRepository repository, IUserC
 
         // Below the provider's minimum its page refuses the payment before creating a transaction, and the payment would wait
         // for an answer that never comes (pendings/665). Refused here, before anything is stored.
-        var minimum = options.Value.MinimumAmountFor(collect.Code, request.Total.Currency);
+        // The tenant may have raised it on its collection account (pendings/660); the platform's account only has the provider's.
+        var minimum = options.Value.EffectiveMinimumFor(collect.Code, request.Total.Currency, credentials.MinimumAmount);
 
         ApplicationGuard.IsTrue(minimum is not null && request.Total.Value < minimum.Amount, Errors.PaymentBelowProviderMinimum);
 

@@ -111,11 +111,21 @@ public class MerchantAccountDto
     public bool FeeScheduleIsDefault { get; set; }
 
     /// <summary>
-    /// The smallest payment the account's provider accepts online, one per currency in minor units; empty when there is none
-    /// (pendings/665). The front desk offers the QR code only for an amount at or above it, and collects a smaller one in
-    /// cash.
+    /// The smallest payment that is charged online, one per currency in minor units: the provider's, raised by
+    /// <see cref="MinimumAmount"/> where it is higher; empty when there is none (pendings/665, 660). The front desk offers the
+    /// QR code only for an amount at or above it, and collects a smaller one in cash.
     /// </summary>
     public List<Money> MinimumAmounts { get; set; } = [];
+
+    /// <summary>
+    /// The minimum the tenant set on its account, in minor units; null when it has none (pendings/660).
+    /// </summary>
+    public Money? MinimumAmount { get; set; }
+
+    /// <summary>
+    /// The provider's own minimum, one per currency in minor units: the floor the tenant cannot go below (pendings/660).
+    /// </summary>
+    public List<Money> ProviderMinimumAmounts { get; set; } = [];
 
     /// <summary>
     /// Builds the view of an account.
@@ -127,7 +137,9 @@ public class MerchantAccountDto
     {
         FeeSchedule = ProviderFeeScheduleDto.From(account.FeeSchedule ?? options.DefaultFeeFor(account.Provider)),
         FeeScheduleIsDefault = account.FeeSchedule is null,
-        MinimumAmounts = options.MinimumAmountsOf(account.Provider),
+        MinimumAmounts = options.EffectiveMinimumAmountsOf(account.Provider, account.MinimumAmount),
+        MinimumAmount = account.MinimumAmount,
+        ProviderMinimumAmounts = options.MinimumAmountsOf(account.Provider),
         Id = account.Id,
         Tenant = account.Tenant,
         Provider = account.Provider,
@@ -159,6 +171,7 @@ public class MerchantAccountDto
         FeeSchedule = ProviderFeeScheduleDto.From(options.DefaultFeeFor(provider)),
         FeeScheduleIsDefault = true,
         MinimumAmounts = options.MinimumAmountsOf(provider),
+        ProviderMinimumAmounts = options.MinimumAmountsOf(provider),
         Id = MerchantAccountAggregate.IdFor(tenant),
         Tenant = tenant,
         Provider = provider,

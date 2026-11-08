@@ -234,4 +234,8 @@ public class Errors : IErrorCodes
     public static readonly Error PaymentMethodTypeIsRequired = new("368");
     public static readonly Error RefundIdIsRequired = new("369");
     public static readonly Error OnlySucceededPaymentsCanBeRefunded = new("370");
+
+    // Minimum of the collection account (pendings/660)
+    public static readonly Error MinimumAmountBelowProviderMinimum = new("373");
+    public static readonly Error MinimumAmountMustBePositive = new("374");
 }

@@ -159,6 +159,32 @@ public class InitiatePaymentCommandHandlerTest
         Assert.True(response.Success);
     }
 
+    /// <summary>
+    /// A property can raise the minimum on its collection account (pendings/660): its $2.000 applies over Wompi's $1.000 here.
+    /// </summary>
+    [Fact]
+    public async Task Handle_BelowTheMinimumThePropertyRaised_ThrowsTheSameError()
+    {
+        // Arrange
+        resolver.Setup(x => x.ForNewPaymentAsync(TestData.Tenant, false, It.IsAny<CancellationToken>())).ReturnsAsync(TestData.Credentials() with { MinimumAmount = CodeDesignPlus.Net.ValueObjects.Financial.Money.FromLong(200_000L, "COP") });
+
+        // Act
+        var exception = await Assert.ThrowsAsync<CodeDesignPlusException>(() => Handler(wompiMinimumCop: 100_000L).Handle(Command(), CancellationToken.None));
+
+        // Assert
+        Assert.Equal(AppErrors.PaymentBelowProviderMinimum.GetCode(), exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_AboveTheProviderMinimumWithoutOwnMinimum_AnswersTheHostedPage()
+    {
+        // Act
+        var response = await Handler(wompiMinimumCop: 100_000L).Handle(Command(), CancellationToken.None);
+
+        // Assert
+        Assert.True(response.Success);
+    }
+
     [Fact]
     public async Task Handle_MinimumOfAnotherCurrency_DoesNotApply()
     {

@@ -1,3 +1,4 @@
+using CodeDesignPlus.Net.ValueObjects.Financial;
 using CodeDesignPlus.Net.Microservice.Payments.Domain.ValueObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Domain;
@@ -113,6 +114,15 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
     /// default of the deployment applies (<c>PaymentProviders:DefaultFees</c>).
     /// </summary>
     public ProviderFeeSchedule? FeeSchedule { get; private set; }
+
+    /// <summary>
+    /// The smallest payment the tenant accepts online, in minor units; null while it has not set one, and then only the
+    /// provider's applies (<c>PaymentProviders:MinimumAmounts</c>, pendings/660).
+    /// </summary>
+    /// <remarks>
+    /// Loose member, not a constructor argument (rule 31): accounts stored before it read it as null.
+    /// </remarks>
+    public Money? MinimumAmount { get; private set; }
 
     /// <summary>
     /// Whether the account can pay third parties.
@@ -317,6 +327,33 @@ public class MerchantAccountAggregate(Guid id) : AggregateRootBase(id), IVersion
         UpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         AddEvent(MerchantAccountFeeScheduleChangedDomainEvent.Create(Id, Tenant, schedule));
+    }
+
+    /// <summary>
+    /// Sets the smallest payment the tenant accepts online, or clears it with null (pendings/660). It can raise the
+    /// provider's minimum, never lower it: the provider's page refuses a smaller payment before creating any transaction.
+    /// </summary>
+    /// <param name="minimum">The minimum in minor units, or null to keep only the provider's.</param>
+    /// <param name="providerMinimum">The provider's minimum in the same currency, or null when it has none.</param>
+    /// <param name="updatedBy">Who set it.</param>
+    /// <returns><c>false</c> when the account already had that minimum and nothing changed.</returns>
+    public bool SetMinimumAmount(Money? minimum, Money? providerMinimum, Guid updatedBy)
+    {
+        DomainGuard.IsTrue(minimum is not null && minimum.Amount <= 0, Errors.MinimumAmountMustBePositive);
+        DomainGuard.IsTrue(minimum is not null && providerMinimum is not null && minimum.Currency == providerMinimum.Currency && minimum.Amount < providerMinimum.Amount, Errors.MinimumAmountBelowProviderMinimum);
+
+        if (MinimumAmount == minimum)
+        {
+            return false;
+        }
+
+        MinimumAmount = minimum;
+        UpdatedBy = updatedBy;
+        UpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        AddEvent(MerchantAccountMinimumAmountChangedDomainEvent.Create(Id, Tenant, minimum));
+
+        return true;
     }
 
     /// <summary>

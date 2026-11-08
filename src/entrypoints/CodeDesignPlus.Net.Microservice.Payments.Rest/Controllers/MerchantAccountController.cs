@@ -2,6 +2,7 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Comma
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.DisconnectMerchantAccount;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.ReplaceMerchantAccountKeys;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.SetMerchantAccountFeeSchedule;
+using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.SetMerchantAccountMinimumAmount;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Commands.ValidateMerchantAccount;
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
@@ -75,6 +76,22 @@ public class MerchantAccountController(IMediator mediator, IUserContext user) : 
     /// <response code="400">If the rates are not valid or the tenant has no collection account yet.</response>
     [HttpPut("fee-schedule")]
     public async Task<IActionResult> SetFeeSchedule([FromBody] SetMerchantAccountFeeScheduleCommand command, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Sets the smallest payment the tenant accepts online, or clears it with a null minimum (pendings/660). It can raise the
+    /// provider's minimum, never lower it.
+    /// </summary>
+    /// <param name="command">The minimum in major units with its currency, or null.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <response code="200">The account with its minimums, without secrets.</response>
+    /// <response code="400">If the minimum is not positive, is below the provider's, or the tenant has no collection account yet.</response>
+    [HttpPut("minimum-amount")]
+    public async Task<IActionResult> SetMinimumAmount([FromBody] SetMerchantAccountMinimumAmountCommand command, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(command, cancellationToken);
 
