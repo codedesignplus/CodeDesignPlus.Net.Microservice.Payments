@@ -77,7 +77,7 @@ public class RefreshPaymentStatusCommandHandler(IPaymentRepository repository, I
             return PaymentStatusDto.From(payment);
         }
 
-        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage, outcome.RetryableUntil), cancellationToken);
+        await mediator.Send(new UpdateStatusCommand(payment.Id, outcome.Status, outcome.Raw, outcome.TransactionId, outcome.Amount, outcome.PaymentMethodType, outcome.ReportedFee, outcome.FailureReason, outcome.ProviderMessage, outcome.RetryableUntil, outcome.CardType), cancellationToken);
 
         var updated = await FindAsync(request.Id, cancellationToken);
 

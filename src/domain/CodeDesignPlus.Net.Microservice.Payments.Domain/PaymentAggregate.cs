@@ -86,6 +86,12 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id), IVersionedAggreg
     /// </summary>
     public string? PaymentMethodType { get; private set; }
     /// <summary>
+    /// For a card, whether it was credit or debit as the provider said it (for example <c>CREDIT</c> or <c>DEBIT</c>); null
+    /// when the provider did not say it or the method is not a card. A loose member (rule 31): the payments stored before
+    /// it existed read it as absent (Kappali pendings/661).
+    /// </summary>
+    public string? CardType { get; private set; }
+    /// <summary>
     /// The commission the provider keeps from this payment, without its tax. Only set once the payment succeeded and
     /// the commission could be known.
     /// </summary>
@@ -300,7 +306,8 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id), IVersionedAggreg
     /// </param>
     /// <param name="failureReason">Why it did not succeed, normalized by the provider adapter; ignored when it succeeded.</param>
     /// <param name="providerMessage">What the bank or the provider said, as they said it; ignored when it succeeded.</param>
-    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null, ProviderFee? fee = null, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null)
+    /// <param name="cardType">For a card, whether it was credit or debit as the provider said it; null when unknown.</param>
+    public void SetFinalResponse(PaymentStatus finalStatus, Dictionary<string, string?> response, string? providerTransactionId = null, Money? capturedAmount = null, string? paymentMethodType = null, ProviderFee? fee = null, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null, string? cardType = null)
     {
         DomainGuard.IsTrue(
             finalStatus != PaymentStatus.Succeeded && finalStatus != PaymentStatus.Failed && finalStatus != PaymentStatus.Expired,
@@ -326,6 +333,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id), IVersionedAggreg
         FinalResponse = response;
         ProviderTransactionId = providerTransactionId;
         PaymentMethodType = paymentMethodType;
+        CardType = string.IsNullOrWhiteSpace(cardType) ? null : cardType.Trim();
         FailureReason = ReasonFor(finalStatus, failureReason);
         ProviderMessage = finalStatus == PaymentStatus.Succeeded ? null : Shorten(providerMessage);
 
@@ -343,7 +351,7 @@ public class PaymentAggregate(Guid id) : AggregateRootBase(id), IVersionedAggreg
 
         var expectedNet = keepsFee ? fee!.NetOf(CapturedAmount!) : null;
 
-        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount, FailureReason, ProviderMessage, ApprovedLate));
+        AddEvent(PaymentResponseAssociatedDomainEvent.Create(Id, Module, ReferenceId, Status, FinalResponse, Tenant, CapturedAmount, Provider, ProviderFee, ProviderFeeTax, expectedNet, FeeSource, PlatformAccount, FailureReason, ProviderMessage, ApprovedLate, PaymentMethodType, CardType));
     }
 
     /// <summary>

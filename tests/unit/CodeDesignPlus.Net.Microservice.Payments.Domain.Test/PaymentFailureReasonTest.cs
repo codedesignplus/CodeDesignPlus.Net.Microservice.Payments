@@ -158,6 +158,43 @@ public class PaymentFailureReasonTest
         Assert.False(visible);
     }
 
+    /// <summary>
+    /// The approval says with what the payer paid: the module that invoices it turns it into the tax authority's payment
+    /// means code (Kappali pendings/661).
+    /// </summary>
+    [Fact]
+    public void SetFinalResponse_ApprovedCreditCard_PublishesTheInstrumentAndTheCardType()
+    {
+        // Arrange
+        var payment = Payment();
+
+        // Act
+        payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", cardType: " CREDIT ");
+
+        // Assert
+        var response = payment.GetAndClearEvents().OfType<PaymentResponseAssociatedDomainEvent>().Single();
+
+        Assert.Equal(("CARD", "CREDIT", "CREDIT"), (response.PaymentMethodType, response.CardType, payment.CardType));
+    }
+
+    /// <summary>
+    /// When the provider does not say whether the card was credit or debit, nobody guesses it.
+    /// </summary>
+    [Fact]
+    public void SetFinalResponse_CardWithoutType_PublishesNoCardType()
+    {
+        // Arrange
+        var payment = Payment();
+
+        // Act
+        payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", cardType: "  ");
+
+        // Assert
+        var response = payment.GetAndClearEvents().OfType<PaymentResponseAssociatedDomainEvent>().Single();
+
+        Assert.Equal(("CARD", (string?)null), (response.PaymentMethodType, response.CardType));
+    }
+
     private static Dictionary<string, string?> Declined() => new() { ["status"] = "DECLINED", ["statusMessage"] = "Fondos insuficientes" };
 
     private static PaymentAggregate Payment(bool platformAccount = false)

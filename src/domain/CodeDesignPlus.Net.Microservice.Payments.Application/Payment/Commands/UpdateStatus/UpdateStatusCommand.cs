@@ -17,6 +17,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Commands.
 /// <param name="FailureReason">Why it did not succeed, normalized by the provider adapter.</param>
 /// <param name="ProviderMessage">What the bank or the provider said, as they said it.</param>
 /// <param name="RetryableUntil">Until when the provider's page lets the payer retry after a failed attempt; null when it does not.</param>
+/// <param name="CardType">For a card, whether it was credit or debit as the provider says it; null when unknown.</param>
 public record UpdateStatusCommand(
     Guid Id,
     PaymentStatus Status,
@@ -27,7 +28,8 @@ public record UpdateStatusCommand(
     ProviderFee? ReportedFee = null,
     PaymentFailureReason FailureReason = PaymentFailureReason.None,
     string? ProviderMessage = null,
-    Instant? RetryableUntil = null
+    Instant? RetryableUntil = null,
+    string? CardType = null
 ) : IRequest;
 
 public class Validator : AbstractValidator<UpdateStatusCommand>

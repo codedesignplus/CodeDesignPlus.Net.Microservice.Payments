@@ -52,7 +52,7 @@ public class UpdateStatusCommandHandler(IPaymentRepository repository, IUserCont
             }
             else
             {
-                current.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage);
+                current.SetFinalResponse(request.Status, request.Metadata, request.ProviderTransactionId, request.CapturedAmount, request.PaymentMethodType, fee, request.FailureReason, request.ProviderMessage, request.CardType);
             }
 
             // Both decline a redelivered outcome without touching the payment.

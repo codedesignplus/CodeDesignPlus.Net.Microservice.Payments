@@ -50,6 +50,28 @@ public class ProcessProviderEventCommandHandlerTest
         mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.Id == payment.Id && c.Status == PaymentStatus.Succeeded && c.CapturedAmount!.Amount == 119_000L && c.ProviderTransactionId == "tx-1"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// The instrument and, for a card, whether it was credit or debit reach the payment: the invoice of what it paid needs
+    /// them (Kappali pendings/661).
+    /// </summary>
+    [Fact]
+    public async Task Handle_ApprovedCard_ClosesThePaymentWithTheInstrumentAndTheCardType()
+    {
+        // Arrange
+        var outcome = new CollectOutcome(PaymentStatus.Succeeded, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = "APPROVED" })
+        {
+            CardType = "CREDIT"
+        };
+
+        collect.Setup(x => x.ReadNotificationAsync(Body, It.IsAny<CancellationToken>())).ReturnsAsync(new ProviderNotification(payment.Id.ToString(), outcome));
+
+        // Act
+        await Handle();
+
+        // Assert
+        mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.PaymentMethodType == "CARD" && c.CardType == "CREDIT"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task Handle_DeclinedEvent_ClosesThePaymentWithTheReasonAndTheBankMessage()
     {

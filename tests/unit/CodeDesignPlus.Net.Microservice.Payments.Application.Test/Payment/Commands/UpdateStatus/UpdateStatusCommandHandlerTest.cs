@@ -103,6 +103,29 @@ public class UpdateStatusCommandHandlerTest
         Assert.Equal((73_154L, 13_899L, 31_947L), (response.ProviderFee!.Amount, response.ProviderFeeTax!.Amount, response.ExpectedNetAmount!.Amount));
     }
 
+    /// <summary>
+    /// The approval publishes with what the payer paid and, for a card, its type: ms-licenses invoices the order with them
+    /// (Kappali pendings/661).
+    /// </summary>
+    [Fact]
+    public async Task Handle_SucceededDebitCard_PublishesTheInstrumentAndTheCardType()
+    {
+        // Arrange
+        var published = new List<IDomainEvent>();
+
+        pubsub.Setup(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>())).Callback<IReadOnlyList<IDomainEvent>, CancellationToken>((events, _) => published.AddRange(events)).Returns(Task.CompletedTask);
+
+        var handler = new UpdateStatusCommandHandler(repository.Object, user.Object, pubsub.Object, liveChannel.Object, fees.Object);
+
+        // Act
+        await handler.Handle(new UpdateStatusCommand(PaymentId, PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", CardType: "DEBIT"), CancellationToken.None);
+
+        // Assert
+        var response = published.OfType<Domain.DomainEvents.PaymentResponseAssociatedDomainEvent>().Single();
+
+        Assert.Equal(("CARD", "DEBIT"), (response.PaymentMethodType, response.CardType));
+    }
+
     [Fact]
     public async Task Handle_DeclinedPayment_PublishesTheReasonAndTheBankMessage()
     {

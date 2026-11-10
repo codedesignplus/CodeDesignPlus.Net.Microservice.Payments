@@ -271,6 +271,17 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
         }
     }
 
+    /// <summary>
+    /// Whether the card was credit or debit, as Wompi says it (CREDIT or DEBIT); null when it does not say it or the
+    /// method is not a card. It is never guessed: the tax authority's code of a card depends on it (Kappali pendings/661).
+    /// </summary>
+    private static string? CardTypeOf(WompiTransaction transaction)
+    {
+        var cardType = transaction.PaymentMethod?.Extra?.CardType?.Trim();
+
+        return string.IsNullOrEmpty(cardType) ? null : cardType.ToUpperInvariant();
+    }
+
     private async Task<CollectOutcome> ToOutcomeAsync(WompiTransaction transaction, string? environment, CancellationToken cancellationToken)
     {
         var status = transaction.Status switch
@@ -294,6 +305,7 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
             ["status"] = transaction.Status,
             ["statusMessage"] = transaction.StatusMessage,
             ["paymentMethodType"] = transaction.PaymentMethodType,
+            ["cardType"] = CardTypeOf(transaction),
             ["amountInCents"] = transaction.AmountInCents?.ToString(CultureInfo.InvariantCulture),
             ["currency"] = transaction.Currency,
             ["finalizedAt"] = transaction.FinalizedAt
@@ -306,6 +318,7 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
 
         return new CollectOutcome(status, transaction.Id, amount, transaction.PaymentMethodType, raw)
         {
+            CardType = CardTypeOf(transaction),
             FailureReason = FailureReasonOf(transaction.Status),
             ProviderMessage = transaction.StatusMessage,
             RetryableUntil = RetryableUntil(transaction)

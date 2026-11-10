@@ -10,7 +10,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Domain.DomainEvents;
 /// It is the contract with every module that charges through this service, and they read <c>Module</c>,
 /// <c>ReferenceId</c>, <c>Status</c> (as a number) and <c>Tenant</c>. It only grows: <c>CapturedAmount</c>,
 /// <c>Provider</c>, the commission (<c>ProviderFee</c>, <c>ProviderFeeTax</c>, <c>ExpectedNetAmount</c>,
-/// <c>FeeSource</c>), <c>PlatformAccount</c>, <c>FailureReason</c>, <c>ProviderMessage</c> and <c>LateApproval</c> are additions that a consumer which does not know them ignores.
+/// <c>FeeSource</c>), <c>PlatformAccount</c>, <c>FailureReason</c>, <c>ProviderMessage</c>, <c>LateApproval</c>, <c>PaymentMethodType</c> and <c>CardType</c> are additions that a consumer which does not know them ignores.
 /// </remarks>
 [EventKey<PaymentAggregate>(1, "PaymentResponseAssociatedDomainEvent")]
 public class PaymentResponseAssociatedDomainEvent(
@@ -30,6 +30,8 @@ public class PaymentResponseAssociatedDomainEvent(
     PaymentFailureReason failureReason = PaymentFailureReason.None,
     string? providerMessage = null,
     bool lateApproval = false,
+    string? paymentMethodType = null,
+    string? cardType = null,
     Guid? eventId = null,
     Instant? occurredAt = null,
     Dictionary<string, object>? metadata = null
@@ -98,8 +100,21 @@ public class PaymentResponseAssociatedDomainEvent(
     /// </summary>
     public bool LateApproval { get; } = lateApproval;
 
-    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null, bool lateApproval = false)
+    /// <summary>
+    /// The instrument the payer used on the provider's page, as the provider names it (for example <c>CARD</c>,
+    /// <c>PSE</c>, <c>NEQUI</c>); null when the provider did not say it. A module that invoices the payment translates it
+    /// to the tax authority's payment means code (Kappali pendings/661). Optional: a consumer that does not know it ignores it.
+    /// </summary>
+    public string? PaymentMethodType { get; } = paymentMethodType;
+
+    /// <summary>
+    /// For a card, whether it was credit or debit as the provider said it (for example <c>CREDIT</c> or <c>DEBIT</c>); null
+    /// when the provider did not say it or the method is not a card. Never guessed (Kappali pendings/661).
+    /// </summary>
+    public string? CardType { get; } = cardType;
+
+    public static PaymentResponseAssociatedDomainEvent Create(Guid aggregateId, string module, Guid referenceId, PaymentStatus status, Dictionary<string, string?> response, Guid? tenant, Money? capturedAmount, string? provider, Money? providerFee = null, Money? providerFeeTax = null, Money? expectedNetAmount = null, string? feeSource = null, bool platformAccount = false, PaymentFailureReason failureReason = PaymentFailureReason.None, string? providerMessage = null, bool lateApproval = false, string? paymentMethodType = null, string? cardType = null)
     {
-        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount, failureReason, providerMessage, lateApproval);
+        return new PaymentResponseAssociatedDomainEvent(aggregateId, module, referenceId, status, response, tenant, capturedAmount, provider, providerFee, providerFeeTax, expectedNetAmount, feeSource, platformAccount, failureReason, providerMessage, lateApproval, paymentMethodType, cardType);
     }
 }

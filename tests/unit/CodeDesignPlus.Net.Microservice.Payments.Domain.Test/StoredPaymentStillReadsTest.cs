@@ -42,6 +42,21 @@ public class StoredPaymentStillReadsTest
     }
 
     [Fact]
+    public void Deserialize_PaymentStoredBeforeCardType_ReadsItAsAbsent()
+    {
+        // Arrange: los cobros guardados antes de Kappali pendings/661 no traen el tipo de tarjeta.
+        var document = Payment().ToBsonDocument();
+
+        document.Remove("CardType");
+
+        // Act
+        var payment = BsonSerializer.Deserialize<PaymentAggregate>(document);
+
+        // Assert
+        Assert.Null(payment.CardType);
+    }
+
+    [Fact]
     public void Deserialize_PaymentStoredBeforeCheckoutExpiresAt_ReadsItAsAbsent()
     {
         // Arrange: los cobros guardados antes de pendings/622 no traen el vencimiento de la página.
@@ -64,7 +79,7 @@ public class StoredPaymentStillReadsTest
 
         var payment = PaymentAggregate.Create(Guid.NewGuid(), "Invoicing", Guid.NewGuid(), subTotal, tax, subTotal + tax, buyer, "Cuota", "Wompi", false, Guid.NewGuid(), Guid.NewGuid());
 
-        payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", subTotal + tax, "CARD", new ProviderFee(Money.FromLong(73_154L, "COP"), Money.FromLong(13_899L, "COP"), ProviderFeeSources.Calculated));
+        payment.SetFinalResponse(PaymentStatus.Succeeded, new Dictionary<string, string?> { ["status"] = "APPROVED" }, "tx-1", subTotal + tax, "CARD", new ProviderFee(Money.FromLong(73_154L, "COP"), Money.FromLong(13_899L, "COP"), ProviderFeeSources.Calculated), cardType: "CREDIT");
         payment.RegisterRefund("COa7Bk9m1", RefundStatus.Pending, subTotal + tax, null, null);
 
         return payment;

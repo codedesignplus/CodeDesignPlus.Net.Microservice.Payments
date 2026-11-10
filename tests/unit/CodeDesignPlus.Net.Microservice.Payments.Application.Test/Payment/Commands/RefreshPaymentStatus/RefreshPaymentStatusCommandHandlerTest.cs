@@ -118,6 +118,24 @@ public class RefreshPaymentStatusCommandHandlerTest
         Assert.Equal(PaymentStatus.Initiated, result.Status);
     }
 
+    /// <summary>
+    /// A payment closed by asking the provider keeps the card type too, the same as one closed by the webhook (Kappali
+    /// pendings/661).
+    /// </summary>
+    [Fact]
+    public async Task Handle_ApprovedDebitCard_AppliesTheCardType()
+    {
+        // Arrange
+        ExpiresAgo(Grace + TimeSpan.FromMinutes(5));
+        collect.Setup(x => x.GetOutcomeAsync(payment, It.IsAny<MerchantCredentials>(), It.IsAny<CancellationToken>())).ReturnsAsync(new CollectOutcome(PaymentStatus.Succeeded, "tx-1", Money.FromLong(119_000L, "COP"), "CARD", new Dictionary<string, string?> { ["status"] = "APPROVED" }) { CardType = "DEBIT" });
+
+        // Act
+        await Handle();
+
+        // Assert
+        mediator.Verify(x => x.Send(It.Is<UpdateStatusCommand>(c => c.CardType == "DEBIT"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task Handle_PageExpiredWithApprovedTransaction_AppliesTheProviderAnswer()
     {

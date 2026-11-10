@@ -148,6 +148,12 @@ public sealed class WompiTransaction
     public string? PaymentMethodType { get; set; }
 
     /// <summary>
+    /// The payment method with its details; for a card, whether it is credit or debit when Wompi says it.
+    /// </summary>
+    [JsonProperty("payment_method")]
+    public WompiPaymentMethod? PaymentMethod { get; set; }
+
+    /// <summary>
     /// When the transaction was created, as Wompi wrote it.
     /// </summary>
     [JsonProperty("created_at")]
@@ -289,4 +295,34 @@ public sealed class WompiBank
     /// </summary>
     [JsonProperty("name")]
     public string? Name { get; set; }
+}
+
+/// <summary>
+/// The payment method of a transaction, as Wompi reports it.
+/// </summary>
+public sealed class WompiPaymentMethod
+{
+    /// <summary>
+    /// CARD, PSE, NEQUI…: the same as the transaction's <c>payment_method_type</c>.
+    /// </summary>
+    [JsonProperty("type")]
+    public string? Type { get; set; }
+
+    /// <summary>
+    /// The details of the method.
+    /// </summary>
+    [JsonProperty("extra")]
+    public WompiPaymentMethodExtra? Extra { get; set; }
+}
+
+/// <summary>
+/// The details of a payment method. Wompi fills only some of them, depending on the method and on the transaction.
+/// </summary>
+public sealed class WompiPaymentMethodExtra
+{
+    /// <summary>
+    /// For a card, CREDIT or DEBIT. Wompi does not always send it: absent means unknown, not credit.
+    /// </summary>
+    [JsonProperty("card_type")]
+    public string? CardType { get; set; }
 }

@@ -96,6 +96,12 @@ public sealed record CollectOutcome(PaymentStatus Status, string? TransactionId,
     public PaymentFailureReason FailureReason { get; init; }
 
     /// <summary>
+    /// For a card, whether it was credit or debit as the provider says it (for example <c>CREDIT</c> or <c>DEBIT</c>);
+    /// null when the provider does not say it or the method is not a card (Kappali pendings/661).
+    /// </summary>
+    public string? CardType { get; init; }
+
+    /// <summary>
     /// What the bank or the provider said about the transaction, as they said it (for example «Fondos insuficientes»).
     /// </summary>
     public string? ProviderMessage { get; init; }

@@ -188,6 +188,36 @@ public class WompiProviderTest
         Assert.Equal((PaymentId.ToString(), 119_000L, "COP", "CARD", "1234-1610641025-49201"), (notification!.Reference, notification.Outcome.Amount!.Amount, notification.Outcome.Amount.Currency, notification.Outcome.PaymentMethodType, notification.Outcome.TransactionId));
     }
 
+    /// <summary>
+    /// Wompi says in the payment method whether the card was credit or debit; it travels as it came, in capitals (Kappali
+    /// pendings/661).
+    /// </summary>
+    [Fact]
+    public async Task ReadNotificationAsync_CardWithType_ReportsTheCardType()
+    {
+        // Arrange
+        var body = Event("APPROVED").Replace("\"payment_method_type\": \"CARD\",", "\"payment_method_type\": \"CARD\", \"payment_method\": { \"type\": \"CARD\", \"extra\": { \"brand\": \"VISA\", \"card_type\": \"credit\" } },", StringComparison.Ordinal);
+
+        // Act
+        var notification = await Provider().ReadNotificationAsync(body, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(("CREDIT", "CREDIT"), (notification!.Outcome.CardType, notification.Outcome.Raw["cardType"]));
+    }
+
+    /// <summary>
+    /// Wompi does not always say the card type: absent is unknown, never credit.
+    /// </summary>
+    [Fact]
+    public async Task ReadNotificationAsync_CardWithoutType_ReportsNoCardType()
+    {
+        // Act
+        var notification = await Provider().ReadNotificationAsync(Event("APPROVED"), CancellationToken.None);
+
+        // Assert
+        Assert.Null(notification!.Outcome.CardType);
+    }
+
     [Fact]
     public async Task ReadNotificationAsync_PayoutEvent_IsNotACollectionEvent()
     {
