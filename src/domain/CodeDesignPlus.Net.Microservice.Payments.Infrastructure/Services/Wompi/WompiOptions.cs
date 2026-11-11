@@ -44,10 +44,15 @@ public class WompiOptions : IValidatableObject
     public Uri PayoutsProductionUrl { get; set; } = null!;
 
     /// <summary>
-    /// Document types the hosted page accepts to prefill the payer's id. A buyer's document of another type is not
-    /// prefilled: the payer types it on the page.
+    /// The hosted page's document type for each code of the document type catalog, e.g. "13" (DIAN code of the
+    /// cedula) to "CC". A buyer's document of a type not listed is not prefilled: the payer types it on the page.
     /// </summary>
-    public List<string> LegalIdTypes { get; set; } = [];
+    /// <remarks>
+    /// The catalog code is the country's (in Colombia, the DIAN's) and Wompi has its own list, so the two are mapped by
+    /// configuration (Kappali pendings/663). Before, the catalog code was sent as is, which only worked while the catalog
+    /// used Wompi's abbreviations.
+    /// </remarks>
+    public Dictionary<string, string> LegalIdTypeCodes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// The platform's own merchant account, which collects the subscriptions sold on the landing.

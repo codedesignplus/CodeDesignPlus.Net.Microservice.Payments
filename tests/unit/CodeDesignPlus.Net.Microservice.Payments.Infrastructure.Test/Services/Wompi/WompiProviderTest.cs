@@ -125,6 +125,17 @@ public class WompiProviderTest
     }
 
     [Fact]
+    public async Task CreateCheckoutAsync_BuyerWithAnUnmappedType_DoesNotPrefillTheDocument()
+    {
+        // Act: 42 is the DIAN code of a foreign id, which Wompi's page has no type for.
+        var session = await Provider().CreateCheckoutAsync(Payment(typeCode: "42"), credentials, new Uri("https://www.example.com/return"), Instant.FromUtc(2026, 10, 28, 20, 0), CancellationToken.None);
+
+        // Assert
+        var query = QueryHelpers.ParseQuery(session.RedirectUrl.Query);
+        Assert.False(query.ContainsKey("customer-data:legal-id-type") || query.ContainsKey("customer-data:legal-id"));
+    }
+
+    [Fact]
     public async Task CreateCheckoutAsync_Url_CarriesNoSecret()
     {
         // Act
@@ -392,7 +403,7 @@ public class WompiProviderTest
         var options = Options.Create(new WompiOptions
         {
             CheckoutUrl = new Uri("https://checkout.wompi.co/p/"),
-            LegalIdTypes = ["CC", "NIT"]
+            LegalIdTypeCodes = new(StringComparer.OrdinalIgnoreCase) { ["13"] = "CC", ["31"] = "NIT" }
         });
 
         return new WompiProvider(client.Object, currencies.Object, options, Mock.Of<ILogger<WompiProvider>>());
@@ -404,9 +415,9 @@ public class WompiProviderTest
             .ReturnsAsync(Currency.Create(Guid.NewGuid(), "Peso colombiano", "COP", "$", digits, 170));
     }
 
-    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L, string phone = "+573001112233", string email = "ana@example.com")
+    private static PaymentAggregate Payment(long subTotal = 10_000_000L, long tax = 1_900_000L, string phone = "+573001112233", string email = "ana@example.com", string typeCode = "13")
     {
-        var buyer = Buyer.CreateWithoutShipping(Guid.NewGuid(), "Ana Restrepo", phone, email, TypeDocument.Create("CC", "Cedula de ciudadania"), "1020304050");
+        var buyer = Buyer.CreateWithoutShipping(Guid.NewGuid(), "Ana Restrepo", phone, email, TypeDocument.Create(typeCode, "Cedula de ciudadania"), "1020304050");
 
         return PaymentAggregate.Create(PaymentId, "Invoicing", Guid.NewGuid(), Money.FromLong(subTotal, "COP"), Money.FromLong(tax, "COP"), Money.FromLong(subTotal + tax, "COP"), buyer, "Cuota de administración", "Wompi", false, Guid.NewGuid(), Guid.NewGuid());
     }

@@ -262,9 +262,9 @@ public sealed class WompiProvider(IWompiClient client, ICurrencyGrpc currencyGrp
             parameters["customer-data:phone-number-prefix"] = prefix;
         }
 
-        var legalIdType = buyer.TypeDocument?.Code;
+        var catalogCode = buyer.TypeDocument?.Code?.Trim();
 
-        if (!string.IsNullOrWhiteSpace(buyer.Document) && legalIdType is not null && options.Value.LegalIdTypes.Contains(legalIdType, StringComparer.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(buyer.Document) && !string.IsNullOrEmpty(catalogCode) && options.Value.LegalIdTypeCodes.TryGetValue(catalogCode, out var legalIdType))
         {
             parameters["customer-data:legal-id"] = buyer.Document;
             parameters["customer-data:legal-id-type"] = legalIdType.ToUpperInvariant();
