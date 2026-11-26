@@ -8,6 +8,7 @@ using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.Queries.GetMerchantAccount;
 using CodeDesignPlus.Net.Security.Abstractions;
+using CodeDesignPlus.Net.Microservice.Payments.Application.MerchantAccount.DataTransferObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 
@@ -30,6 +31,7 @@ public class MerchantAccountController(IMediator mediator, IUserContext user) : 
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <response code="200">The account, without secrets.</response>
     [HttpGet]
+    [ProducesResponseType<MerchantAccountDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetMerchantAccountQuery(user.Tenant), cancellationToken);

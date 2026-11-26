@@ -14,6 +14,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 public class BeneficiaryController(IMediator mediator, IMapper mapper) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType<Pagination<BeneficiaryDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAllBeneficiariesQuery(criteria), cancellationToken);
@@ -21,6 +22,7 @@ public class BeneficiaryController(IMediator mediator, IMapper mapper) : Control
     }
 
     [HttpGet("{id:guid}")]
+    [ProducesResponseType<BeneficiaryDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetBeneficiaryByIdQuery(id), cancellationToken);
@@ -28,6 +30,7 @@ public class BeneficiaryController(IMediator mediator, IMapper mapper) : Control
     }
 
     [HttpGet("user/{userId:guid}")]
+    [ProducesResponseType<BeneficiaryDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByUserId(Guid userId, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetBeneficiaryByUserIdQuery(userId), cancellationToken);

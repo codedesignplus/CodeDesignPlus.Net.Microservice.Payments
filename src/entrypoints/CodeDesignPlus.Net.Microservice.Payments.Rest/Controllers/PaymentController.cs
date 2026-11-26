@@ -7,6 +7,8 @@ using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.Queries.GetPl
 using CodeDesignPlus.Net.Exceptions;
 using CodeDesignPlus.Net.Microservice.Payments.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+using CodeDesignPlus.Net.Core.Abstractions.Models.Pager;
+using CodeDesignPlus.Net.Microservice.Payments.Application.Payment.DataTransferObjects;
 
 namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 
@@ -42,6 +44,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <response code="200">La pagina de cobros, sin datos de tarjeta ni del documento del comprador.</response>
     /// <response code="403">Si el usuario no tiene permiso para consultar los cobros.</response>
     [HttpGet]
+    [ProducesResponseType<Pagination<PaymentSummaryDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAllPaymentSummariesQuery(criteria), cancellationToken);
@@ -63,6 +66,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <response code="200">The page of platform payments.</response>
     /// <response code="403">If the user may not read the platform's payments.</response>
     [HttpGet("platform")]
+    [ProducesResponseType<Pagination<PlatformPaymentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPlatformPayments([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAllPlatformPaymentsQuery(criteria), cancellationToken);
@@ -80,6 +84,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <response code="400">If it does not exist or is not a platform payment.</response>
     /// <response code="403">If the user may not read the platform's payments.</response>
     [HttpGet("platform/{id:guid}")]
+    [ProducesResponseType<PlatformPaymentDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPlatformPaymentById(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetPlatformPaymentByIdQuery(id), cancellationToken);
@@ -134,6 +139,7 @@ public class PaymentController(IMediator mediator) : ControllerBase
     /// <response code="200">The status, the reason it failed and what the bank or the provider said.</response>
     /// <response code="400">If the payment does not exist or is not the user's to read.</response>
     [HttpGet("{id:guid}/outcome")]
+    [ProducesResponseType<PaymentOutcomeDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOutcome(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetPaymentOutcomeQuery(id), cancellationToken);

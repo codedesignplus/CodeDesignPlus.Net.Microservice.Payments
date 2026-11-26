@@ -11,6 +11,7 @@ namespace CodeDesignPlus.Net.Microservice.Payments.Rest.Controllers;
 public class DisbursementController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType<Pagination<DisbursementDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] C.Criteria criteria, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAllDisbursementsQuery(criteria), cancellationToken);
@@ -18,6 +19,7 @@ public class DisbursementController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [ProducesResponseType<DisbursementDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetDisbursementByIdQuery(id), cancellationToken);
@@ -25,6 +27,7 @@ public class DisbursementController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("payment/{paymentId:guid}")]
+    [ProducesResponseType<List<DisbursementDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByPayment(Guid paymentId, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetDisbursementsByPaymentQuery(paymentId), cancellationToken);
